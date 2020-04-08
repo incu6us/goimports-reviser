@@ -31,7 +31,7 @@ import (
 )
 ```
 
-### Use help for usage:
+### Use help for details:
 ```bash
 goimports-reviser -h
 ```
@@ -41,5 +41,5 @@ goimports-reviser -h
 goimports-reviser -project-name github.com/incu6us/goimport-reviser -file-path ./reviser/reviser.go 
 ```
 
-### Example, to configure it with JetBrains(file watcher plugin):
+### Example, to configure it with JetBrains IDEs (via file watcher plugin):
 ![example](./images/image.png)

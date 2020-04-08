@@ -50,7 +50,7 @@ func main() {
 	flag.Parse()
 
 	if err := validateInputs(projectName, filePath); err != nil {
-		fmt.Println(err)
+		fmt.Printf("%s\n\n", err)
 		usage()
 		os.Exit(1)
 	}
@@ -69,11 +69,11 @@ func validateInputs(projectName, filePath string) error {
 	var errMesages []string
 
 	if projectName == "" {
-		errMesages = append(errMesages, fmt.Sprintf("%s should be set", projectNameKey))
+		errMesages = append(errMesages, fmt.Sprintf("-%s should be set", projectNameKey))
 	}
 
 	if filePath == "" {
-		errMesages = append(errMesages, fmt.Sprintf("%s should be set", filePathKey))
+		errMesages = append(errMesages, fmt.Sprintf("-%s should be set", filePathKey))
 	}
 
 	if len(errMesages) > 0 {

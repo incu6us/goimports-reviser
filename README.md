@@ -1,5 +1,4 @@
-# goimport-reviser
----
+# goimports-reviser
 
 Tool for Golang to sort goimport by 3 groups: std, general and project dependencies
 

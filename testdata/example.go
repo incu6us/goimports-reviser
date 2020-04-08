@@ -2,7 +2,9 @@ package testdata
 
 import (
 	"bytes"
-	"goimport-validator/testdata/innderpkg"
+
+	"github.com/incu6us/goimport-reviser/testdata/innderpkg"
+
 	"log"
 
 	"github.com/pkg/errors"

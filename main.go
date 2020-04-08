@@ -10,6 +10,8 @@ import (
 
 	"os"
 
+	"io/ioutil"
+
 	"github.com/incu6us/goimport-reviser/reviser"
 )
 
@@ -53,12 +55,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	out, err := reviser.Execute(projectName, filePath)
+	fixedOutput, err := reviser.Execute(projectName, filePath)
 	if err != nil {
 		log.Fatalf("%+v", err)
 	}
 
-	fmt.Println(string(out))
+	if err := ioutil.WriteFile(filePath, fixedOutput, 0644); err != nil {
+		log.Fatalf("failed to write fixed result to file(%s): %s", filePath, err)
+	}
 }
 
 func validateInputs(projectName, filePath string) error {

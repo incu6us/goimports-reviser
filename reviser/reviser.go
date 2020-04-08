@@ -25,7 +25,7 @@ func Execute(projectName, filePath string) ([]byte, error) {
 
 	imports := combineAllImports(f)
 
-	stdImports, projectImports, generalImports := groupImports(projectName, imports)
+	stdImports, generalImports, projectImports := groupImports(projectName, imports)
 
 	fixImports(f, stdImports, generalImports, projectImports)
 
@@ -62,7 +62,7 @@ func groupImports(projectName string, imports []string) ([]string, []string, []s
 	sort.Strings(generalImports)
 	sort.Strings(projectImports)
 
-	return stdImports, projectImports, generalImports
+	return stdImports, generalImports, projectImports
 }
 
 func generateFile(fset *token.FileSet, file *ast.File) ([]byte, error) {

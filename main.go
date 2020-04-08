@@ -10,10 +10,15 @@ import (
 	"log"
 	"strings"
 
+	"sort"
+
 	"github.com/incu6us/goimport-reviser/helper"
 )
 
-const testFilePath = "./testdata/example.go"
+const (
+	projectName  = "goimport-reviser"
+	testFilePath = "./testdata/example.go"
+)
 
 func main() {
 	fset := token.NewFileSet()
@@ -25,21 +30,11 @@ func main() {
 
 	imports := combineImports(f)
 
-	var stdImports []string
-	var otherImports []string
+	stdImports, projectImports, generalImports := groupImports(imports)
 
-	for _, generalImport := range imports {
-		if _, ok := helper.StdPackages[generalImport]; ok {
-			stdImports = append(stdImports, generalImport)
-			continue
-		}
+	fixImports(f, stdImports, generalImports, projectImports)
 
-		otherImports = append(otherImports, generalImport)
-	}
-
-	fixImports(f, stdImports, otherImports)
-
-	out, err := GenerateFile(fset, f)
+	out, err := generateFile(fset, f)
 	if err != nil {
 		log.Println(err)
 		return
@@ -48,7 +43,35 @@ func main() {
 	fmt.Println(string(out))
 }
 
-func GenerateFile(fset *token.FileSet, file *ast.File) ([]byte, error) {
+func groupImports(imports []string) ([]string, []string, []string) {
+	var (
+		stdImports     []string
+		projectImports []string
+		generalImports []string
+	)
+
+	for _, imprt := range imports {
+		if _, ok := helper.StdPackages[imprt]; ok {
+			stdImports = append(stdImports, imprt)
+			continue
+		}
+
+		if strings.Contains(imprt, projectName) {
+			projectImports = append(projectImports, imprt)
+			continue
+		}
+
+		generalImports = append(generalImports, imprt)
+	}
+
+	sort.Strings(stdImports)
+	sort.Strings(generalImports)
+	sort.Strings(projectImports)
+
+	return stdImports, projectImports, generalImports
+}
+
+func generateFile(fset *token.FileSet, file *ast.File) ([]byte, error) {
 	var output []byte
 	buffer := bytes.NewBuffer(output)
 	if err := printer.Fprint(buffer, fset, file); err != nil {
@@ -58,7 +81,7 @@ func GenerateFile(fset *token.FileSet, file *ast.File) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func fixImports(f *ast.File, stdImports []string, generalImports []string) {
+func fixImports(f *ast.File, stdImports []string, generalImports []string, projectImports []string) {
 	for _, decl := range f.Decls {
 		switch decl.(type) {
 		case *ast.GenDecl:
@@ -80,8 +103,22 @@ func fixImports(f *ast.File, stdImports []string, generalImports []string) {
 					}
 				}
 
+				linesCounter = len(generalImports)
 				for _, generalImport := range generalImports {
 					iSpec := &ast.ImportSpec{Path: &ast.BasicLit{Value: generalImport}}
+					specs = append(specs, iSpec)
+
+					linesCounter--
+
+					if linesCounter == 0 && len(generalImports) > 0 {
+						iSpec = &ast.ImportSpec{Path: &ast.BasicLit{Value: ""}}
+
+						specs = append(specs, iSpec)
+					}
+				}
+
+				for _, projectImport := range projectImports {
+					iSpec := &ast.ImportSpec{Path: &ast.BasicLit{Value: projectImport}}
 					specs = append(specs, iSpec)
 				}
 

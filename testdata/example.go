@@ -1,11 +1,11 @@
 package testdata
 
 import (
-	"bytes"
+	"log"
 
 	"github.com/incu6us/goimport-reviser/testdata/innderpkg"
 
-	"log"
+	"bytes"
 
 	"github.com/pkg/errors"
 )

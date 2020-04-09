@@ -53,17 +53,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	formattedOutput, hasChanged, err := reviser.Execute(projectName, filePath)
+	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath)
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}
 
-	if !hasChanged {
+	if !hasChange {
 		return
 	}
 
 	if err := ioutil.WriteFile(filePath, formattedOutput, 0644); err != nil {
-		log.Fatalf("failed to write fixed result to file(%s): %s", filePath, errors.WithStack(err))
+		log.Fatalf("failed to write fixed result to file(%s): %+v", filePath, errors.WithStack(err))
 	}
 }
 

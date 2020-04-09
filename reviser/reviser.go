@@ -40,12 +40,12 @@ func Execute(projectName, filePath string) ([]byte, bool, error) {
 		return nil, false, err
 	}
 
-	hasChanged, err := hasDiff(formattedContent, filePath)
+	hasChange, err := hasDiff(formattedContent, filePath)
 	if err != nil {
 		return nil, false, err
 	}
 
-	return formattedContent, hasChanged, nil
+	return formattedContent, hasChange, nil
 }
 
 func hasDiff(formattedContent []byte, filePath string) (bool, error) {

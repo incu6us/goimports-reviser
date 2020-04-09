@@ -3,6 +3,7 @@ package reviser
 import (
 	"bytes"
 	"go/ast"
+	"go/format"
 	"go/parser"
 	"go/printer"
 	"go/token"
@@ -29,17 +30,22 @@ func Execute(projectName, filePath string) ([]byte, error) {
 
 	fixImports(f, stdImports, generalImports, projectImports)
 
-	formattedContent, err := generateFile(fset, f)
+	fixedImportsContent, err := generateFile(fset, f)
 	if err != nil {
 		return nil, err
 	}
 
-	ok, err := hasDiff(formattedContent, filePath)
+	ok, err := hasDiff(fixedImportsContent, filePath)
 	if err != nil {
 		return nil, err
 	}
 
 	if ok {
+		formattedContent, err := format.Source(fixedImportsContent)
+		if err != nil {
+			return nil, err
+		}
+
 		return formattedContent, nil
 	}
 

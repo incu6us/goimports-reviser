@@ -3,27 +3,27 @@ package reviser
 import (
 	"io/ioutil"
 	"testing"
-
+	
 	"github.com/stretchr/testify/assert"
 )
 
 func TestExecute(t *testing.T) {
 	type args struct {
-		projectName string
-		filePath    string
-		fileContent string
+		projectName	string
+		filePath	string
+		fileContent	string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr bool
+		name	string
+		args	args
+		want	string
+		wantErr	bool
 	}{
 		{
-			name: "success with comments",
+			name:	"success with comments",
 			args: args{
-				projectName: "github.com/incu6us/goimports-reviser",
-				filePath:    "./testdata/example.go",
+				projectName:	"github.com/incu6us/goimports-reviser",
+				filePath:	"./testdata/example.go",
 				fileContent: `package testdata
 
 import (
@@ -44,22 +44,22 @@ import (
 import (
 	"bytes"
 	"log"
-	
+
 	"github.com/pkg/errors"
-	
+
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
 
 // nolint:gomnd
 `,
-			wantErr: false,
+			wantErr:	false,
 		},
 
 		{
-			name: "success with std & project deps",
+			name:	"success with std & project deps",
 			args: args{
-				projectName: "github.com/incu6us/goimports-reviser",
-				filePath:    "./testdata/example.go",
+				projectName:	"github.com/incu6us/goimports-reviser",
+				filePath:	"./testdata/example.go",
 				fileContent: `package testdata
 
 import (
@@ -80,20 +80,20 @@ import (
 import (
 	"bytes"
 	"log"
-	
+
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
 
 // nolint:gomnd
 `,
-			wantErr: false,
+			wantErr:	false,
 		},
 
 		{
-			name: "success with std & third-party deps",
+			name:	"success with std & third-party deps",
 			args: args{
-				projectName: "github.com/incu6us/goimports-reviser",
-				filePath:    "./testdata/example.go",
+				projectName:	"github.com/incu6us/goimports-reviser",
+				filePath:	"./testdata/example.go",
 				fileContent: `package testdata
 
 import (
@@ -112,20 +112,20 @@ import (
 import (
 	"bytes"
 	"log"
-	
+
 	"github.com/pkg/errors"
 )
 
 // nolint:gomnd
 `,
-			wantErr: false,
+			wantErr:	false,
 		},
 
 		{
-			name: "success with std deps only",
+			name:	"success with std deps only",
 			args: args{
-				projectName: "github.com/incu6us/goimports-reviser",
-				filePath:    "./testdata/example.go",
+				projectName:	"github.com/incu6us/goimports-reviser",
+				filePath:	"./testdata/example.go",
 				fileContent: `package testdata
 
 import (
@@ -146,14 +146,14 @@ import (
 
 // nolint:gomnd
 `,
-			wantErr: false,
+			wantErr:	false,
 		},
 
 		{
-			name: "success with third-party deps only",
+			name:	"success with third-party deps only",
 			args: args{
-				projectName: "github.com/incu6us/goimports-reviser",
-				filePath:    "./testdata/example.go",
+				projectName:	"github.com/incu6us/goimports-reviser",
+				filePath:	"./testdata/example.go",
 				fileContent: `package testdata
 
 import (
@@ -172,14 +172,14 @@ import (
 
 // nolint:gomnd
 `,
-			wantErr: false,
+			wantErr:	false,
 		},
 
 		{
-			name: "success with project deps only",
+			name:	"success with project deps only",
 			args: args{
-				projectName: "github.com/incu6us/goimports-reviser",
-				filePath:    "./testdata/example.go",
+				projectName:	"github.com/incu6us/goimports-reviser",
+				filePath:	"./testdata/example.go",
 				fileContent: `package testdata
 
 import (
@@ -199,14 +199,14 @@ import (
 
 // nolint:gomnd
 `,
-			wantErr: false,
+			wantErr:	false,
 		},
 
 		{
-			name: "success with no changes",
+			name:	"success with no changes",
 			args: args{
-				projectName: "github.com/incu6us/goimports-reviser",
-				filePath:    "./testdata/example.go",
+				projectName:	"github.com/incu6us/goimports-reviser",
+				filePath:	"./testdata/example.go",
 				fileContent: `package testdata
 
 import (
@@ -216,8 +216,8 @@ import (
 // nolint:gomnd
 `,
 			},
-			want:    "",
-			wantErr: false,
+			want:		"",
+			wantErr:	false,
 		},
 	}
 	for _, tt := range tests {

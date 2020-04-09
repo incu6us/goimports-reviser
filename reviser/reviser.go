@@ -35,17 +35,17 @@ func Execute(projectName, filePath string) ([]byte, error) {
 		return nil, err
 	}
 
-	ok, err := hasDiff(fixedImportsContent, filePath)
+	formattedContent, err := format.Source(fixedImportsContent)
+	if err != nil {
+		return nil, err
+	}
+
+	ok, err := hasDiff(formattedContent, filePath)
 	if err != nil {
 		return nil, err
 	}
 
 	if ok {
-		formattedContent, err := format.Source(fixedImportsContent)
-		if err != nil {
-			return nil, err
-		}
-
 		return formattedContent, nil
 	}
 

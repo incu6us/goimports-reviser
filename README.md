@@ -1,4 +1,5 @@
 # goimports-reviser
+!['Status Badge'](https://github.com/incu6us/goimports-reviser/workflows/Go/badge.svg)
 
 Tool for Golang to sort goimports by 3 groups: std, general and project dependencies
 
@@ -9,7 +10,7 @@ package testdata
 import (
 	"log"
 
-	"github.com/incu6us/goimport-reviser/testdata/innderpkg"
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 
 	"bytes"
 
@@ -27,7 +28,7 @@ import (
 	
 	"github.com/pkg/errors"
 	
-	"github.com/incu6us/goimport-reviser/testdata/innderpkg"
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
 ```
 
@@ -38,7 +39,7 @@ goimports-reviser -h
 
 ### Example with bash cmd:
 ```bash
-goimports-reviser -project-name github.com/incu6us/goimport-reviser -file-path ./reviser/reviser.go 
+goimports-reviser -project-name github.com/incu6us/goimports-reviser -file-path ./reviser/reviser.go 
 ```
 
 ### Example, to configure it with JetBrains IDEs (via file watcher plugin):

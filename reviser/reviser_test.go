@@ -22,14 +22,14 @@ func TestExecute(t *testing.T) {
 		{
 			name: "success with comments",
 			args: args{
-				projectName: "github.com/incu6us/goimport-reviser",
+				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",
 				fileContent: `package testdata
 
 import (
 	"log"
 
-	"github.com/incu6us/goimport-reviser/testdata/innderpkg"
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 
 	"bytes"
 
@@ -47,7 +47,153 @@ import (
 	
 	"github.com/pkg/errors"
 	
-	"github.com/incu6us/goimport-reviser/testdata/innderpkg"
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+)
+
+// nolint:gomnd
+`,
+			wantErr: false,
+		},
+
+		{
+			name: "success with std & project deps",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"log"
+
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+
+	"bytes"
+
+
+)
+
+// nolint:gomnd
+`,
+			},
+			want: `package testdata
+
+import (
+	"bytes"
+	"log"
+	
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+)
+
+// nolint:gomnd
+`,
+			wantErr: false,
+		},
+
+		{
+			name: "success with std & third-party deps",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"log"
+
+	"bytes"
+
+	"github.com/pkg/errors"
+)
+
+// nolint:gomnd
+`,
+			},
+			want: `package testdata
+
+import (
+	"bytes"
+	"log"
+	
+	"github.com/pkg/errors"
+)
+
+// nolint:gomnd
+`,
+			wantErr: false,
+		},
+
+		{
+			name: "success with std deps only",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"log"
+
+	"bytes"
+)
+
+// nolint:gomnd
+`,
+			},
+			want: `package testdata
+
+import (
+	"bytes"
+	"log"
+)
+
+// nolint:gomnd
+`,
+			wantErr: false,
+		},
+
+		{
+			name: "success with third-party deps only",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+
+	"github.com/pkg/errors"
+)
+
+// nolint:gomnd
+`,
+			},
+			want: `package testdata
+
+import (
+	"github.com/pkg/errors"
+)
+
+// nolint:gomnd
+`,
+			wantErr: false,
+		},
+
+		{
+			name: "success with project deps only",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+
+)
+
+// nolint:gomnd
+`,
+			},
+			want: `package testdata
+
+import (
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
 
 // nolint:gomnd

@@ -1,16 +1,13 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
-	"log"
-
-	"errors"
-	"strings"
-
-	"os"
-
 	"io/ioutil"
+	"log"
+	"os"
+	"strings"
 
 	"github.com/incu6us/goimport-reviser/reviser"
 )

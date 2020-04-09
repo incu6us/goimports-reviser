@@ -8,7 +8,6 @@ import (
 	"go/printer"
 	"go/token"
 	"io/ioutil"
-	"log"
 	"sort"
 	"strings"
 
@@ -23,19 +22,18 @@ func Execute(projectName, filePath string) ([]byte, bool, error) {
 
 	fset := token.NewFileSet()
 
-	f, err := parser.ParseFile(fset, "", originalContent, parser.ParseComments)
+	pf, err := parser.ParseFile(fset, "", originalContent, parser.ParseComments)
 	if err != nil {
-		log.Println(err)
 		return nil, false, err
 	}
 
-	imports := combineAllImports(f)
+	imports := combineAllImports(pf)
 
 	stdImports, generalImports, projectImports := groupImports(projectName, imports)
 
-	fixImports(f, stdImports, generalImports, projectImports)
+	fixImports(pf, stdImports, generalImports, projectImports)
 
-	fixedImportsContent, err := generateFile(fset, f)
+	fixedImportsContent, err := generateFile(fset, pf)
 	if err != nil {
 		return nil, false, err
 	}

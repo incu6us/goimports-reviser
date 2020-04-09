@@ -68,18 +68,18 @@ func main() {
 }
 
 func validateInputs(projectName, filePath string) error {
-	var errMesages []string
+	var errMessages []string
 
 	if projectName == "" {
-		errMesages = append(errMesages, fmt.Sprintf("-%s should be set", projectNameKey))
+		errMessages = append(errMessages, fmt.Sprintf("-%s should be set", projectNameKey))
 	}
 
 	if filePath == "" {
-		errMesages = append(errMesages, fmt.Sprintf("-%s should be set", filePathKey))
+		errMessages = append(errMessages, fmt.Sprintf("-%s should be set", filePathKey))
 	}
 
-	if len(errMesages) > 0 {
-		return errors.New(strings.Join(errMesages, "\n"))
+	if len(errMessages) > 0 {
+		return errors.New(strings.Join(errMessages, "\n"))
 	}
 
 	return nil

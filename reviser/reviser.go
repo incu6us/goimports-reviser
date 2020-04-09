@@ -15,13 +15,13 @@ import (
 	"github.com/incu6us/goimports-reviser/helper"
 )
 
-func Execute(projectName, filePath string) ([]byte, error) {
+func Execute(projectName, filePath string) ([]byte, bool, error) {
 	fset := token.NewFileSet()
 
 	f, err := parser.ParseFile(fset, filePath, nil, parser.ParseComments)
 	if err != nil {
 		log.Println(err)
-		return nil, err
+		return nil, false, err
 	}
 
 	imports := combineAllImports(f)
@@ -32,24 +32,20 @@ func Execute(projectName, filePath string) ([]byte, error) {
 
 	fixedImportsContent, err := generateFile(fset, f)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	formattedContent, err := format.Source(fixedImportsContent)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	ok, err := hasDiff(formattedContent, filePath)
+	hasChanged, err := hasDiff(formattedContent, filePath)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	if ok {
-		return formattedContent, nil
-	}
-
-	return nil, nil
+	return formattedContent, hasChanged, nil
 }
 
 func hasDiff(formattedContent []byte, filePath string) (bool, error) {

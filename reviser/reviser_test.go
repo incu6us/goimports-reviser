@@ -3,27 +3,28 @@ package reviser
 import (
 	"io/ioutil"
 	"testing"
-	
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestExecute(t *testing.T) {
 	type args struct {
-		projectName	string
-		filePath	string
-		fileContent	string
+		projectName string
+		filePath    string
+		fileContent string
 	}
 	tests := []struct {
-		name	string
-		args	args
-		want	string
-		wantErr	bool
+		name       string
+		args       args
+		want       string
+		wantChange bool
+		wantErr    bool
 	}{
 		{
-			name:	"success with comments",
+			name: "success with comments",
 			args: args{
-				projectName:	"github.com/incu6us/goimports-reviser",
-				filePath:	"./testdata/example.go",
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
 				fileContent: `package testdata
 
 import (
@@ -52,14 +53,15 @@ import (
 
 // nolint:gomnd
 `,
-			wantErr:	false,
+			wantChange: true,
+			wantErr:    false,
 		},
 
 		{
-			name:	"success with std & project deps",
+			name: "success with std & project deps",
 			args: args{
-				projectName:	"github.com/incu6us/goimports-reviser",
-				filePath:	"./testdata/example.go",
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
 				fileContent: `package testdata
 
 import (
@@ -86,14 +88,15 @@ import (
 
 // nolint:gomnd
 `,
-			wantErr:	false,
+			wantChange: true,
+			wantErr:    false,
 		},
 
 		{
-			name:	"success with std & third-party deps",
+			name: "success with std & third-party deps",
 			args: args{
-				projectName:	"github.com/incu6us/goimports-reviser",
-				filePath:	"./testdata/example.go",
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
 				fileContent: `package testdata
 
 import (
@@ -118,14 +121,15 @@ import (
 
 // nolint:gomnd
 `,
-			wantErr:	false,
+			wantChange: true,
+			wantErr:    false,
 		},
 
 		{
-			name:	"success with std deps only",
+			name: "success with std deps only",
 			args: args{
-				projectName:	"github.com/incu6us/goimports-reviser",
-				filePath:	"./testdata/example.go",
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
 				fileContent: `package testdata
 
 import (
@@ -146,14 +150,15 @@ import (
 
 // nolint:gomnd
 `,
-			wantErr:	false,
+			wantChange: true,
+			wantErr:    false,
 		},
 
 		{
-			name:	"success with third-party deps only",
+			name: "success with third-party deps only",
 			args: args{
-				projectName:	"github.com/incu6us/goimports-reviser",
-				filePath:	"./testdata/example.go",
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
 				fileContent: `package testdata
 
 import (
@@ -172,14 +177,15 @@ import (
 
 // nolint:gomnd
 `,
-			wantErr:	false,
+			wantChange: true,
+			wantErr:    false,
 		},
 
 		{
-			name:	"success with project deps only",
+			name: "success with project deps only",
 			args: args{
-				projectName:	"github.com/incu6us/goimports-reviser",
-				filePath:	"./testdata/example.go",
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
 				fileContent: `package testdata
 
 import (
@@ -199,14 +205,15 @@ import (
 
 // nolint:gomnd
 `,
-			wantErr:	false,
+			wantChange: true,
+			wantErr:    false,
 		},
 
 		{
-			name:	"success with no changes",
+			name: "success with no changes",
 			args: args{
-				projectName:	"github.com/incu6us/goimports-reviser",
-				filePath:	"./testdata/example.go",
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
 				fileContent: `package testdata
 
 import (
@@ -216,8 +223,16 @@ import (
 // nolint:gomnd
 `,
 			},
-			want:		"",
-			wantErr:	false,
+			want: `package testdata
+
+import (
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+)
+
+// nolint:gomnd
+`,
+			wantChange: false,
+			wantErr:    false,
 		},
 	}
 	for _, tt := range tests {
@@ -226,12 +241,13 @@ import (
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Execute(tt.args.projectName, tt.args.filePath)
+			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
+			assert.Equal(t, tt.wantChange, hasChange)
 			assert.Equal(t, tt.want, string(got))
 		})
 	}

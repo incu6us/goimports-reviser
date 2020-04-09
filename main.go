@@ -53,12 +53,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	formattedOutput, err := reviser.Execute(projectName, filePath)
+	formattedOutput, hasChanged, err := reviser.Execute(projectName, filePath)
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}
 
-	if formattedOutput == nil {
+	if !hasChanged {
 		return
 	}
 

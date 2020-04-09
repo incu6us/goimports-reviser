@@ -1,13 +1,14 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/incu6us/goimports-reviser/reviser"
 )
@@ -52,13 +53,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	fixedOutput, err := reviser.Execute(projectName, filePath)
+	formattedOutput, err := reviser.Execute(projectName, filePath)
 	if err != nil {
-		log.Fatalf("%+v", err)
+		log.Fatalf("%+v", errors.WithStack(err))
 	}
 
-	if err := ioutil.WriteFile(filePath, fixedOutput, 0644); err != nil {
-		log.Fatalf("failed to write fixed result to file(%s): %s", filePath, err)
+	if formattedOutput == nil {
+		return
+	}
+
+	if err := ioutil.WriteFile(filePath, formattedOutput, 0644); err != nil {
+		log.Fatalf("failed to write fixed result to file(%s): %s", filePath, errors.WithStack(err))
 	}
 }
 

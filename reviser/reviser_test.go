@@ -183,6 +183,7 @@ import (
 				fileContent: `package testdata
 
 import (
+
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 
 )
@@ -198,6 +199,24 @@ import (
 
 // nolint:gomnd
 `,
+			wantErr: false,
+		},
+
+		{
+			name: "success with no changes",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+)
+
+// nolint:gomnd
+`,
+			},
+			want:    "",
 			wantErr: false,
 		},
 	}

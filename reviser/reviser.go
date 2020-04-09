@@ -6,11 +6,10 @@ import (
 	"go/parser"
 	"go/printer"
 	"go/token"
+	"io/ioutil"
 	"log"
 	"sort"
 	"strings"
-
-	"github.com/pkg/errors"
 
 	"github.com/incu6us/goimports-reviser/helper"
 )
@@ -21,7 +20,7 @@ func Execute(projectName, filePath string) ([]byte, error) {
 	f, err := parser.ParseFile(fset, filePath, nil, parser.ParseComments)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 
 	imports := combineAllImports(f)
@@ -30,12 +29,30 @@ func Execute(projectName, filePath string) ([]byte, error) {
 
 	fixImports(f, stdImports, generalImports, projectImports)
 
-	out, err := generateFile(fset, f)
+	formattedContent, err := generateFile(fset, f)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 
-	return out, nil
+	ok, err := hasDiff(formattedContent, filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	if ok {
+		return formattedContent, nil
+	}
+
+	return nil, nil
+}
+
+func hasDiff(formattedContent []byte, filePath string) (bool, error) {
+	originalContent, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return false, err
+	}
+
+	return !bytes.Equal(originalContent, formattedContent), nil
 }
 
 func groupImports(projectName string, imports []string) ([]string, []string, []string) {

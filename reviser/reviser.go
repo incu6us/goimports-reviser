@@ -16,9 +16,14 @@ import (
 )
 
 func Execute(projectName, filePath string) ([]byte, bool, error) {
+	originalContent, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return nil, false, err
+	}
+
 	fset := token.NewFileSet()
 
-	f, err := parser.ParseFile(fset, filePath, nil, parser.ParseComments)
+	f, err := parser.ParseFile(fset, "", originalContent, parser.ParseComments)
 	if err != nil {
 		log.Println(err)
 		return nil, false, err
@@ -40,21 +45,7 @@ func Execute(projectName, filePath string) ([]byte, bool, error) {
 		return nil, false, err
 	}
 
-	hasChange, err := hasDiff(formattedContent, filePath)
-	if err != nil {
-		return nil, false, err
-	}
-
-	return formattedContent, hasChange, nil
-}
-
-func hasDiff(formattedContent []byte, filePath string) (bool, error) {
-	originalContent, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return false, err
-	}
-
-	return !bytes.Equal(originalContent, formattedContent), nil
+	return formattedContent, !bytes.Equal(originalContent, formattedContent), nil
 }
 
 func groupImports(projectName string, imports []string) ([]string, []string, []string) {

@@ -45,6 +45,8 @@ func groupImports(projectName string, imports []string) ([]string, []string, []s
 		generalImports []string
 	)
 
+	sort.Strings(imports)
+
 	for _, imprt := range imports {
 		if _, ok := helper.StdPackages[imprt]; ok {
 			stdImports = append(stdImports, imprt)
@@ -58,10 +60,6 @@ func groupImports(projectName string, imports []string) ([]string, []string, []s
 
 		generalImports = append(generalImports, imprt)
 	}
-
-	sort.Strings(stdImports)
-	sort.Strings(generalImports)
-	sort.Strings(projectImports)
 
 	return stdImports, generalImports, projectImports
 }

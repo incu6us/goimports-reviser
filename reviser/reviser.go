@@ -89,7 +89,7 @@ func fixImports(f *ast.File, stdImports []string, generalImports []string, proje
 
 					linesCounter--
 
-					if linesCounter == 0 && len(generalImports) > 0 {
+					if linesCounter == 0 && (len(generalImports) > 0 || len(projectImports) > 0) {
 						iSpec = &ast.ImportSpec{Path: &ast.BasicLit{Value: ""}}
 
 						specs = append(specs, iSpec)

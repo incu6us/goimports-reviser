@@ -12,12 +12,13 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/incu6us/goimport-reviser/helper"
+	"github.com/incu6us/goimports-reviser/helper"
 )
 
 func Execute(projectName, filePath string) ([]byte, error) {
 	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, filePath, nil, 0)
+
+	f, err := parser.ParseFile(fset, filePath, nil, parser.ParseComments)
 	if err != nil {
 		log.Println(err)
 		return nil, errors.WithStack(err)

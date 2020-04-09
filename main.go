@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/incu6us/goimport-reviser/reviser"
+	"github.com/incu6us/goimports-reviser/reviser"
 )
 
 const (

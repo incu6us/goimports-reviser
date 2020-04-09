@@ -20,7 +20,7 @@ func TestExecute(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "success",
+			name: "success with comments",
 			args: args{
 				projectName: "github.com/incu6us/goimport-reviser",
 				filePath:    "./testdata/example.go",
@@ -35,6 +35,8 @@ import (
 
 	"github.com/pkg/errors"
 )
+
+// nolint:gomnd
 `,
 			},
 			want: `package testdata
@@ -47,6 +49,8 @@ import (
 	
 	"github.com/incu6us/goimport-reviser/testdata/innderpkg"
 )
+
+// nolint:gomnd
 `,
 			wantErr: false,
 		},

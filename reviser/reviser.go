@@ -56,12 +56,14 @@ func groupImports(projectName string, imports []string) ([]string, []string, []s
 	sort.Strings(imports)
 
 	for _, imprt := range imports {
-		if _, ok := helper.StdPackages[imprt]; ok {
+		pkgWithoutAlias := skipPackageAlias(imprt)
+
+		if _, ok := helper.StdPackages[pkgWithoutAlias]; ok {
 			stdImports = append(stdImports, imprt)
 			continue
 		}
 
-		if strings.Contains(imprt, projectName) {
+		if strings.Contains(pkgWithoutAlias, projectName) {
 			projectImports = append(projectImports, imprt)
 			continue
 		}
@@ -70,6 +72,15 @@ func groupImports(projectName string, imports []string) ([]string, []string, []s
 	}
 
 	return stdImports, generalImports, projectImports
+}
+
+func skipPackageAlias(pkg string) string {
+	values := strings.Split(pkg, " ")
+	if len(values) > 1 {
+		return values[1]
+	}
+
+	return pkg
 }
 
 func generateFile(fset *token.FileSet, file *ast.File) ([]byte, error) {

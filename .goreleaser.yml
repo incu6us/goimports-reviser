@@ -1,0 +1,30 @@
+env:
+  - GO111MODULE=on
+  - CGO_ENABLED=0
+before:
+  hooks:
+    - go mod download
+builds:
+  - ldflags:
+      - -s -w -X "main.Version={{ .Tag }}" -X "main.Commit={{ .Commit }}"
+archives:
+  - replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+checksum:
+  name_template: "checksums.txt"
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+release:
+  github:
+    owner: incu6us
+    name: goimports-reviser

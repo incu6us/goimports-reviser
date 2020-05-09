@@ -1,5 +1,6 @@
 # goimports-reviser
-!['Status Badge'](https://github.com/incu6us/goimports-reviser/workflows/Go/badge.svg)
+!['Status Badge'](https://github.com/incu6us/goimports-reviser/workflows/build/badge.svg)
+!['Release Badge'](https://github.com/incu6us/goimports-reviser/workflows/release/badge.svg)
 
 Tool for Golang to sort goimports by 3 groups: std, general and project dependencies.
 Also formatting for your code will be prepared(so, you don't need to use `gofmt` or `goimports` separately). 

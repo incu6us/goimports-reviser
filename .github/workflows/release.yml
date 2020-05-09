@@ -26,6 +26,5 @@ jobs:
         with:
           version: latest
           args: release --rm-dist
-          key: ${{ secrets.PRIVATE_KEY }}
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}

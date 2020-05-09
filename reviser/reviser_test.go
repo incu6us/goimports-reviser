@@ -98,13 +98,13 @@ import (
 				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",
 				fileContent: `package testdata
-
+		
 import (
-	"log"
+"log"
 
-	"bytes"
+"bytes"
 
-	"github.com/pkg/errors"
+"github.com/pkg/errors"
 )
 
 // nolint:gomnd
@@ -131,11 +131,11 @@ import (
 				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",
 				fileContent: `package testdata
-
+		
 import (
-	"log"
+"log"
 
-	"bytes"
+"bytes"
 )
 
 // nolint:gomnd
@@ -200,6 +200,38 @@ import (
 			want: `package testdata
 
 import (
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+)
+
+// nolint:gomnd
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+
+		{
+			name: "success with clear comment for import",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"fmt"
+
+
+	// test
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+)
+
+// nolint:gomnd
+`,
+			},
+			want: `package testdata
+
+import (
+	"fmt"
+
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
 

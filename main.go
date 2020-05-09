@@ -16,6 +16,13 @@ import (
 const (
 	projectNameKey = "project-name"
 	filePathKey    = "file-path"
+	versionKey     = "version"
+)
+
+// Project build specific vars
+var (
+	Version, Commit   string
+	shouldShowVersion *bool
 )
 
 var projectName, filePath string
@@ -34,6 +41,12 @@ func init() {
 		"",
 		"file path to fix imports(ex.: ./reviser/reviser.go)",
 	)
+
+	shouldShowVersion = flag.Bool(
+		versionKey,
+		false,
+		"to show the version",
+	)
 }
 
 var usage = func() {
@@ -46,6 +59,11 @@ var usage = func() {
 
 func main() {
 	flag.Parse()
+
+	if shouldShowVersion != nil && *shouldShowVersion {
+		fmt.Printf("version: %s (%s)\n", Version, Commit)
+		return
+	}
 
 	if err := validateInputs(projectName, filePath); err != nil {
 		fmt.Printf("%s\n\n", err)

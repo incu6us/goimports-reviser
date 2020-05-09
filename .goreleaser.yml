@@ -1,30 +1,71 @@
 env:
   - GO111MODULE=on
   - CGO_ENABLED=0
+  - PROJECT_NAME=goimports-reviser
+  - PROJECT_USER=incu6us
+
 before:
   hooks:
     - go mod download
+
 builds:
-  - ldflags:
+  - id: goimports-reviser-amd64
+    binary: goimports-reviser
+    goos:
+      - linux
+    goarch:
+      - amd64
+    ldflags:
       - -s -w -X "main.Version={{ .Tag }}" -X "main.Commit={{ .Commit }}"
-archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: x86_64
+
+  - id: goimports-reviser-darwin-amd64
+    binary: goimports-reviser
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X "main.Version={{ .Tag }}" -X "main.Commit={{ .Commit }}"
+
+  - id: goimports-reviser-windows-amd64
+    binary: goimports-reviser
+    goos:
+      - windows
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X "main.Version={{ .Tag }}" -X "main.Commit={{ .Commit }}"
+
 checksum:
   name_template: "checksums.txt"
+
 snapshot:
   name_template: "{{ .Tag }}-next"
+
 changelog:
   sort: asc
   filters:
     exclude:
       - "^docs:"
       - "^test:"
+
 release:
   github:
     owner: incu6us
     name: goimports-reviser
+
+brews:
+  - name: goimports-reviser
+    github:
+      owner: incu6us
+      name: homebrew-tap
+    url_template: "http://github.com/{{ .Env.PROJECT_USER }}/{{ .ProjectName }}/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    commit_author:
+      name: incu6us
+      email: vyacheslavpryimak@gmail.com
+    folder: Formula
+    description: "Right imports sorting & code formatting tool (goimports on steroids)."
+    test: |
+      system "#{bin}/goimports-reviser -version"
+    install: |
+      bin.install "goimports-reviser"

@@ -5,6 +5,13 @@
 Tool for Golang to sort goimports by 3 groups: std, general and project dependencies.
 Also formatting for your code will be prepared(so, you don't need to use `gofmt` or `goimports` separately). 
 
+# Install
+```bash
+$ brew tap incu6us/homebrew-tap
+$ brew install incu6us/homebrew-tap/goimports-reviser
+```
+
+
 Before usage:
 ```go
 package testdata

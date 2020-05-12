@@ -21,7 +21,9 @@ const (
 
 // Project build specific vars
 var (
-	Version, Commit   string
+	Version string
+	Commit  string
+
 	shouldShowVersion *bool
 )
 
@@ -42,11 +44,13 @@ func init() {
 		"file path to fix imports(ex.: ./reviser/reviser.go)",
 	)
 
-	shouldShowVersion = flag.Bool(
-		versionKey,
-		false,
-		"to show the version",
-	)
+	if Version != "" {
+		shouldShowVersion = flag.Bool(
+			versionKey,
+			false,
+			"to show the version",
+		)
+	}
 }
 
 var usage = func() {

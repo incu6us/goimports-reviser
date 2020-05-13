@@ -65,7 +65,7 @@ brews:
       email: vyacheslavpryimak@gmail.com
     folder: Formula
     homepage: "https://github.com/incu6us/goimports-reviser"
-    description: "Right imports sorting & code formatting tool (goimports on steroids)"
+    description: "Right imports sorting & code formatting tool"
     test: |
       system "#{bin}/goimports-reviser -version"
     install: |

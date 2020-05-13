@@ -14,6 +14,7 @@ import (
 	"github.com/incu6us/goimports-reviser/helper"
 )
 
+// Revise imports and format the code
 func Execute(projectName, filePath string) ([]byte, bool, error) {
 	originalContent, err := ioutil.ReadFile(filePath)
 	if err != nil {

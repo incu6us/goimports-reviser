@@ -210,7 +210,7 @@ import (
 		},
 
 		{
-			name: "success with clear comment for import",
+			name: "success with clear doc for import",
 			args: args{
 				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",
@@ -233,6 +233,37 @@ import (
 	"fmt"
 
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+)
+
+// nolint:gomnd
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+
+		{
+			name: "success with comment for import",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg" // test1
+	
+	"fmt" //test2
+	// this should be skipped
+)
+
+// nolint:gomnd
+`,
+			},
+			want: `package testdata
+
+import (
+	"fmt" // test2
+
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg" // test1
 )
 
 // nolint:gomnd

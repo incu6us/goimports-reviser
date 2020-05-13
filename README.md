@@ -4,7 +4,7 @@
 !['Quality Badge'](https://goreportcard.com/badge/github.com/incu6us/goimports-reviser)
 
 Tool for Golang to sort goimports by 3 groups: std, general and project dependencies.
-Also formatting for your code will be prepared(so, you don't need to use `gofmt` or `goimports` separately). 
+Also, formatting for your code will be prepared(so, you don't need to use `gofmt` or `goimports` separately). 
 
 # Install
 ```bash
@@ -41,6 +41,15 @@ import (
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
 ```
+
+Comments(not Docs) for imports is acceptable. Example:
+```go
+package testdata
+
+import (
+    "fmt" // comments to the package here
+)
+```  
 
 ### Use help for details:
 ```bash

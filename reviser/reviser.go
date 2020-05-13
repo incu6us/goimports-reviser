@@ -2,6 +2,7 @@ package reviser
 
 import (
 	"bytes"
+	"fmt"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -28,11 +29,11 @@ func Execute(projectName, filePath string) ([]byte, bool, error) {
 		return nil, false, err
 	}
 
-	imports, commentsGroup := combineAllImportsWithMetadata(pf)
+	imports, commentsMetadata := combineAllImportsWithMetadata(pf)
 
 	stdImports, generalImports, projectImports := groupImports(projectName, imports)
 
-	fixImports(pf, stdImports, generalImports, projectImports, commentsGroup)
+	fixImports(pf, stdImports, generalImports, projectImports, commentsMetadata)
 
 	fixedImportsContent, err := generateFile(fset, pf)
 	if err != nil {
@@ -94,23 +95,25 @@ func generateFile(fset *token.FileSet, file *ast.File) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func fixImports(f *ast.File, stdImports []string, generalImports []string, projectImports []string, commentsGroup map[string]*ast.CommentGroup) {
-	importCommentsPos := make(map[token.Pos]struct{}, len(f.Comments))
+func fixImports(f *ast.File, stdImports []string, generalImports []string, projectImports []string, commentsMetadata map[string]*commentsMetadata) {
+	var importsPositions []*importPosition
 
 	for _, decl := range f.Decls {
 		switch decl.(type) {
 		case *ast.GenDecl:
 			dd := decl.(*ast.GenDecl)
 			if dd.Tok == token.IMPORT {
-				combineCommentsPos(dd, importCommentsPos)
+				importsPositions = append(importsPositions, &importPosition{
+					Start: dd.Pos(),
+					End:   dd.End(),
+				})
 
 				var specs []ast.Spec
 
 				linesCounter := len(stdImports)
 				for _, stdImport := range stdImports {
 					iSpec := &ast.ImportSpec{
-						Doc:  commentGroup(stdImport, commentsGroup),
-						Path: &ast.BasicLit{Value: stdImport, Kind: dd.Tok},
+						Path: &ast.BasicLit{Value: importWithComment(stdImport, commentsMetadata), Kind: dd.Tok},
 					}
 					specs = append(specs, iSpec)
 
@@ -126,8 +129,7 @@ func fixImports(f *ast.File, stdImports []string, generalImports []string, proje
 				linesCounter = len(generalImports)
 				for _, generalImport := range generalImports {
 					iSpec := &ast.ImportSpec{
-						Doc:  commentGroup(generalImport, commentsGroup),
-						Path: &ast.BasicLit{Value: generalImport, Kind: dd.Tok},
+						Path: &ast.BasicLit{Value: importWithComment(generalImport, commentsMetadata), Kind: dd.Tok},
 					}
 					specs = append(specs, iSpec)
 
@@ -142,8 +144,7 @@ func fixImports(f *ast.File, stdImports []string, generalImports []string, proje
 
 				for _, projectImport := range projectImports {
 					iSpec := &ast.ImportSpec{
-						Doc:  commentGroup(projectImport, commentsGroup),
-						Path: &ast.BasicLit{Value: projectImport, Kind: dd.Tok},
+						Path: &ast.BasicLit{Value: importWithComment(projectImport, commentsMetadata), Kind: dd.Tok},
 					}
 					specs = append(specs, iSpec)
 				}
@@ -153,14 +154,17 @@ func fixImports(f *ast.File, stdImports []string, generalImports []string, proje
 		}
 	}
 
-	clearImportComments(f, importCommentsPos)
+	clearImportDocs(f, importsPositions)
 }
 
-func clearImportComments(f *ast.File, importCommentsPos map[token.Pos]struct{}) {
+func clearImportDocs(f *ast.File, importsPositions []*importPosition) {
 	importsComments := make([]*ast.CommentGroup, 0, len(f.Comments))
 
 	for _, comment := range f.Comments {
-		if _, ok := importCommentsPos[comment.Pos()]; !ok {
+		for _, importPosition := range importsPositions {
+			if importPosition.IsInRange(comment) {
+				continue
+			}
 			importsComments = append(importsComments, comment)
 		}
 	}
@@ -168,29 +172,21 @@ func clearImportComments(f *ast.File, importCommentsPos map[token.Pos]struct{}) 
 	f.Comments = importsComments
 }
 
-func combineCommentsPos(dd *ast.GenDecl, importCommentsPos map[token.Pos]struct{}) {
-	for _, spec := range dd.Specs {
-		doc := spec.(*ast.ImportSpec).Doc
-		if doc != nil {
-			importCommentsPos[doc.Pos()] = struct{}{}
-		}
-	}
-}
-
-func commentGroup(imprt string, commentsGroup map[string]*ast.CommentGroup) *ast.CommentGroup {
-	commentGroup, ok := commentsGroup[imprt]
+func importWithComment(imprt string, commentsMetadata map[string]*commentsMetadata) string {
+	var comment string
+	commentGroup, ok := commentsMetadata[imprt]
 	if ok {
-		if commentGroup != nil && len(commentGroup.List) > 0 {
-			return commentGroup
+		if commentGroup != nil && commentGroup.Comment != nil && len(commentGroup.Comment.List) > 0 {
+			comment = fmt.Sprintf("// %s", commentGroup.Comment.Text())
 		}
 	}
 
-	return nil
+	return fmt.Sprintf("%s %s", imprt, comment)
 }
 
-func combineAllImportsWithMetadata(f *ast.File) ([]string, map[string]*ast.CommentGroup) {
+func combineAllImportsWithMetadata(f *ast.File) ([]string, map[string]*commentsMetadata) {
 	var imports []string
-	commentsGroup := map[string]*ast.CommentGroup{}
+	importsWithMetadata := map[string]*commentsMetadata{}
 
 	for _, decl := range f.Decls {
 		switch decl.(type) {
@@ -208,11 +204,32 @@ func combineAllImportsWithMetadata(f *ast.File) ([]string, map[string]*ast.Comme
 					}
 
 					imports = append(imports, importSpecStr)
-					commentsGroup[importSpecStr] = importSpec.Doc
+					importsWithMetadata[importSpecStr] = &commentsMetadata{
+						Doc:     importSpec.Doc,
+						Comment: importSpec.Comment,
+					}
 				}
 			}
 		}
 	}
 
-	return imports, commentsGroup
+	return imports, importsWithMetadata
+}
+
+type commentsMetadata struct {
+	Doc     *ast.CommentGroup
+	Comment *ast.CommentGroup
+}
+
+type importPosition struct {
+	Start token.Pos
+	End   token.Pos
+}
+
+func (p *importPosition) IsInRange(comment *ast.CommentGroup) bool {
+	if p.Start >= comment.Pos() || comment.Pos() <= p.End {
+		return true
+	}
+
+	return false
 }

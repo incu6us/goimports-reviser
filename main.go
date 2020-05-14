@@ -14,9 +14,10 @@ import (
 )
 
 const (
-	projectNameKey = "project-name"
-	filePathKey    = "file-path"
-	versionKey     = "version"
+	projectNameKey      = "project-name"
+	filePathKey         = "file-path"
+	versionKey          = "version"
+	removeUnusedImports = "rm-unused"
 )
 
 // Project build specific vars
@@ -24,7 +25,8 @@ var (
 	Version string
 	Commit  string
 
-	shouldShowVersion *bool
+	shouldShowVersion         *bool
+	shouldRemoveUnusedImports *bool
 )
 
 var projectName, filePath string
@@ -42,6 +44,12 @@ func init() {
 		filePathKey,
 		"",
 		"file path to fix imports(ex.: ./reviser/reviser.go)",
+	)
+
+	shouldRemoveUnusedImports = flag.Bool(
+		removeUnusedImports,
+		false,
+		"remove unused imports",
 	)
 
 	if Version != "" {
@@ -75,7 +83,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath)
+	var options reviser.Options
+	if shouldRemoveUnusedImports != nil && *shouldRemoveUnusedImports {
+		options = append(options, reviser.OptionRemoveUnusedImports)
+	}
+
+	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, options...)
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}

@@ -12,11 +12,31 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/tools/go/ast/astutil"
+
 	"github.com/incu6us/goimports-reviser/helper"
 )
 
+type Option int
+
+const (
+	OptionRemoveUnusedImports Option = iota + 1
+)
+
+type Options []Option
+
+func (o Options) shouldRemoveUnusedImports() bool {
+	for _, option := range o {
+		if option == OptionRemoveUnusedImports {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Revise imports and format the code
-func Execute(projectName, filePath string) ([]byte, bool, error) {
+func Execute(projectName, filePath string, options ...Option) ([]byte, bool, error) {
 	originalContent, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, false, err
@@ -29,7 +49,7 @@ func Execute(projectName, filePath string) ([]byte, bool, error) {
 		return nil, false, err
 	}
 
-	imports, commentsMetadata := combineAllImportsWithMetadata(pf)
+	imports, commentsMetadata := combineAllImportsWithMetadata(pf, options)
 
 	stdImports, generalImports, projectImports := groupImports(projectName, imports)
 
@@ -184,9 +204,10 @@ func importWithComment(imprt string, commentsMetadata map[string]*commentsMetada
 	return fmt.Sprintf("%s %s", imprt, comment)
 }
 
-func combineAllImportsWithMetadata(f *ast.File) ([]string, map[string]*commentsMetadata) {
+func combineAllImportsWithMetadata(f *ast.File, options Options) ([]string, map[string]*commentsMetadata) {
 	var imports []string
 	importsWithMetadata := map[string]*commentsMetadata{}
+	shouldRemoveUnusedImports := options.shouldRemoveUnusedImports()
 
 	for _, decl := range f.Decls {
 		switch decl.(type) {
@@ -196,6 +217,10 @@ func combineAllImportsWithMetadata(f *ast.File) ([]string, map[string]*commentsM
 				for _, spec := range dd.Specs {
 					var importSpecStr string
 					importSpec := spec.(*ast.ImportSpec)
+
+					if shouldRemoveUnusedImports && !astutil.UsesImport(f, strings.Trim(importSpec.Path.Value, `"`)) {
+						continue
+					}
 
 					if importSpec.Name != nil {
 						importSpecStr = strings.Join([]string{importSpec.Name.String(), importSpec.Path.Value}, " ")

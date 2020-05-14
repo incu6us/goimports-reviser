@@ -5,6 +5,7 @@
 
 Tool for Golang to sort goimports by 3 groups: std, general and project dependencies.
 Also, formatting for your code will be prepared(so, you don't need to use `gofmt` or `goimports` separately). 
+Use additional option `-rm-unused` to remove unused imports.
 
 # Install
 ```bash

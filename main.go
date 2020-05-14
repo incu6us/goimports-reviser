@@ -14,10 +14,10 @@ import (
 )
 
 const (
-	projectNameKey      = "project-name"
-	filePathKey         = "file-path"
-	versionKey          = "version"
-	removeUnusedImports = "rm-unused"
+	projectNameKey         = "project-name"
+	filePathKey            = "file-path"
+	versionKey             = "version"
+	removeUnusedImportsKey = "rm-unused"
 )
 
 // Project build specific vars
@@ -47,7 +47,7 @@ func init() {
 	)
 
 	shouldRemoveUnusedImports = flag.Bool(
-		removeUnusedImports,
+		removeUnusedImportsKey,
 		false,
 		"remove unused imports",
 	)

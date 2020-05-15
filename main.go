@@ -14,16 +14,18 @@ import (
 )
 
 const (
-	projectNameKey         = "project-name"
-	filePathKey            = "file-path"
-	versionKey             = "version"
-	removeUnusedImportsKey = "rm-unused"
+	projectNameArg         = "project-name"
+	filePathArg            = "file-path"
+	versionArg             = "version"
+	removeUnusedImportsArg = "rm-unused"
 )
 
 // Project build specific vars
 var (
-	Version string
-	Commit  string
+	Tag       string
+	Commit    string
+	SourceURL string
+	GoVersion string
 
 	shouldShowVersion         *bool
 	shouldRemoveUnusedImports *bool
@@ -34,34 +36,34 @@ var projectName, filePath string
 func init() {
 	flag.StringVar(
 		&projectName,
-		projectNameKey,
+		projectNameArg,
 		"",
-		"your project name(ex.: github.com/incu6us/goimport-reviser)",
+		"Your project name(ex.: github.com/incu6us/goimport-reviser). Required parameter.",
 	)
 
 	flag.StringVar(
 		&filePath,
-		filePathKey,
+		filePathArg,
 		"",
-		"file path to fix imports(ex.: ./reviser/reviser.go)",
+		"File path to fix imports(ex.: ./reviser/reviser.go). Required parameter.",
 	)
 
 	shouldRemoveUnusedImports = flag.Bool(
-		removeUnusedImportsKey,
+		removeUnusedImportsArg,
 		false,
-		"remove unused imports",
+		"Remove unused imports. Optional parameter.",
 	)
 
-	if Version != "" {
+	if Tag != "" {
 		shouldShowVersion = flag.Bool(
-			versionKey,
+			versionArg,
 			false,
-			"to show the version",
+			"Show version.",
 		)
 	}
 }
 
-var usage = func() {
+func printUsage() {
 	if _, err := fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0]); err != nil {
 		log.Fatalf("failed to print usage: %s", err)
 	}
@@ -69,17 +71,28 @@ var usage = func() {
 	flag.PrintDefaults()
 }
 
+func printVersion() {
+	fmt.Printf(
+		"version: %s\nbuild with: %s\ntag: %s\ncommit: %s\nsource: %s\n",
+		strings.TrimPrefix(Tag, "v"),
+		GoVersion,
+		Tag,
+		Commit,
+		SourceURL,
+	)
+}
+
 func main() {
 	flag.Parse()
 
 	if shouldShowVersion != nil && *shouldShowVersion {
-		fmt.Printf("version: %s (%s)\n", Version, Commit)
+		printVersion()
 		return
 	}
 
 	if err := validateInputs(projectName, filePath); err != nil {
 		fmt.Printf("%s\n\n", err)
-		usage()
+		printUsage()
 		os.Exit(1)
 	}
 
@@ -106,11 +119,11 @@ func validateInputs(projectName, filePath string) error {
 	var errMessages []string
 
 	if projectName == "" {
-		errMessages = append(errMessages, fmt.Sprintf("-%s should be set", projectNameKey))
+		errMessages = append(errMessages, fmt.Sprintf("-%s should be set", projectNameArg))
 	}
 
 	if filePath == "" {
-		errMessages = append(errMessages, fmt.Sprintf("-%s should be set", filePathKey))
+		errMessages = append(errMessages, fmt.Sprintf("-%s should be set", filePathArg))
 	}
 
 	if len(errMessages) > 0 {

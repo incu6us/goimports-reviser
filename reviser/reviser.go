@@ -12,8 +12,6 @@ import (
 	"sort"
 	"strings"
 
-	"golang.org/x/tools/go/ast/astutil"
-
 	"github.com/incu6us/goimports-reviser/helper"
 )
 
@@ -21,6 +19,7 @@ type Option int
 
 const (
 	OptionRemoveUnusedImports Option = iota + 1
+	OptionUseAliasForVersionSuffix
 )
 
 type Options []Option
@@ -28,6 +27,16 @@ type Options []Option
 func (o Options) shouldRemoveUnusedImports() bool {
 	for _, option := range o {
 		if option == OptionRemoveUnusedImports {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (o Options) shouldUseAliasForVersionSuffix() bool {
+	for _, option := range o {
+		if option == OptionUseAliasForVersionSuffix {
 			return true
 		}
 	}
@@ -208,6 +217,7 @@ func combineAllImportsWithMetadata(f *ast.File, options Options) ([]string, map[
 	var imports []string
 	importsWithMetadata := map[string]*commentsMetadata{}
 	shouldRemoveUnusedImports := options.shouldRemoveUnusedImports()
+	shouldUseAliasForVersionSuffix := options.shouldUseAliasForVersionSuffix()
 
 	for _, decl := range f.Decls {
 		switch decl.(type) {
@@ -218,14 +228,29 @@ func combineAllImportsWithMetadata(f *ast.File, options Options) ([]string, map[
 					var importSpecStr string
 					importSpec := spec.(*ast.ImportSpec)
 
-					if shouldRemoveUnusedImports && !astutil.UsesImport(f, strings.Trim(importSpec.Path.Value, `"`)) {
+					if shouldRemoveUnusedImports && !UsesImport(f, strings.Trim(importSpec.Path.Value, `"`)) {
 						continue
 					}
 
 					if importSpec.Name != nil {
 						importSpecStr = strings.Join([]string{importSpec.Name.String(), importSpec.Path.Value}, " ")
 					} else {
-						importSpecStr = importSpec.Path.Value
+						if shouldUseAliasForVersionSuffix {
+							// if AliasFromImportPath(importSpec.Path.Value) == importSpec.Path.Value {
+							// 	importSpecStr = importSpec.Path.Value
+							// } else {
+							aliasName := AliasFromImportPath(strings.Trim(importSpec.Path.Value, `"`))
+							if aliasName != strings.Trim(importSpec.Path.Value, `"`) {
+								importSpecStr = fmt.Sprintf("%s %s",
+									AliasFromImportPath(strings.Trim(importSpec.Path.Value, `"`)),
+									importSpec.Path.Value,
+								)
+							} else {
+								importSpecStr = importSpec.Path.Value
+							}
+						} else {
+							importSpecStr = importSpec.Path.Value
+						}
 					}
 
 					imports = append(imports, importSpecStr)

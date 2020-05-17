@@ -38,7 +38,7 @@ func init() {
 		&projectName,
 		projectNameArg,
 		"",
-		"Your project name(ex.: github.com/incu6us/goimport-reviser). Required parameter.",
+		"Your project name(ex.: github.com/incu6us/goimports-reviser). Required parameter.",
 	)
 
 	flag.StringVar(

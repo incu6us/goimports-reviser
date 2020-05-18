@@ -4,6 +4,7 @@
 !['Quality Badge'](https://goreportcard.com/badge/github.com/incu6us/goimports-reviser)
 [![codecov](https://codecov.io/gh/incu6us/goimports-reviser/branch/master/graph/badge.svg)](https://codecov.io/gh/incu6us/goimports-reviser)
 ![GitHub All Releases](https://img.shields.io/github/downloads/incu6us/goimports-reviser/total?color=green)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/incu6us/goimports-reviser?color=green)
 ![license](https://img.shields.io/github/license/incu6us/goimports-reviser)
 
 !['logo'](./images/reviser-muscot_200.png)

@@ -11,7 +11,7 @@
 
 Tool for Golang to sort goimports by 3 groups: std, general and project dependencies.
 Also, formatting for your code will be prepared(so, you don't need to use `gofmt` or `goimports` separately). 
-Use additional option `-rm-unused` to remove unused imports.
+Use additional option `-rm-unused` to remove unused imports and `-set-alias` to rewrite import aliases for versioned packages.
 
 ## Install
 ```bash
@@ -68,6 +68,8 @@ import (
     	Your project name(ex.: github.com/incu6us/goimports-reviser). Required parameter.
   -rm-unused
     	Remove unused imports. Optional parameter.
+  -set-alias
+        Set alias for versioned package names, like 'github.com/go-pg/pg/v9'. In this case import will be set as 'pg "github.com/go-pg/pg/v9"'
   -version
     	Show version.
 ```

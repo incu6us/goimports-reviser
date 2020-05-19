@@ -18,6 +18,7 @@ const (
 	filePathArg            = "file-path"
 	versionArg             = "version"
 	removeUnusedImportsArg = "rm-unused"
+	setAlias               = "set-alias"
 )
 
 // Project build specific vars
@@ -29,6 +30,7 @@ var (
 
 	shouldShowVersion         *bool
 	shouldRemoveUnusedImports *bool
+	shouldSetAlias            *bool
 )
 
 var projectName, filePath string
@@ -52,6 +54,12 @@ func init() {
 		removeUnusedImportsArg,
 		false,
 		"Remove unused imports. Optional parameter.",
+	)
+
+	shouldSetAlias = flag.Bool(
+		setAlias,
+		false,
+		`Set alias for versioned package names, like 'github.com/go-pg/pg/v9'. In this case import will be set as 'pg "github.com/go-pg/pg/v9"'`,
 	)
 
 	if Tag != "" {
@@ -99,6 +107,10 @@ func main() {
 	var options reviser.Options
 	if shouldRemoveUnusedImports != nil && *shouldRemoveUnusedImports {
 		options = append(options, reviser.OptionRemoveUnusedImports)
+	}
+
+	if shouldSetAlias != nil && *shouldSetAlias {
+		options = append(options, reviser.OptionUseAliasForVersionSuffix)
 	}
 
 	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, options...)

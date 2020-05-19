@@ -59,7 +59,7 @@ func init() {
 	shouldSetAlias = flag.Bool(
 		setAlias,
 		false,
-		`Set alias for versioned package names, like 'github.com/go-pg/pg/v9''. In this case import will be set as 'pg "github.com/go-pg/pg/v9"'`,
+		`Set alias for versioned package names, like 'github.com/go-pg/pg/v9'. In this case import will be set as 'pg "github.com/go-pg/pg/v9"'`,
 	)
 
 	if Tag != "" {

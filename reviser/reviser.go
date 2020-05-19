@@ -236,18 +236,7 @@ func combineAllImportsWithMetadata(f *ast.File, options Options) ([]string, map[
 						importSpecStr = strings.Join([]string{importSpec.Name.String(), importSpec.Path.Value}, " ")
 					} else {
 						if shouldUseAliasForVersionSuffix {
-							// if AliasFromImportPath(importSpec.Path.Value) == importSpec.Path.Value {
-							// 	importSpecStr = importSpec.Path.Value
-							// } else {
-							aliasName := AliasFromImportPath(strings.Trim(importSpec.Path.Value, `"`))
-							if aliasName != strings.Trim(importSpec.Path.Value, `"`) {
-								importSpecStr = fmt.Sprintf("%s %s",
-									AliasFromImportPath(strings.Trim(importSpec.Path.Value, `"`)),
-									importSpec.Path.Value,
-								)
-							} else {
-								importSpecStr = importSpec.Path.Value
-							}
+							importSpecStr = setAliasForVersionedImportSpec(importSpec)
 						} else {
 							importSpecStr = importSpec.Path.Value
 						}
@@ -264,6 +253,19 @@ func combineAllImportsWithMetadata(f *ast.File, options Options) ([]string, map[
 	}
 
 	return imports, importsWithMetadata
+}
+
+func setAliasForVersionedImportSpec(importSpec *ast.ImportSpec) string {
+	var importSpecStr string
+
+	aliasName, ok := AliasFromImportPath(strings.Trim(importSpec.Path.Value, `"`))
+	if ok {
+		importSpecStr = fmt.Sprintf("%s %s", aliasName, importSpec.Path.Value)
+	} else {
+		importSpecStr = importSpec.Path.Value
+	}
+
+	return importSpecStr
 }
 
 type commentsMetadata struct {

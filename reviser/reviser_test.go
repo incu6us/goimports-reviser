@@ -496,6 +496,40 @@ func main() {
 			wantChange: true,
 			wantErr:    false,
 		},
+		{
+			name: "success with github.com/pkg/errors",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package main
+import(
+	"fmt"
+	"github.com/pkg/errors"
+	"strconv"
+)
+
+func main(){
+	_ = strconv.Itoa(1)
+	fmt.Println(pg.In([]string{"test"}))
+}`,
+			},
+			want: `package main
+
+import (
+	"fmt"
+	"strconv"
+
+	"github.com/pkg/errors"
+)
+
+func main() {
+	_ = strconv.Itoa(1)
+	fmt.Println(pg.In([]string{"test"}))
+}
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
 	}
 
 	for _, tt := range tests {

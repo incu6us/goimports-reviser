@@ -15,7 +15,8 @@ func UsesImport(f *ast.File, importPath string) bool {
 		name := spec.Name.String()
 		switch name {
 		case "<nil>":
-			importIdentNames[AliasFromImportPath(importPath)] = struct{}{}
+			pkgName, _ := AliasFromImportPath(importPath)
+			importIdentNames[pkgName] = struct{}{}
 		case "_", ".":
 			return true
 		default:
@@ -41,10 +42,13 @@ func UsesImport(f *ast.File, importPath string) bool {
 }
 
 // AliasFromImportPath will get package alias if it has a version in the end of the path (ex.: github.com/go-pg/pg/v9)
-func AliasFromImportPath(importPath string) string {
+func AliasFromImportPath(importPath string) (string, bool) {
+	var isAliasSet bool
+
 	base := path.Base(importPath)
 	if strings.HasPrefix(base, "v") {
 		if _, err := strconv.Atoi(base[1:]); err == nil {
+			isAliasSet = true
 			dir := path.Dir(importPath)
 			if dir != "." {
 				base = path.Base(dir)
@@ -52,7 +56,7 @@ func AliasFromImportPath(importPath string) string {
 		}
 	}
 
-	return base
+	return base, isAliasSet
 }
 
 type visitFn func(node ast.Node)

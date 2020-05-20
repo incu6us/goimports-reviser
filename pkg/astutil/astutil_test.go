@@ -113,6 +113,24 @@ func main(){
 			},
 			want: true,
 		},
+		{
+			name: "success with unused strconv",
+			args: args{
+				fileData: `package main
+import(
+	"fmt"
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+	"strconv"
+)
+
+func main(){
+	fmt.Println(innderpkg.Something())
+}
+`,
+				path: "strconv",
+			},
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 

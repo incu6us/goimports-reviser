@@ -76,9 +76,9 @@ import (
 ```
 
 ## Examples:
-### Bash
+### Cmd
 ```bash
-goimports-reviser -project-name github.com/incu6us/goimports-reviser -file-path ./reviser/reviser.go 
+goimports-reviser -project-name github.com/incu6us/goimports-reviser -file-path ./reviser/reviser.go -rm-unused -set-alias
 ```
 
 ### Example, to configure it with JetBrains IDEs (via file watcher plugin):

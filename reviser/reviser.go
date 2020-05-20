@@ -260,7 +260,7 @@ func combineAllImportsWithMetadata(f *ast.File, options Options) map[string]*com
 func setAliasForVersionedImportSpec(importSpec *ast.ImportSpec) string {
 	var importSpecStr string
 
-	aliasName, ok := astutil.AliasFromImportPath(strings.Trim(importSpec.Path.Value, `"`))
+	aliasName, ok := astutil.PackageNameFromImportPath(strings.Trim(importSpec.Path.Value, `"`))
 	if ok {
 		importSpecStr = fmt.Sprintf("%s %s", aliasName, importSpec.Path.Value)
 	} else {

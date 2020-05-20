@@ -11,16 +11,21 @@ import (
 func UsesImport(f *ast.File, importPath string) bool {
 	importIdentNames := make(map[string]struct{}, len(f.Imports))
 
+	var importSpec *ast.ImportSpec
 	for _, spec := range f.Imports {
 		name := spec.Name.String()
 		switch name {
 		case "<nil>":
-			pkgName, _ := AliasFromImportPath(importPath)
+			pkgName, _ := PackageNameFromImportPath(importPath)
 			importIdentNames[pkgName] = struct{}{}
 		case "_", ".":
 			return true
 		default:
 			importIdentNames[name] = struct{}{}
+		}
+
+		if importPath == strings.Trim(spec.Path.Value, `"`) {
+			importSpec = spec
 		}
 	}
 
@@ -31,8 +36,11 @@ func UsesImport(f *ast.File, importPath string) bool {
 			ident, ok := sel.X.(*ast.Ident)
 			if ok {
 				if _, ok := importIdentNames[ident.Name]; ok {
-					used = true
-					return
+					pkg, _ := PackageNameFromImportPath(importPath)
+					if (ident.Name == pkg || ident.Name == importSpec.Name.String()) && ident.Obj == nil {
+						used = true
+						return
+					}
 				}
 			}
 		}
@@ -41,14 +49,15 @@ func UsesImport(f *ast.File, importPath string) bool {
 	return used
 }
 
-// AliasFromImportPath will return package alias and true if it has a version suffix in the end of the path (ex.: github.com/go-pg/pg/v9)
-func AliasFromImportPath(importPath string) (string, bool) {
-	var isAliasSet bool
+// PackageNameFromImportPath will return package alias name
+// and true if it has a version suffix in the end of the path (ex.: github.com/go-pg/pg/v9)
+func PackageNameFromImportPath(importPath string) (string, bool) {
+	var hasVersionSuffix bool
 
 	base := path.Base(importPath)
 	if strings.HasPrefix(base, "v") {
 		if _, err := strconv.Atoi(base[1:]); err == nil {
-			isAliasSet = true
+			hasVersionSuffix = true
 			dir := path.Dir(importPath)
 			if dir != "." {
 				base = path.Base(dir)
@@ -56,7 +65,7 @@ func AliasFromImportPath(importPath string) (string, bool) {
 		}
 	}
 
-	return base, isAliasSet
+	return base, hasVersionSuffix
 }
 
 type visitFn func(node ast.Node)

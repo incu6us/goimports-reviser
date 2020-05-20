@@ -1,4 +1,4 @@
-package reviser
+package astutil
 
 import (
 	"go/parser"

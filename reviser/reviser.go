@@ -12,7 +12,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/incu6us/goimports-reviser/helper"
+	"github.com/incu6us/goimports-reviser/pkg/astutil"
+	"github.com/incu6us/goimports-reviser/pkg/std"
 )
 
 type Option int
@@ -58,11 +59,11 @@ func Execute(projectName, filePath string, options ...Option) ([]byte, bool, err
 		return nil, false, err
 	}
 
-	imports, commentsMetadata := combineAllImportsWithMetadata(pf, options)
+	importsWithMetadata := combineAllImportsWithMetadata(pf, options)
 
-	stdImports, generalImports, projectImports := groupImports(projectName, imports)
+	stdImports, generalImports, projectImports := groupImports(projectName, importsWithMetadata)
 
-	fixImports(pf, stdImports, generalImports, projectImports, commentsMetadata)
+	fixImports(pf, stdImports, generalImports, projectImports, importsWithMetadata)
 
 	fixedImportsContent, err := generateFile(fset, pf)
 	if err != nil {
@@ -77,19 +78,17 @@ func Execute(projectName, filePath string, options ...Option) ([]byte, bool, err
 	return formattedContent, !bytes.Equal(originalContent, formattedContent), nil
 }
 
-func groupImports(projectName string, imports []string) ([]string, []string, []string) {
+func groupImports(projectName string, importsWithMetadata map[string]*commentsMetadata) ([]string, []string, []string) {
 	var (
 		stdImports     []string
 		projectImports []string
 		generalImports []string
 	)
 
-	sort.Strings(imports)
-
-	for _, imprt := range imports {
+	for imprt := range importsWithMetadata {
 		pkgWithoutAlias := skipPackageAlias(imprt)
 
-		if _, ok := helper.StdPackages[pkgWithoutAlias]; ok {
+		if _, ok := std.StdPackages[pkgWithoutAlias]; ok {
 			stdImports = append(stdImports, imprt)
 			continue
 		}
@@ -101,6 +100,10 @@ func groupImports(projectName string, imports []string) ([]string, []string, []s
 
 		generalImports = append(generalImports, imprt)
 	}
+
+	sort.Strings(stdImports)
+	sort.Strings(generalImports)
+	sort.Strings(projectImports)
 
 	return stdImports, generalImports, projectImports
 }
@@ -141,41 +144,41 @@ func fixImports(f *ast.File, stdImports []string, generalImports []string, proje
 
 				linesCounter := len(stdImports)
 				for _, stdImport := range stdImports {
-					iSpec := &ast.ImportSpec{
+					spec := &ast.ImportSpec{
 						Path: &ast.BasicLit{Value: importWithComment(stdImport, commentsMetadata), Kind: dd.Tok},
 					}
-					specs = append(specs, iSpec)
+					specs = append(specs, spec)
 
 					linesCounter--
 
 					if linesCounter == 0 && (len(generalImports) > 0 || len(projectImports) > 0) {
-						iSpec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
+						spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
 
-						specs = append(specs, iSpec)
+						specs = append(specs, spec)
 					}
 				}
 
 				linesCounter = len(generalImports)
 				for _, generalImport := range generalImports {
-					iSpec := &ast.ImportSpec{
+					spec := &ast.ImportSpec{
 						Path: &ast.BasicLit{Value: importWithComment(generalImport, commentsMetadata), Kind: dd.Tok},
 					}
-					specs = append(specs, iSpec)
+					specs = append(specs, spec)
 
 					linesCounter--
 
 					if linesCounter == 0 && len(projectImports) > 0 {
-						iSpec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
+						spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
 
-						specs = append(specs, iSpec)
+						specs = append(specs, spec)
 					}
 				}
 
 				for _, projectImport := range projectImports {
-					iSpec := &ast.ImportSpec{
+					spec := &ast.ImportSpec{
 						Path: &ast.BasicLit{Value: importWithComment(projectImport, commentsMetadata), Kind: dd.Tok},
 					}
-					specs = append(specs, iSpec)
+					specs = append(specs, spec)
 				}
 
 				dd.Specs = specs
@@ -213,9 +216,9 @@ func importWithComment(imprt string, commentsMetadata map[string]*commentsMetada
 	return fmt.Sprintf("%s %s", imprt, comment)
 }
 
-func combineAllImportsWithMetadata(f *ast.File, options Options) ([]string, map[string]*commentsMetadata) {
-	var imports []string
+func combineAllImportsWithMetadata(f *ast.File, options Options) map[string]*commentsMetadata {
 	importsWithMetadata := map[string]*commentsMetadata{}
+
 	shouldRemoveUnusedImports := options.shouldRemoveUnusedImports()
 	shouldUseAliasForVersionSuffix := options.shouldUseAliasForVersionSuffix()
 
@@ -228,7 +231,7 @@ func combineAllImportsWithMetadata(f *ast.File, options Options) ([]string, map[
 					var importSpecStr string
 					importSpec := spec.(*ast.ImportSpec)
 
-					if shouldRemoveUnusedImports && !UsesImport(f, strings.Trim(importSpec.Path.Value, `"`)) {
+					if shouldRemoveUnusedImports && !astutil.UsesImport(f, strings.Trim(importSpec.Path.Value, `"`)) {
 						continue
 					}
 
@@ -242,7 +245,6 @@ func combineAllImportsWithMetadata(f *ast.File, options Options) ([]string, map[
 						}
 					}
 
-					imports = append(imports, importSpecStr)
 					importsWithMetadata[importSpecStr] = &commentsMetadata{
 						Doc:     importSpec.Doc,
 						Comment: importSpec.Comment,
@@ -252,13 +254,13 @@ func combineAllImportsWithMetadata(f *ast.File, options Options) ([]string, map[
 		}
 	}
 
-	return imports, importsWithMetadata
+	return importsWithMetadata
 }
 
 func setAliasForVersionedImportSpec(importSpec *ast.ImportSpec) string {
 	var importSpecStr string
 
-	aliasName, ok := AliasFromImportPath(strings.Trim(importSpec.Path.Value, `"`))
+	aliasName, ok := astutil.AliasFromImportPath(strings.Trim(importSpec.Path.Value, `"`))
 	if ok {
 		importSpecStr = fmt.Sprintf("%s %s", aliasName, importSpec.Path.Value)
 	} else {

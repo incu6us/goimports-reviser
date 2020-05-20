@@ -1,4 +1,4 @@
-package reviser
+package astutil
 
 import (
 	"go/ast"
@@ -41,7 +41,7 @@ func UsesImport(f *ast.File, importPath string) bool {
 	return used
 }
 
-// AliasFromImportPath will get package alias if it has a version in the end of the path (ex.: github.com/go-pg/pg/v9)
+// AliasFromImportPath will return package alias and true if it has a version suffix in the end of the path (ex.: github.com/go-pg/pg/v9)
 func AliasFromImportPath(importPath string) (string, bool) {
 	var isAliasSet bool
 

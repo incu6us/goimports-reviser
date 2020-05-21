@@ -25,6 +25,11 @@ jobs:
         run: |
           echo "::set-env name=GO_VERSION::$(go version | awk '{print $3;}')"
 
+      - name: Login to Snapcraft
+        uses: samuelmeuli/action-snapcraft@v1
+        with:
+          snapcraft_token: ${{ secrets.SNAPCRAFT_TOKEN }}
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v1
         with:

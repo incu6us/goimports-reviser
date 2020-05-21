@@ -7,6 +7,9 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/incu6us/goimports-reviser?color=green)
 ![license](https://img.shields.io/github/license/incu6us/goimports-reviser)
 
+[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-white.svg)](https://snapcraft.io/goimports-reviser)
+
+
 !['logo'](./images/reviser-muscot_200.png)
 
 Tool for Golang to sort goimports by 3 groups: std, general and project dependencies.
@@ -14,9 +17,15 @@ Also, formatting for your code will be prepared(so, you don't need to use `gofmt
 Use additional option `-rm-unused` to remove unused imports and `-set-alias` to rewrite import aliases for versioned packages.
 
 ## Install
+### With Brew
 ```bash
-$ brew tap incu6us/homebrew-tap
-$ brew install incu6us/homebrew-tap/goimports-reviser
+brew tap incu6us/homebrew-tap
+brew install incu6us/homebrew-tap/goimports-reviser
+```
+
+### With Snap
+```bash
+snap install goimports-reviser
 ```
 
 ## How To Use
@@ -76,9 +85,9 @@ import (
 ```
 
 ## Examples:
-### Bash
+### Cmd
 ```bash
-goimports-reviser -project-name github.com/incu6us/goimports-reviser -file-path ./reviser/reviser.go 
+goimports-reviser -project-name github.com/incu6us/goimports-reviser -file-path ./reviser/reviser.go -rm-unused -set-alias
 ```
 
 ### Example, to configure it with JetBrains IDEs (via file watcher plugin):

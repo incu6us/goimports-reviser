@@ -70,3 +70,18 @@ brews:
       system "#{bin}/goimports-reviser -version"
     install: |
       bin.install "goimports-reviser"
+
+snapcrafts:
+  - id: goimports-reviser
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    replacements:
+      amd64: 64-bit
+      386: 32-bit
+      darwin: MacOS
+    publish: true
+    summary: "Right imports sorting & code formatting tool"
+    description: |
+      Tool for Golang to sort goimports by 3 groups: std, general and project dependencies. Also, formatting for your code will be prepared(so, you don't need to use gofmt or goimports separately).
+    grade: stable
+    confinement: strict
+    license: MIT

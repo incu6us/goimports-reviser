@@ -5,12 +5,12 @@
 [![codecov](https://codecov.io/gh/incu6us/goimports-reviser/branch/master/graph/badge.svg)](https://codecov.io/gh/incu6us/goimports-reviser)
 ![GitHub All Releases](https://img.shields.io/github/downloads/incu6us/goimports-reviser/total?color=green)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/incu6us/goimports-reviser?color=green)
+[![goimports-reviser](https://snapcraft.io//goimports-reviser/badge.svg)](https://snapcraft.io/goimports-reviser)
 ![license](https://img.shields.io/github/license/incu6us/goimports-reviser)
-
-[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-white.svg)](https://snapcraft.io/goimports-reviser)
 
 
 !['logo'](./images/reviser-muscot_200.png)
+
 
 Tool for Golang to sort goimports by 3 groups: std, general and project dependencies.
 Also, formatting for your code will be prepared(so, you don't need to use `gofmt` or `goimports` separately). 

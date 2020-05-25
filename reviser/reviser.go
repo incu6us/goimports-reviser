@@ -281,7 +281,7 @@ type importPosition struct {
 }
 
 func (p *importPosition) IsInRange(comment *ast.CommentGroup) bool {
-	if p.Start >= comment.Pos() || comment.Pos() <= p.End {
+	if p.Start <= comment.Pos() && comment.Pos() <= p.End {
 		return true
 	}
 

@@ -429,6 +429,44 @@ func main() {
 			wantChange: true,
 			wantErr:    false,
 		},
+		{
+			name: "success with comments before imports",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `// Some comments are here
+package testdata
+
+// test
+import (
+	"fmt" //fmt package
+	_ "github.com/incu6us/goimports-reviser/testdata/innderpkg" //custom package
+)
+
+// nolint:gomnd
+func main(){
+  _ = fmt.Println("test")
+}
+`,
+			},
+			want: `// Some comments are here
+package testdata
+
+// test
+import (
+	"fmt" // fmt package
+
+	_ "github.com/incu6us/goimports-reviser/testdata/innderpkg" // custom package
+)
+
+// nolint:gomnd
+func main() {
+	_ = fmt.Println("test")
+}
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
 	}
 
 	for _, tt := range tests {

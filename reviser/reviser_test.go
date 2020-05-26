@@ -467,6 +467,51 @@ func main() {
 			wantChange: true,
 			wantErr:    false,
 		},
+		{
+			name: "success without imports",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `// Some comments are here
+package main
+
+// OutputDir the output directory where the built version of Authelia is located.
+var OutputDir = "dist"
+
+// DockerImageName the official name of Authelia docker image.
+var DockerImageName = "authelia/authelia"
+
+// IntermediateDockerImageName local name of the docker image.
+var IntermediateDockerImageName = "authelia:dist"
+
+const masterTag = "master"
+const stringFalse = "false"
+const stringTrue = "true"
+const suitePathPrefix = "PathPrefix"
+const webDirectory = "web"
+`,
+			},
+			want: `// Some comments are here
+package main
+
+// OutputDir the output directory where the built version of Authelia is located.
+var OutputDir = "dist"
+
+// DockerImageName the official name of Authelia docker image.
+var DockerImageName = "authelia/authelia"
+
+// IntermediateDockerImageName local name of the docker image.
+var IntermediateDockerImageName = "authelia:dist"
+
+const masterTag = "master"
+const stringFalse = "false"
+const stringTrue = "true"
+const suitePathPrefix = "PathPrefix"
+const webDirectory = "web"
+`,
+			wantChange: false,
+			wantErr:    false,
+		},
 	}
 
 	for _, tt := range tests {

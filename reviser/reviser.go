@@ -201,7 +201,9 @@ func clearImportDocs(f *ast.File, importsPositions []*importPosition) {
 		}
 	}
 
-	f.Comments = importsComments
+	if len(importsComments) > 0 {
+		f.Comments = importsComments
+	}
 }
 
 func importWithComment(imprt string, commentsMetadata map[string]*commentsMetadata) string {

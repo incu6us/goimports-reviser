@@ -201,7 +201,7 @@ func clearImportDocs(f *ast.File, importsPositions []*importPosition) {
 		}
 	}
 
-	if len(importsComments) > 0 {
+	if len(f.Imports) > 0 {
 		f.Comments = importsComments
 	}
 }

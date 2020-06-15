@@ -297,6 +297,44 @@ import (
 			wantChange: false,
 			wantErr:    false,
 		},
+
+		{
+			name: "success no changes by imports and comments",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+
+	_ "github.com/lib/pq" // configure database/sql with postgres driver
+	"github.com/pkg/errors"
+	"go.uber.org/fx"
+
+	"github.com/incu6us/goimports-reviser/pkg/somepkg"
+)
+`,
+			},
+			want: `package testdata
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+
+	_ "github.com/lib/pq" // configure database/sql with postgres driver
+	"github.com/pkg/errors"
+	"go.uber.org/fx"
+
+	"github.com/incu6us/goimports-reviser/pkg/somepkg"
+)
+`,
+			wantChange: false,
+			wantErr:    false,
+		},
 	}
 	for _, tt := range tests {
 		if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {

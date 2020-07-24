@@ -46,7 +46,7 @@ func (o Options) shouldUseAliasForVersionSuffix() bool {
 }
 
 // Revise imports and format the code
-func Execute(projectName, filePath string, options ...Option) ([]byte, bool, error) {
+func Execute(gopath, projectName, filePath string, options ...Option) ([]byte, bool, error) {
 	originalContent, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, false, err
@@ -59,7 +59,7 @@ func Execute(projectName, filePath string, options ...Option) ([]byte, bool, err
 		return nil, false, err
 	}
 
-	importsWithMetadata := combineAllImportsWithMetadata(pf, options)
+	importsWithMetadata := combineAllImportsWithMetadata(pf, gopath, options)
 
 	stdImports, generalImports, projectImports := groupImports(projectName, importsWithMetadata)
 
@@ -218,7 +218,7 @@ func importWithComment(imprt string, commentsMetadata map[string]*commentsMetada
 	return fmt.Sprintf("%s %s", imprt, comment)
 }
 
-func combineAllImportsWithMetadata(f *ast.File, options Options) map[string]*commentsMetadata {
+func combineAllImportsWithMetadata(f *ast.File, gopath string, options Options) map[string]*commentsMetadata {
 	importsWithMetadata := map[string]*commentsMetadata{}
 
 	shouldRemoveUnusedImports := options.shouldRemoveUnusedImports()
@@ -233,7 +233,7 @@ func combineAllImportsWithMetadata(f *ast.File, options Options) map[string]*com
 					var importSpecStr string
 					importSpec := spec.(*ast.ImportSpec)
 
-					if shouldRemoveUnusedImports && !astutil.UsesImport(f, strings.Trim(importSpec.Path.Value, `"`)) {
+					if shouldRemoveUnusedImports && !astutil.UsesImport(f, gopath, strings.Trim(importSpec.Path.Value, `"`)) {
 						continue
 					}
 
@@ -241,7 +241,7 @@ func combineAllImportsWithMetadata(f *ast.File, options Options) map[string]*com
 						importSpecStr = strings.Join([]string{importSpec.Name.String(), importSpec.Path.Value}, " ")
 					} else {
 						if shouldUseAliasForVersionSuffix {
-							importSpecStr = setAliasForVersionedImportSpec(importSpec)
+							importSpecStr = setAliasForVersionedImportSpec(gopath, importSpec)
 						} else {
 							importSpecStr = importSpec.Path.Value
 						}
@@ -259,10 +259,10 @@ func combineAllImportsWithMetadata(f *ast.File, options Options) map[string]*com
 	return importsWithMetadata
 }
 
-func setAliasForVersionedImportSpec(importSpec *ast.ImportSpec) string {
+func setAliasForVersionedImportSpec(gopath string, importSpec *ast.ImportSpec) string {
 	var importSpecStr string
 
-	aliasName, ok := astutil.PackageNameFromImportPath(strings.Trim(importSpec.Path.Value, `"`))
+	aliasName, ok := astutil.PackageNameFromImportPath(gopath, strings.Trim(importSpec.Path.Value, `"`))
 	if ok {
 		importSpecStr = fmt.Sprintf("%s %s", aliasName, importSpec.Path.Value)
 	} else {

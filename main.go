@@ -31,6 +31,8 @@ var (
 	shouldShowVersion         *bool
 	shouldRemoveUnusedImports *bool
 	shouldSetAlias            *bool
+
+	gopath = os.Getenv("GOPATH")
 )
 
 var projectName, filePath string
@@ -114,7 +116,7 @@ func main() {
 		options = append(options, reviser.OptionUseAliasForVersionSuffix)
 	}
 
-	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, options...)
+	formattedOutput, hasChange, err := reviser.Execute(gopath, projectName, filePath, options...)
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}
@@ -137,6 +139,10 @@ func validateInputs(projectName, filePath string) error {
 
 	if filePath == "" {
 		errMessages = append(errMessages, fmt.Sprintf("-%s should be set", filePathArg))
+	}
+
+	if gopath == "" {
+		errMessages = append(errMessages, "GOPATH environment variable should be set")
 	}
 
 	if len(errMessages) > 0 {

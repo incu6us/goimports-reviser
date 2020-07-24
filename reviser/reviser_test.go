@@ -7,7 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const gopath = "./testdata"
+
 func TestExecute(t *testing.T) {
+
 	type args struct {
 		projectName string
 		filePath    string
@@ -342,7 +345,7 @@ import (
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath)
+			got, hasChange, err := Execute(gopath, tt.args.projectName, tt.args.filePath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -558,7 +561,7 @@ const webDirectory = "web"
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, OptionRemoveUnusedImports)
+			got, hasChange, err := Execute(gopath, tt.args.projectName, tt.args.filePath, OptionRemoveUnusedImports)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -659,7 +662,7 @@ func main() {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, OptionUseAliasForVersionSuffix)
+			got, hasChange, err := Execute(gopath, tt.args.projectName, tt.args.filePath, OptionUseAliasForVersionSuffix)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -9,6 +9,8 @@ import (
 )
 
 func TestUsesImport(t *testing.T) {
+	const gopath = "./testdata"
+
 	type args struct {
 		fileData string
 		path     string
@@ -143,7 +145,7 @@ func main(){
 				require.Nil(t, err)
 			}
 
-			if got := UsesImport(f, tt.args.path); got != tt.want {
+			if got := UsesImport(f, gopath, tt.args.path); got != tt.want {
 				t.Errorf("UsesImport() = %v, want %v", got, tt.want)
 			}
 		})

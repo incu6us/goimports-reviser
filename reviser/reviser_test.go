@@ -13,6 +13,7 @@ func TestExecute(t *testing.T) {
 		filePath    string
 		fileContent string
 	}
+
 	tests := []struct {
 		name       string
 		args       args
@@ -360,6 +361,7 @@ func TestExecute_WithRemoveUnusedImports(t *testing.T) {
 		filePath    string
 		fileContent string
 	}
+
 	tests := []struct {
 		name       string
 		args       args
@@ -376,7 +378,7 @@ func TestExecute_WithRemoveUnusedImports(t *testing.T) {
 
 import (
 	"fmt" //fmt package
-	"github.com/incu6us/goimports-reviser/testdata/innderpkg" //custom package
+	"github.com/pkg/errors" //custom package
 )
 
 // nolint:gomnd
@@ -409,7 +411,7 @@ func main() {
 
 import (
 	"fmt" //fmt package
-	p "github.com/incu6us/goimports-reviser/testdata/innderpkg" //p package
+	p "github.com/pkg/errors" //p package
 )
 
 // nolint:gomnd
@@ -442,7 +444,7 @@ func main() {
 
 import (
 	"fmt" //fmt package
-	_ "github.com/incu6us/goimports-reviser/testdata/innderpkg" //custom package
+	_ "github.com/pkg/errors" //custom package
 )
 
 // nolint:gomnd
@@ -456,7 +458,7 @@ func main(){
 import (
 	"fmt" // fmt package
 
-	_ "github.com/incu6us/goimports-reviser/testdata/innderpkg" // custom package
+	_ "github.com/pkg/errors" // custom package
 )
 
 // nolint:gomnd
@@ -478,7 +480,7 @@ package testdata
 // test
 import (
 	"fmt" //fmt package
-	_ "github.com/incu6us/goimports-reviser/testdata/innderpkg" //custom package
+	_ "github.com/pkg/errors" //custom package
 )
 
 // nolint:gomnd
@@ -494,7 +496,7 @@ package testdata
 import (
 	"fmt" // fmt package
 
-	_ "github.com/incu6us/goimports-reviser/testdata/innderpkg" // custom package
+	_ "github.com/pkg/errors" // custom package
 )
 
 // nolint:gomnd

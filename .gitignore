@@ -1,3 +1,4 @@
 reviser/testdata/*.go
+reviser/testdata/pkg
 dist
 coverage.txt

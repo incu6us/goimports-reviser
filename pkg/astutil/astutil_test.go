@@ -1,8 +1,12 @@
 package astutil
 
 import (
+	"fmt"
 	"go/parser"
 	"go/token"
+	"reflect"
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,9 +14,11 @@ import (
 
 func TestUsesImport(t *testing.T) {
 	type args struct {
-		fileData string
-		path     string
+		fileData       string
+		path           string
+		packageImports map[string]string
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -34,6 +40,9 @@ func main(){
 }
 `,
 				path: "github.com/go-pg/pg/v9",
+				packageImports: map[string]string{
+					"github.com/go-pg/pg/v9": "pg",
+				},
 			},
 			want: true,
 		},
@@ -72,6 +81,9 @@ func main(){
 }
 `,
 				path: "strconv",
+				packageImports: map[string]string{
+					"strconv": "strconv",
+				},
 			},
 			want: true,
 		},
@@ -110,6 +122,9 @@ func main(){
 }
 `,
 				path: "github.com/incu6us/goimports-reviser/testdata/innderpkg",
+				packageImports: map[string]string{
+					"github.com/incu6us/goimports-reviser/testdata/innderpkg": "innderpkg",
+				},
 			},
 			want: true,
 		},
@@ -143,8 +158,70 @@ func main(){
 				require.Nil(t, err)
 			}
 
-			if got := UsesImport(f, tt.args.path); got != tt.want {
+			if got := UsesImport(f, tt.args.packageImports, tt.args.path); got != tt.want {
 				t.Errorf("UsesImport() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestLoadPackageDeps(t *testing.T) {
+	type args struct {
+		dir string
+	}
+
+	tests := []struct {
+		name    string
+		args    args
+		want    map[string]string
+		wantErr bool
+	}{
+		{
+			name: "success",
+			args: args{
+				dir: "./testdata/",
+			},
+			want: map[string]string{
+				"fmt":                   "fmt",
+				"github.com/pkg/errors": "errors",
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			f, err := parser.ParseFile(
+				token.NewFileSet(),
+				fmt.Sprintf("%s/%s", tt.args.dir, "testdata.go"),
+				nil,
+				parser.ParseComments,
+			)
+			if err != nil {
+				t.Errorf("parser.ParseFile() error = %v", err)
+				return
+			}
+
+			got, err := LoadPackageDependencies(tt.args.dir, ParseBuildTag(f))
+			if (err != nil) != tt.wantErr {
+				t.Errorf("LoadPackageDependencies() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			gotList := make([]string, 0, len(got))
+			for pkg, name := range got {
+				gotList = append(gotList, strings.Join([]string{pkg, name}, " - "))
+			}
+			sort.Strings(gotList)
+
+			wantList := make([]string, 0, len(got))
+			for pkg, name := range tt.want {
+				wantList = append(wantList, strings.Join([]string{pkg, name}, " - "))
+			}
+			sort.Strings(wantList)
+
+			if !reflect.DeepEqual(gotList, wantList) {
+				t.Errorf("LoadPackageDependencies() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

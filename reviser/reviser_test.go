@@ -7,15 +7,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const gopath = "./testdata"
-
 func TestExecute(t *testing.T) {
-
 	type args struct {
 		projectName string
 		filePath    string
 		fileContent string
 	}
+
 	tests := []struct {
 		name       string
 		args       args
@@ -345,7 +343,7 @@ import (
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(gopath, tt.args.projectName, tt.args.filePath)
+			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -363,6 +361,7 @@ func TestExecute_WithRemoveUnusedImports(t *testing.T) {
 		filePath    string
 		fileContent string
 	}
+
 	tests := []struct {
 		name       string
 		args       args
@@ -379,7 +378,7 @@ func TestExecute_WithRemoveUnusedImports(t *testing.T) {
 
 import (
 	"fmt" //fmt package
-	"github.com/incu6us/goimports-reviser/testdata/innderpkg" //custom package
+	"github.com/pkg/errors" //custom package
 )
 
 // nolint:gomnd
@@ -412,7 +411,7 @@ func main() {
 
 import (
 	"fmt" //fmt package
-	p "github.com/incu6us/goimports-reviser/testdata/innderpkg" //p package
+	p "github.com/pkg/errors" //p package
 )
 
 // nolint:gomnd
@@ -445,7 +444,7 @@ func main() {
 
 import (
 	"fmt" //fmt package
-	_ "github.com/incu6us/goimports-reviser/testdata/innderpkg" //custom package
+	_ "github.com/pkg/errors" //custom package
 )
 
 // nolint:gomnd
@@ -459,7 +458,7 @@ func main(){
 import (
 	"fmt" // fmt package
 
-	_ "github.com/incu6us/goimports-reviser/testdata/innderpkg" // custom package
+	_ "github.com/pkg/errors" // custom package
 )
 
 // nolint:gomnd
@@ -481,7 +480,7 @@ package testdata
 // test
 import (
 	"fmt" //fmt package
-	_ "github.com/incu6us/goimports-reviser/testdata/innderpkg" //custom package
+	_ "github.com/pkg/errors" //custom package
 )
 
 // nolint:gomnd
@@ -497,7 +496,7 @@ package testdata
 import (
 	"fmt" // fmt package
 
-	_ "github.com/incu6us/goimports-reviser/testdata/innderpkg" // custom package
+	_ "github.com/pkg/errors" // custom package
 )
 
 // nolint:gomnd
@@ -561,7 +560,7 @@ const webDirectory = "web"
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(gopath, tt.args.projectName, tt.args.filePath, OptionRemoveUnusedImports)
+			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, OptionRemoveUnusedImports)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -662,7 +661,7 @@ func main() {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(gopath, tt.args.projectName, tt.args.filePath, OptionUseAliasForVersionSuffix)
+			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, OptionUseAliasForVersionSuffix)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return

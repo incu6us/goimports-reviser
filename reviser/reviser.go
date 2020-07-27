@@ -9,6 +9,7 @@ import (
 	"go/printer"
 	"go/token"
 	"io/ioutil"
+	"path"
 	"sort"
 	"strings"
 
@@ -46,7 +47,7 @@ func (o Options) shouldUseAliasForVersionSuffix() bool {
 }
 
 // Revise imports and format the code
-func Execute(gopath, projectName, filePath string, options ...Option) ([]byte, bool, error) {
+func Execute(projectName, filePath string, options ...Option) ([]byte, bool, error) {
 	originalContent, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, false, err
@@ -59,7 +60,10 @@ func Execute(gopath, projectName, filePath string, options ...Option) ([]byte, b
 		return nil, false, err
 	}
 
-	importsWithMetadata := combineAllImportsWithMetadata(pf, gopath, options)
+	importsWithMetadata, err := parseImports(pf, filePath, options)
+	if err != nil {
+		return nil, false, err
+	}
 
 	stdImports, generalImports, projectImports := groupImports(projectName, importsWithMetadata)
 
@@ -127,7 +131,11 @@ func generateFile(fset *token.FileSet, file *ast.File) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func fixImports(f *ast.File, stdImports []string, generalImports []string, projectImports []string, commentsMetadata map[string]*commentsMetadata) {
+func fixImports(
+	f *ast.File,
+	stdImports, generalImports, projectImports []string,
+	commentsMetadata map[string]*commentsMetadata,
+) {
 	var importsPositions []*importPosition
 
 	for _, decl := range f.Decls {
@@ -135,10 +143,12 @@ func fixImports(f *ast.File, stdImports []string, generalImports []string, proje
 		case *ast.GenDecl:
 			dd := decl.(*ast.GenDecl)
 			if dd.Tok == token.IMPORT {
-				importsPositions = append(importsPositions, &importPosition{
-					Start: dd.Pos(),
-					End:   dd.End(),
-				})
+				importsPositions = append(
+					importsPositions, &importPosition{
+						Start: dd.Pos(),
+						End:   dd.End(),
+					},
+				)
 
 				var specs []ast.Spec
 
@@ -218,11 +228,21 @@ func importWithComment(imprt string, commentsMetadata map[string]*commentsMetada
 	return fmt.Sprintf("%s %s", imprt, comment)
 }
 
-func combineAllImportsWithMetadata(f *ast.File, gopath string, options Options) map[string]*commentsMetadata {
+func parseImports(f *ast.File, filePath string, options Options) (map[string]*commentsMetadata, error) {
 	importsWithMetadata := map[string]*commentsMetadata{}
 
 	shouldRemoveUnusedImports := options.shouldRemoveUnusedImports()
 	shouldUseAliasForVersionSuffix := options.shouldUseAliasForVersionSuffix()
+
+	var packageImports map[string]string
+	var err error
+
+	if shouldRemoveUnusedImports || shouldUseAliasForVersionSuffix {
+		packageImports, err = astutil.LoadPackageDependencies(path.Dir(filePath), astutil.ParseBuildTag(f))
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	for _, decl := range f.Decls {
 		switch decl.(type) {
@@ -233,7 +253,9 @@ func combineAllImportsWithMetadata(f *ast.File, gopath string, options Options) 
 					var importSpecStr string
 					importSpec := spec.(*ast.ImportSpec)
 
-					if shouldRemoveUnusedImports && !astutil.UsesImport(f, gopath, strings.Trim(importSpec.Path.Value, `"`)) {
+					if shouldRemoveUnusedImports && !astutil.UsesImport(
+						f, packageImports, strings.Trim(importSpec.Path.Value, `"`),
+					) {
 						continue
 					}
 
@@ -241,7 +263,7 @@ func combineAllImportsWithMetadata(f *ast.File, gopath string, options Options) 
 						importSpecStr = strings.Join([]string{importSpec.Name.String(), importSpec.Path.Value}, " ")
 					} else {
 						if shouldUseAliasForVersionSuffix {
-							importSpecStr = setAliasForVersionedImportSpec(gopath, importSpec)
+							importSpecStr = setAliasForVersionedImportSpec(importSpec, packageImports)
 						} else {
 							importSpecStr = importSpec.Path.Value
 						}
@@ -256,14 +278,17 @@ func combineAllImportsWithMetadata(f *ast.File, gopath string, options Options) 
 		}
 	}
 
-	return importsWithMetadata
+	return importsWithMetadata, nil
 }
 
-func setAliasForVersionedImportSpec(gopath string, importSpec *ast.ImportSpec) string {
+func setAliasForVersionedImportSpec(importSpec *ast.ImportSpec, packageImports map[string]string) string {
 	var importSpecStr string
 
-	aliasName, ok := astutil.PackageNameFromImportPath(gopath, strings.Trim(importSpec.Path.Value, `"`))
-	if ok {
+	imprt := strings.Trim(importSpec.Path.Value, `"`)
+	aliasName := packageImports[imprt]
+
+	importSuffix := path.Base(imprt)
+	if importSuffix != aliasName {
 		importSpecStr = fmt.Sprintf("%s %s", aliasName, importSpec.Path.Value)
 	} else {
 		importSpecStr = importSpec.Path.Value

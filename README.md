@@ -14,7 +14,9 @@
 
 Tool for Golang to sort goimports by 3 groups: std, general and project dependencies.
 Also, formatting for your code will be prepared(so, you don't need to use `gofmt` or `goimports` separately). 
-Use additional option `-rm-unused` to remove unused imports and `-set-alias` to rewrite import aliases for versioned packages.
+Use additional options `-rm-unused` to remove unused imports and `-set-alias` to rewrite import aliases for versioned packages or for packages with additional prefix/suffix(example: `opentracing "github.com/opentracing/opentracing-go"`).
+
+*The last two options (`-rm-unused` & `-set-alias`) will work only for projects using Go Modules.*
 
 ## Install
 ### With Brew

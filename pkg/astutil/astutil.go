@@ -13,6 +13,7 @@ const (
 	buildTagPrefix = "+build"
 )
 
+// PackageImports is map of imports with their package names
 type PackageImports map[string]string
 
 // UsesImport is for analyze if the import dependency is in use

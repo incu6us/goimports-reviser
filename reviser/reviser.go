@@ -17,13 +17,18 @@ import (
 	"github.com/incu6us/goimports-reviser/pkg/std"
 )
 
+// Option is an int alias for options
 type Option int
 
 const (
+	// OptionRemoveUnusedImports is an option to remove unused imports
 	OptionRemoveUnusedImports Option = iota + 1
+
+	// OptionUseAliasForVersionSuffix is an option to set explicit package name in imports
 	OptionUseAliasForVersionSuffix
 )
 
+// Options is a slice of executing options
 type Options []Option
 
 func (o Options) shouldRemoveUnusedImports() bool {
@@ -46,7 +51,7 @@ func (o Options) shouldUseAliasForVersionSuffix() bool {
 	return false
 }
 
-// Revise imports and format the code
+// Execute is for revise imports and format the code
 func Execute(projectName, filePath string, options ...Option) ([]byte, bool, error) {
 	originalContent, err := ioutil.ReadFile(filePath)
 	if err != nil {

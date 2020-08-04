@@ -7,6 +7,7 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/incu6us/goimports-reviser?color=green)
 [![goimports-reviser](https://snapcraft.io//goimports-reviser/badge.svg)](https://snapcraft.io/goimports-reviser)
 ![license](https://img.shields.io/github/license/incu6us/goimports-reviser)
+[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go) 
 
 
 !['logo'](./images/reviser-muscot_200.png)

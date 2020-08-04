@@ -1,4 +1,4 @@
-module github.com/incu6us/goimports-reviser
+module github.com/incu6us/goimports-reviser/v2
 
 go 1.13
 

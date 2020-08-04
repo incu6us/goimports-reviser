@@ -13,8 +13,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/incu6us/goimports-reviser/pkg/astutil"
-	"github.com/incu6us/goimports-reviser/pkg/std"
+	"github.com/incu6us/goimports-reviser/v2/pkg/astutil"
+	"github.com/incu6us/goimports-reviser/v2/pkg/std"
 )
 
 // Option is an int alias for options

@@ -72,7 +72,7 @@ import (
     "fmt" // comments to the package here
 )
 ```  
-### Example with `-local`-option (for example project `goimports-reviser`)
+### Example with `-local`-option
 
 Before usage:
 

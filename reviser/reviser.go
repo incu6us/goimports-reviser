@@ -17,6 +17,10 @@ import (
 	"github.com/incu6us/goimports-reviser/v2/pkg/std"
 )
 
+const (
+	stringValueSeparator = ","
+)
+
 // Option is an int alias for options
 type Option int
 
@@ -52,7 +56,7 @@ func (o Options) shouldUseAliasForVersionSuffix() bool {
 }
 
 // Execute is for revise imports and format the code
-func Execute(projectName, filePath string, options ...Option) ([]byte, bool, error) {
+func Execute(projectName, filePath, localPkgPrefixes string, options ...Option) ([]byte, bool, error) {
 	originalContent, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, false, err
@@ -70,9 +74,13 @@ func Execute(projectName, filePath string, options ...Option) ([]byte, bool, err
 		return nil, false, err
 	}
 
-	stdImports, generalImports, projectImports := groupImports(projectName, importsWithMetadata)
+	stdImports, generalImports, projectLocalPkgs, projectImports := groupImports(
+		projectName,
+		localPkgPrefixes,
+		importsWithMetadata,
+	)
 
-	fixImports(pf, stdImports, generalImports, projectImports, importsWithMetadata)
+	fixImports(pf, stdImports, generalImports, projectLocalPkgs, projectImports, importsWithMetadata)
 
 	fixedImportsContent, err := generateFile(fset, pf)
 	if err != nil {
@@ -87,18 +95,38 @@ func Execute(projectName, filePath string, options ...Option) ([]byte, bool, err
 	return formattedContent, !bytes.Equal(originalContent, formattedContent), nil
 }
 
-func groupImports(projectName string, importsWithMetadata map[string]*commentsMetadata) ([]string, []string, []string) {
+func groupImports(
+	projectName string,
+	localPkgPrefixes string,
+	importsWithMetadata map[string]*commentsMetadata,
+) ([]string, []string, []string, []string) {
 	var (
-		stdImports     []string
-		projectImports []string
-		generalImports []string
+		stdImports       []string
+		projectImports   []string
+		projectLocalPkgs []string
+		generalImports   []string
 	)
+
+	localPackagePrefixes := commaValueToSlice(localPkgPrefixes)
 
 	for imprt := range importsWithMetadata {
 		pkgWithoutAlias := skipPackageAlias(imprt)
 
 		if _, ok := std.StdPackages[pkgWithoutAlias]; ok {
 			stdImports = append(stdImports, imprt)
+			continue
+		}
+
+		var isLocalPackageFound bool
+		for _, localPackagePrefix := range localPackagePrefixes {
+			if strings.HasPrefix(pkgWithoutAlias, localPackagePrefix) {
+				projectLocalPkgs = append(projectLocalPkgs, imprt)
+				isLocalPackageFound = true
+				break
+			}
+		}
+
+		if isLocalPackageFound {
 			continue
 		}
 
@@ -112,18 +140,36 @@ func groupImports(projectName string, importsWithMetadata map[string]*commentsMe
 
 	sort.Strings(stdImports)
 	sort.Strings(generalImports)
+	sort.Strings(projectLocalPkgs)
 	sort.Strings(projectImports)
 
-	return stdImports, generalImports, projectImports
+	return stdImports, generalImports, projectLocalPkgs, projectImports
+}
+
+func commaValueToSlice(s string) []string {
+	values := strings.Split(s, stringValueSeparator)
+	result := make([]string, 0, len(values))
+
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+
+		if value == "" {
+			continue
+		}
+
+		result = append(result, value)
+	}
+
+	return result
 }
 
 func skipPackageAlias(pkg string) string {
 	values := strings.Split(pkg, " ")
 	if len(values) > 1 {
-		return values[1]
+		return strings.Trim(values[1], `"`)
 	}
 
-	return pkg
+	return strings.Trim(pkg, `"`)
 }
 
 func generateFile(fset *token.FileSet, file *ast.File) ([]byte, error) {
@@ -138,7 +184,7 @@ func generateFile(fset *token.FileSet, file *ast.File) ([]byte, error) {
 
 func fixImports(
 	f *ast.File,
-	stdImports, generalImports, projectImports []string,
+	stdImports, generalImports, projectLocalPkgs, projectImports []string,
 	commentsMetadata map[string]*commentsMetadata,
 ) {
 	var importsPositions []*importPosition
@@ -166,7 +212,7 @@ func fixImports(
 
 					linesCounter--
 
-					if linesCounter == 0 && (len(generalImports) > 0 || len(projectImports) > 0) {
+					if linesCounter == 0 && (len(generalImports) > 0 || len(projectLocalPkgs) > 0 || len(projectImports) > 0) {
 						spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
 
 						specs = append(specs, spec)
@@ -177,6 +223,22 @@ func fixImports(
 				for _, generalImport := range generalImports {
 					spec := &ast.ImportSpec{
 						Path: &ast.BasicLit{Value: importWithComment(generalImport, commentsMetadata), Kind: dd.Tok},
+					}
+					specs = append(specs, spec)
+
+					linesCounter--
+
+					if linesCounter == 0 && (len(projectLocalPkgs) > 0 || len(projectImports) > 0) {
+						spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
+
+						specs = append(specs, spec)
+					}
+				}
+
+				linesCounter = len(projectLocalPkgs)
+				for _, projectLocalPkg := range projectLocalPkgs {
+					spec := &ast.ImportSpec{
+						Path: &ast.BasicLit{Value: importWithComment(projectLocalPkg, commentsMetadata), Kind: dd.Tok},
 					}
 					specs = append(specs, spec)
 

@@ -24,7 +24,7 @@ package std
 // StdPackages is a set of go libs
 var StdPackages = map[string]struct{}{
 {{- range $index, $element := .}}
-	"\"{{$element}}\"": {},
+	"{{$element}}": {},
 {{- end}}
 }
 

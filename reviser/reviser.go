@@ -182,6 +182,7 @@ func generateFile(fset *token.FileSet, file *ast.File) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
+// TODO: fix gocyclo
 func fixImports(
 	f *ast.File,
 	stdImports, generalImports, projectLocalPkgs, projectImports []string,

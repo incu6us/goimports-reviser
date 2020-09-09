@@ -19,6 +19,7 @@ const (
 	versionArg             = "version"
 	removeUnusedImportsArg = "rm-unused"
 	setAlias               = "set-alias"
+	localPkgPrefixesArg    = "local"
 )
 
 // Project build specific vars
@@ -33,7 +34,7 @@ var (
 	shouldSetAlias            *bool
 )
 
-var projectName, filePath string
+var projectName, filePath, localPkgPrefixes string
 
 func init() {
 	flag.StringVar(
@@ -48,6 +49,13 @@ func init() {
 		filePathArg,
 		"",
 		"File path to fix imports(ex.: ./reviser/reviser.go). Required parameter.",
+	)
+
+	flag.StringVar(
+		&localPkgPrefixes,
+		localPkgPrefixesArg,
+		"",
+		`Local package prefixes which will be placed after 3rd-party group(if defined). Values should be comma-separated. Optional parameters.`,
 	)
 
 	shouldRemoveUnusedImports = flag.Bool(
@@ -114,7 +122,7 @@ func main() {
 		options = append(options, reviser.OptionUseAliasForVersionSuffix)
 	}
 
-	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, options...)
+	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, localPkgPrefixes, options...)
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}

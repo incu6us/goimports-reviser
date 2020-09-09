@@ -343,7 +343,7 @@ import (
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath)
+			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -560,7 +560,7 @@ const webDirectory = "web"
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, OptionRemoveUnusedImports)
+			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "", OptionRemoveUnusedImports)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -661,7 +661,124 @@ func main() {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, OptionUseAliasForVersionSuffix)
+			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "", OptionUseAliasForVersionSuffix)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			assert.Equal(t, tt.wantChange, hasChange)
+			assert.Equal(t, tt.want, string(got))
+		})
+	}
+}
+
+func TestExecute_WithLocalPackagePrefixes(t *testing.T) {
+	type args struct {
+		projectName      string
+		filePath         string
+		fileContent      string
+		localPkgPrefixes string
+	}
+
+	tests := []struct {
+		name       string
+		args       args
+		want       string
+		wantChange bool
+		wantErr    bool
+	}{
+		{
+			name: "group local packages",
+			args: args{
+				projectName:      "github.com/incu6us/goimports-reviser",
+				localPkgPrefixes: "goimports-reviser",
+				filePath:         "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"fmt" //fmt package
+	"github.com/pkg/errors" //custom package
+	"github.com/incu6us/goimports-reviser/pkg"
+	"goimports-reviser/pkg"
+)
+
+// nolint:gomnd
+func main(){
+  _ = fmt.Println("test")
+}
+`,
+			},
+			want: `package testdata
+
+import (
+	"fmt" // fmt package
+
+	"github.com/pkg/errors" // custom package
+
+	"goimports-reviser/pkg"
+
+	"github.com/incu6us/goimports-reviser/pkg"
+)
+
+// nolint:gomnd
+func main() {
+	_ = fmt.Println("test")
+}
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+		{
+			name: "group local packages",
+			args: args{
+				projectName:      "goimports-reviser",
+				localPkgPrefixes: "github.com/incu6us/goimports-reviser",
+				filePath:         "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"fmt" //fmt package
+	"github.com/pkg/errors" //custom package
+	"github.com/incu6us/goimports-reviser/pkg"
+	"goimports-reviser/pkg"
+)
+
+// nolint:gomnd
+func main(){
+  _ = fmt.Println("test")
+}
+`,
+			},
+			want: `package testdata
+
+import (
+	"fmt" // fmt package
+
+	"github.com/pkg/errors" // custom package
+
+	"github.com/incu6us/goimports-reviser/pkg"
+
+	"goimports-reviser/pkg"
+)
+
+// nolint:gomnd
+func main() {
+	_ = fmt.Println("test")
+}
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
+			t.Errorf("write test file failed: %s", err)
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, tt.args.localPkgPrefixes)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return

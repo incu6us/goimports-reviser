@@ -119,7 +119,7 @@ func groupImports(
 
 		var isLocalPackageFound bool
 		for _, localPackagePrefix := range localPackagePrefixes {
-			if strings.HasPrefix(pkgWithoutAlias, localPackagePrefix) {
+			if strings.HasPrefix(pkgWithoutAlias, localPackagePrefix) && !strings.HasPrefix(pkgWithoutAlias, projectName) {
 				projectLocalPkgs = append(projectLocalPkgs, imprt)
 				isLocalPackageFound = true
 				break

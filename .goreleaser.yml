@@ -50,6 +50,7 @@ changelog:
       - "^test:"
 
 release:
+  prerelease: auto
   github:
     owner: incu6us
     name: goimports-reviser

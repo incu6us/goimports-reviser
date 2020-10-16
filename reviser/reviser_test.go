@@ -743,7 +743,6 @@ import (
 	"github.com/incu6us/goimports-reviser/pkg"
 	"goimports-reviser/pkg"
 )
-
 // nolint:gomnd
 func main(){
   _ = fmt.Println("test")
@@ -760,6 +759,95 @@ import (
 	"github.com/incu6us/goimports-reviser/pkg"
 
 	"goimports-reviser/pkg"
+)
+
+// nolint:gomnd
+func main() {
+	_ = fmt.Println("test")
+}
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+		{
+			name: "group local packages separately from project files",
+			args: args{
+				projectName:      "github.com/incu6us/goimports-reviser/code/thispkg",
+				localPkgPrefixes: "github.com/incu6us/goimports-reviser/code",
+				filePath:         "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"fmt"
+	"github.com/3rdparty/pkg"
+	"github.com/incu6us/goimports-reviser/code/foopkg"
+	"github.com/incu6us/goimports-reviser/code/otherpkg"
+	"github.com/incu6us/goimports-reviser/code/thispkg/stuff"
+	"github.com/incu6us/goimports-reviser/code/thispkg/morestuff"
+)
+
+// nolint:gomnd
+func main(){
+  _ = fmt.Println("test")
+}
+`,
+			},
+			want: `package testdata
+
+import (
+	"fmt"
+
+	"github.com/3rdparty/pkg"
+
+	"github.com/incu6us/goimports-reviser/code/foopkg"
+	"github.com/incu6us/goimports-reviser/code/otherpkg"
+
+	"github.com/incu6us/goimports-reviser/code/thispkg/morestuff"
+	"github.com/incu6us/goimports-reviser/code/thispkg/stuff"
+)
+
+// nolint:gomnd
+func main() {
+	_ = fmt.Println("test")
+}
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+		{
+			name: "check without local packages",
+			args: args{
+				projectName:      "github.com/incu6us/goimports-reviser/code/thispkg",
+				localPkgPrefixes: "",
+				filePath:         "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"fmt"
+	"github.com/3rdparty/pkg"
+	"github.com/incu6us/goimports-reviser/code/foopkg"
+	"github.com/incu6us/goimports-reviser/code/otherpkg"
+	"github.com/incu6us/goimports-reviser/code/thispkg/stuff"
+	"github.com/incu6us/goimports-reviser/code/thispkg/morestuff"
+)
+
+// nolint:gomnd
+func main(){
+  _ = fmt.Println("test")
+}
+`,
+			},
+			want: `package testdata
+
+import (
+	"fmt"
+
+	"github.com/3rdparty/pkg"
+	"github.com/incu6us/goimports-reviser/code/foopkg"
+	"github.com/incu6us/goimports-reviser/code/otherpkg"
+
+	"github.com/incu6us/goimports-reviser/code/thispkg/morestuff"
+	"github.com/incu6us/goimports-reviser/code/thispkg/stuff"
 )
 
 // nolint:gomnd

@@ -108,7 +108,7 @@ Usage of goimports-reviser:
   -file-path string
         File path to fix imports(ex.: ./reviser/reviser.go). Required parameter.
   -project-name string
-        Your project name(ex.: github.com/incu6us/goimports-reviser). Required parameter.
+        Your project name(ex.: github.com/incu6us/goimports-reviser). Optional parameter.
   -local string
         Local package prefixes which will be placed after 3rd-party group(if defined). Values should be comma-separated. Optional parameters.
   -rm-unused
@@ -120,7 +120,7 @@ Usage of goimports-reviser:
 ## Examples:
 ### Cmd
 ```bash
-goimports-reviser -project-name github.com/incu6us/goimports-reviser -file-path ./reviser/reviser.go -rm-unused -set-alias
+goimports-reviser -file-path ./reviser/reviser.go -rm-unused -set-alias
 ```
 
 ### Example, to configure it with JetBrains IDEs (via file watcher plugin):

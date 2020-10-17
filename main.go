@@ -39,17 +39,17 @@ var projectName, filePath, localPkgPrefixes string
 
 func init() {
 	flag.StringVar(
-		&projectName,
-		projectNameArg,
-		"",
-		"Your project name(ex.: github.com/incu6us/goimports-reviser). Required parameter.",
-	)
-
-	flag.StringVar(
 		&filePath,
 		filePathArg,
 		"",
 		"File path to fix imports(ex.: ./reviser/reviser.go). Required parameter.",
+	)
+
+	flag.StringVar(
+		&projectName,
+		projectNameArg,
+		"",
+		"Your project name(ex.: github.com/incu6us/goimports-reviser). Optional parameter.",
 	)
 
 	flag.StringVar(
@@ -108,14 +108,14 @@ func main() {
 		return
 	}
 
-	projectName, err := determineProjectName(projectName, filePath)
-	if err != nil {
+	if err := validateRequiredParam(filePath); err != nil {
 		fmt.Printf("%s\n\n", err)
 		printUsage()
 		os.Exit(1)
 	}
 
-	if err := validateInputs(projectName, filePath); err != nil {
+	projectName, err := determineProjectName(projectName, filePath)
+	if err != nil {
 		fmt.Printf("%s\n\n", err)
 		printUsage()
 		os.Exit(1)
@@ -162,19 +162,9 @@ func determineProjectName(projectName, filePath string) (string, error) {
 	return projectName, nil
 }
 
-func validateInputs(projectName, filePath string) error {
-	var errMessages []string
-
-	if projectName == "" {
-		errMessages = append(errMessages, fmt.Sprintf("-%s should be set", projectNameArg))
-	}
-
+func validateRequiredParam(filePath string) error {
 	if filePath == "" {
-		errMessages = append(errMessages, fmt.Sprintf("-%s should be set", filePathArg))
-	}
-
-	if len(errMessages) > 0 {
-		return errors.New(strings.Join(errMessages, "\n"))
+		return errors.Errorf("-%s should be set", filePathArg)
 	}
 
 	return nil

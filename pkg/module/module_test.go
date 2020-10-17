@@ -39,9 +39,9 @@ func TestName(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: ".",
+			name: "path with '.'",
 			args: args{
-				dir: "",
+				dir: ".",
 			},
 			want:    "",
 			wantErr: true,
@@ -51,7 +51,7 @@ func TestName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			goModRootPath, err := GoModRootPath(tt.args.dir)
-			if (err != nil) != tt.wantErr {
+			if err != nil && !tt.wantErr {
 				t.Errorf("GoModRootPath() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}

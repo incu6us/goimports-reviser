@@ -10,6 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/incu6us/goimports-reviser/v2/pkg/module"
 	"github.com/incu6us/goimports-reviser/v2/reviser"
 )
 
@@ -38,17 +39,17 @@ var projectName, filePath, localPkgPrefixes string
 
 func init() {
 	flag.StringVar(
-		&projectName,
-		projectNameArg,
-		"",
-		"Your project name(ex.: github.com/incu6us/goimports-reviser). Required parameter.",
-	)
-
-	flag.StringVar(
 		&filePath,
 		filePathArg,
 		"",
 		"File path to fix imports(ex.: ./reviser/reviser.go). Required parameter.",
+	)
+
+	flag.StringVar(
+		&projectName,
+		projectNameArg,
+		"",
+		"Your project name(ex.: github.com/incu6us/goimports-reviser). Optional parameter.",
 	)
 
 	flag.StringVar(
@@ -107,7 +108,14 @@ func main() {
 		return
 	}
 
-	if err := validateInputs(projectName, filePath); err != nil {
+	if err := validateRequiredParam(filePath); err != nil {
+		fmt.Printf("%s\n\n", err)
+		printUsage()
+		os.Exit(1)
+	}
+
+	projectName, err := determineProjectName(projectName, filePath)
+	if err != nil {
 		fmt.Printf("%s\n\n", err)
 		printUsage()
 		os.Exit(1)
@@ -136,19 +144,27 @@ func main() {
 	}
 }
 
-func validateInputs(projectName, filePath string) error {
-	var errMessages []string
-
+func determineProjectName(projectName, filePath string) (string, error) {
 	if projectName == "" {
-		errMessages = append(errMessages, fmt.Sprintf("-%s should be set", projectNameArg))
+		projectRootPath, err := module.GoModRootPath(filePath)
+		if err != nil {
+			return "", err
+		}
+
+		moduleName, err := module.Name(projectRootPath)
+		if err != nil {
+			return "", err
+		}
+
+		return moduleName, nil
 	}
 
+	return projectName, nil
+}
+
+func validateRequiredParam(filePath string) error {
 	if filePath == "" {
-		errMessages = append(errMessages, fmt.Sprintf("-%s should be set", filePathArg))
-	}
-
-	if len(errMessages) > 0 {
-		return errors.New(strings.Join(errMessages, "\n"))
+		return errors.Errorf("-%s should be set", filePathArg)
 	}
 
 	return nil

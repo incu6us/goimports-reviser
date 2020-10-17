@@ -30,6 +30,22 @@ func TestName(t *testing.T) {
 			want:    "github.com/incu6us/goimports-reviser/v2",
 			wantErr: false,
 		},
+		{
+			name: "path is not set error",
+			args: args{
+				dir: "",
+			},
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name: ".",
+			args: args{
+				dir: "",
+			},
+			want:    "",
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {

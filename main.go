@@ -10,6 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/incu6us/goimports-reviser/v2/pkg/module"
 	"github.com/incu6us/goimports-reviser/v2/reviser"
 )
 
@@ -107,6 +108,13 @@ func main() {
 		return
 	}
 
+	projectName, err := determineProjectName(projectName, filePath)
+	if err != nil {
+		fmt.Printf("%s\n\n", err)
+		printUsage()
+		os.Exit(1)
+	}
+
 	if err := validateInputs(projectName, filePath); err != nil {
 		fmt.Printf("%s\n\n", err)
 		printUsage()
@@ -134,6 +142,24 @@ func main() {
 	if err := ioutil.WriteFile(filePath, formattedOutput, 0644); err != nil {
 		log.Fatalf("failed to write fixed result to file(%s): %+v", filePath, errors.WithStack(err))
 	}
+}
+
+func determineProjectName(projectName, filePath string) (string, error) {
+	if projectName == "" {
+		projectRootPath, err := module.GoModRootPath(filePath)
+		if err != nil {
+			return "", err
+		}
+
+		moduleName, err := module.Name(projectRootPath)
+		if err != nil {
+			return "", err
+		}
+
+		return moduleName, nil
+	}
+
+	return projectName, nil
 }
 
 func validateInputs(projectName, filePath string) error {

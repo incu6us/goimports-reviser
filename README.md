@@ -18,7 +18,6 @@ Also, formatting for your code will be prepared(so, you don't need to use `gofmt
 Use additional options `-rm-unused` to remove unused imports and `-set-alias` to rewrite import aliases for versioned packages or for packages with additional prefix/suffix(example: `opentracing "github.com/opentracing/opentracing-go"`).
 `-local` - will create group for local imports. Values should be comma-separated.
 
-*The last two options (`-rm-unused` & `-set-alias`) will work only for projects using Go Modules.*
 
 ## Configuration:
 ### Cmd

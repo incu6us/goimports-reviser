@@ -182,7 +182,6 @@ func generateFile(fset *token.FileSet, file *ast.File) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-// TODO: fix gocyclo
 func fixImports(
 	f *ast.File,
 	stdImports, generalImports, projectLocalPkgs, projectImports []string,
@@ -191,80 +190,94 @@ func fixImports(
 	var importsPositions []*importPosition
 
 	for _, decl := range f.Decls {
-		switch decl.(type) {
-		case *ast.GenDecl:
-			dd := decl.(*ast.GenDecl)
-			if dd.Tok == token.IMPORT {
-				importsPositions = append(
-					importsPositions, &importPosition{
-						Start: dd.Pos(),
-						End:   dd.End(),
-					},
-				)
-
-				var specs []ast.Spec
-
-				linesCounter := len(stdImports)
-				for _, stdImport := range stdImports {
-					spec := &ast.ImportSpec{
-						Path: &ast.BasicLit{Value: importWithComment(stdImport, commentsMetadata), Kind: dd.Tok},
-					}
-					specs = append(specs, spec)
-
-					linesCounter--
-
-					if linesCounter == 0 && (len(generalImports) > 0 || len(projectLocalPkgs) > 0 || len(projectImports) > 0) {
-						spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
-
-						specs = append(specs, spec)
-					}
-				}
-
-				linesCounter = len(generalImports)
-				for _, generalImport := range generalImports {
-					spec := &ast.ImportSpec{
-						Path: &ast.BasicLit{Value: importWithComment(generalImport, commentsMetadata), Kind: dd.Tok},
-					}
-					specs = append(specs, spec)
-
-					linesCounter--
-
-					if linesCounter == 0 && (len(projectLocalPkgs) > 0 || len(projectImports) > 0) {
-						spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
-
-						specs = append(specs, spec)
-					}
-				}
-
-				linesCounter = len(projectLocalPkgs)
-				for _, projectLocalPkg := range projectLocalPkgs {
-					spec := &ast.ImportSpec{
-						Path: &ast.BasicLit{Value: importWithComment(projectLocalPkg, commentsMetadata), Kind: dd.Tok},
-					}
-					specs = append(specs, spec)
-
-					linesCounter--
-
-					if linesCounter == 0 && len(projectImports) > 0 {
-						spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
-
-						specs = append(specs, spec)
-					}
-				}
-
-				for _, projectImport := range projectImports {
-					spec := &ast.ImportSpec{
-						Path: &ast.BasicLit{Value: importWithComment(projectImport, commentsMetadata), Kind: dd.Tok},
-					}
-					specs = append(specs, spec)
-				}
-
-				dd.Specs = specs
-			}
+		dd, ok := decl.(*ast.GenDecl)
+		if !ok {
+			continue
 		}
+
+		if dd.Tok != token.IMPORT {
+			continue
+		}
+
+		importsPositions = append(
+			importsPositions, &importPosition{
+				Start: dd.Pos(),
+				End:   dd.End(),
+			},
+		)
+
+		dd.Specs = rebuildImports(dd.Tok, commentsMetadata, stdImports, generalImports, projectLocalPkgs, projectImports)
 	}
 
 	clearImportDocs(f, importsPositions)
+}
+
+func rebuildImports(
+	tok token.Token,
+	commentsMetadata map[string]*commentsMetadata,
+	stdImports []string,
+	generalImports []string,
+	projectLocalPkgs []string,
+	projectImports []string,
+) []ast.Spec {
+	var specs []ast.Spec
+
+	linesCounter := len(stdImports)
+	for _, stdImport := range stdImports {
+		spec := &ast.ImportSpec{
+			Path: &ast.BasicLit{Value: importWithComment(stdImport, commentsMetadata), Kind: tok},
+		}
+		specs = append(specs, spec)
+
+		linesCounter--
+
+		if linesCounter == 0 && (len(generalImports) > 0 || len(projectLocalPkgs) > 0 || len(projectImports) > 0) {
+			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
+
+			specs = append(specs, spec)
+		}
+	}
+
+	linesCounter = len(generalImports)
+	for _, generalImport := range generalImports {
+		spec := &ast.ImportSpec{
+			Path: &ast.BasicLit{Value: importWithComment(generalImport, commentsMetadata), Kind: tok},
+		}
+		specs = append(specs, spec)
+
+		linesCounter--
+
+		if linesCounter == 0 && (len(projectLocalPkgs) > 0 || len(projectImports) > 0) {
+			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
+
+			specs = append(specs, spec)
+		}
+	}
+
+	linesCounter = len(projectLocalPkgs)
+	for _, projectLocalPkg := range projectLocalPkgs {
+		spec := &ast.ImportSpec{
+			Path: &ast.BasicLit{Value: importWithComment(projectLocalPkg, commentsMetadata), Kind: tok},
+		}
+		specs = append(specs, spec)
+
+		linesCounter--
+
+		if linesCounter == 0 && len(projectImports) > 0 {
+			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
+
+			specs = append(specs, spec)
+		}
+	}
+
+	for _, projectImport := range projectImports {
+		spec := &ast.ImportSpec{
+			Path: &ast.BasicLit{Value: importWithComment(projectImport, commentsMetadata), Kind: tok},
+		}
+		specs = append(specs, spec)
+	}
+
+	return specs
 }
 
 func clearImportDocs(f *ast.File, importsPositions []*importPosition) {

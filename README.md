@@ -38,6 +38,8 @@ Usage of goimports-reviser:
         Your project name(ex.: github.com/incu6us/goimports-reviser). Optional parameter.
   -local string
         Local package prefixes which will be placed after 3rd-party group(if defined). Values should be comma-separated. Optional parameters.
+  -output string
+        Can be "file" or "stdout". Whether to write the formatted content back to the file or to stdout. Optional parameter. (default "file")
   -rm-unused
         Remove unused imports. Optional parameter.
   -set-alias

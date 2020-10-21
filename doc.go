@@ -1,4 +1,4 @@
-// Tool for Golang to sort goimports by 3 groups: std, general and project dependencies.
+// Tool for Golang to sort goimports by 3-4 groups: std, general, local(which is optional) and project dependencies.
 // It will help you to keep your code cleaner.
 //
 // Example:

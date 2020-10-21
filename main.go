@@ -21,6 +21,7 @@ const (
 	removeUnusedImportsArg = "rm-unused"
 	setAliasArg            = "set-alias"
 	localPkgPrefixesArg    = "local"
+	outputArg              = "output"
 )
 
 // Project build specific vars
@@ -35,7 +36,7 @@ var (
 	shouldSetAlias            *bool
 )
 
-var projectName, filePath, localPkgPrefixes string
+var projectName, filePath, localPkgPrefixes, output string
 
 func init() {
 	flag.StringVar(
@@ -56,7 +57,14 @@ func init() {
 		&localPkgPrefixes,
 		localPkgPrefixesArg,
 		"",
-		`Local package prefixes which will be placed after 3rd-party group(if defined). Values should be comma-separated. Optional parameters.`,
+		"Local package prefixes which will be placed after 3rd-party group(if defined). Values should be comma-separated. Optional parameters.",
+	)
+
+	flag.StringVar(
+		&output,
+		outputArg,
+		"file",
+		`Can be "file" or "stdout". Whether to write the formatted content back to the file or to stdout. Optional parameter.`,
 	)
 
 	shouldRemoveUnusedImports = flag.Bool(
@@ -135,12 +143,18 @@ func main() {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}
 
-	if !hasChange {
-		return
-	}
+	if output == "stdout" {
+		fmt.Print(string(formattedOutput))
+	} else if output == "file" {
+		if !hasChange {
+			return
+		}
 
-	if err := ioutil.WriteFile(filePath, formattedOutput, 0644); err != nil {
-		log.Fatalf("failed to write fixed result to file(%s): %+v", filePath, errors.WithStack(err))
+		if err := ioutil.WriteFile(filePath, formattedOutput, 0644); err != nil {
+			log.Fatalf("failed to write fixed result to file(%s): %+v", filePath, errors.WithStack(err))
+		}
+	} else {
+		log.Fatalf(`invalid output "%s" specified`, output)
 	}
 }
 

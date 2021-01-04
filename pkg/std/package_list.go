@@ -204,4 +204,5 @@ var StdPackages = map[string]struct{}{
 	"vendor/golang.org/x/text/transform":          {},
 	"vendor/golang.org/x/text/unicode/bidi":       {},
 	"vendor/golang.org/x/text/unicode/norm":       {},
+	"syscall/js":                                  {},
 }

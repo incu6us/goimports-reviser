@@ -31,6 +31,10 @@ var StdPackages = map[string]struct{}{
 `
 )
 
+var experimentalPackageList = []string{
+	"syscall/js",
+}
+
 func main() {
 	w := bytes.NewBufferString("")
 
@@ -45,6 +49,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
 		return
+	}
+
+	for _, experimentalPackage := range experimentalPackageList {
+		packageList = append(packageList, &packages.Package{
+			ID: experimentalPackage,
+		})
 	}
 
 	if err := tpl.Execute(w, packageList); err != nil {

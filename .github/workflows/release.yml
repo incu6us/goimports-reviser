@@ -23,7 +23,7 @@ jobs:
 
       - name: Set Envs
         run: |
-          echo "::set-env name=GO_VERSION::$(go version | awk '{print $3;}')"
+          echo GO_VERSION=$(go version | awk '{print $3;}') >> $GITHUB_ENV
 
       - name: Login to Snapcraft
         uses: samuelmeuli/action-snapcraft@v1
@@ -37,4 +37,4 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
-          GO_VERSION: ${{ env.GO_VERSION }}
+          GO_VERSION: ${{ env.GITHUB_GO_VERSION }}

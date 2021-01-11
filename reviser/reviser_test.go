@@ -2,6 +2,7 @@ package reviser
 
 import (
 	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -343,7 +344,9 @@ import (
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "")
+			file, err := os.Open(tt.args.filePath)
+			assert.NoError(t, err)
+			got, hasChange, err := Execute(file, tt.args.projectName, tt.args.filePath, "")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -560,7 +563,9 @@ const webDirectory = "web"
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "", OptionRemoveUnusedImports)
+			file, err := os.Open(tt.args.filePath)
+			assert.NoError(t, err)
+			got, hasChange, err := Execute(file, tt.args.projectName, tt.args.filePath, "", OptionRemoveUnusedImports)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -661,7 +666,9 @@ func main() {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "", OptionUseAliasForVersionSuffix)
+			file, err := os.Open(tt.args.filePath)
+			assert.NoError(t, err)
+			got, hasChange, err := Execute(file, tt.args.projectName, tt.args.filePath, "", OptionUseAliasForVersionSuffix)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -866,7 +873,9 @@ func main() {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, tt.args.localPkgPrefixes)
+			file, err := os.Open(tt.args.filePath)
+			assert.NoError(t, err)
+			got, hasChange, err := Execute(file, tt.args.projectName, tt.args.filePath, tt.args.localPkgPrefixes)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return

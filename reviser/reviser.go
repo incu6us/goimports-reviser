@@ -8,6 +8,7 @@ import (
 	"go/parser"
 	"go/printer"
 	"go/token"
+	"io"
 	"io/ioutil"
 	"path"
 	"sort"
@@ -56,8 +57,8 @@ func (o Options) shouldUseAliasForVersionSuffix() bool {
 }
 
 // Execute is for revise imports and format the code
-func Execute(projectName, filePath, localPkgPrefixes string, options ...Option) ([]byte, bool, error) {
-	originalContent, err := ioutil.ReadFile(filePath)
+func Execute(reader io.Reader, projectName, filePath, localPkgPrefixes string, options ...Option) ([]byte, bool, error) {
+	originalContent, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return nil, false, err
 	}

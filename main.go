@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -122,6 +123,29 @@ func main() {
 		os.Exit(1)
 	}
 
+	var reader io.Reader
+	// If file being formatted is being passed via stdin determine projectName via working dir
+	if filePath == "-" {
+		reader = os.Stdin
+		path, err := os.Getwd()
+		if err != nil {
+			fmt.Printf("%s\n\n", err)
+			printUsage()
+			os.Exit(1)
+		}
+		filePath = path
+		// force output to stdout when input is stdin
+		output = "stdout"
+	} else {
+		file, err := os.Open(filePath)
+		if err != nil {
+			fmt.Printf("%s\n\n", err)
+			printUsage()
+			os.Exit(1)
+		}
+		reader = file
+	}
+
 	projectName, err := determineProjectName(projectName, filePath)
 	if err != nil {
 		fmt.Printf("%s\n\n", err)
@@ -138,7 +162,7 @@ func main() {
 		options = append(options, reviser.OptionUseAliasForVersionSuffix)
 	}
 
-	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, localPkgPrefixes, options...)
+	formattedOutput, hasChange, err := reviser.Execute(reader, projectName, filePath, localPkgPrefixes, options...)
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}

@@ -57,7 +57,7 @@ release:
 
 brews:
   - name: goimports-reviser
-    github:
+    tap:
       owner: incu6us
       name: homebrew-tap
     url_template: "https://github.com/{{ .Env.PROJECT_USER }}/{{ .ProjectName }}/releases/download/{{ .Tag }}/{{ .ArtifactName }}"

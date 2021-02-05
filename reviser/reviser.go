@@ -172,10 +172,10 @@ func skipPackageAlias(pkg string) string {
 	return strings.Trim(pkg, `"`)
 }
 
-func generateFile(fset *token.FileSet, file *ast.File) ([]byte, error) {
+func generateFile(fset *token.FileSet, f *ast.File) ([]byte, error) {
 	var output []byte
 	buffer := bytes.NewBuffer(output)
-	if err := printer.Fprint(buffer, fset, file); err != nil {
+	if err := printer.Fprint(buffer, fset, f); err != nil {
 		return nil, err
 	}
 
@@ -210,6 +210,37 @@ func fixImports(
 	}
 
 	clearImportDocs(f, importsPositions)
+	removeEmptyImportNode(f)
+}
+
+func removeEmptyImportNode(f *ast.File) {
+	var (
+		decls      []ast.Decl
+		hasImports bool
+	)
+
+	for _, decl := range f.Decls {
+		dd, ok := decl.(*ast.GenDecl)
+		if !ok {
+			decls = append(decls, decl)
+
+			continue
+		}
+
+		if dd.Tok == token.IMPORT && len(dd.Specs) > 0 {
+			hasImports = true
+
+			break
+		}
+
+		if dd.Tok != token.IMPORT {
+			decls = append(decls, decl)
+		}
+	}
+
+	if !hasImports {
+		f.Decls = decls
+	}
 }
 
 func rebuildImports(

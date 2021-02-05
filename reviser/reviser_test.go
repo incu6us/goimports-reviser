@@ -552,6 +552,33 @@ const webDirectory = "web"
 			wantChange: false,
 			wantErr:    false,
 		},
+		{
+			name: "cleanup empty import block",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `// Some comments are here
+package testdata
+
+import (
+	"fmt"
+)
+
+// nolint:gomnd
+func main(){
+}
+`,
+			},
+			want: `// Some comments are here
+package testdata
+
+// nolint:gomnd
+func main() {
+}
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
 	}
 
 	for _, tt := range tests {

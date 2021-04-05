@@ -298,7 +298,6 @@ import (
 			wantChange: false,
 			wantErr:    false,
 		},
-
 		{
 			name: "success no changes by imports and comments",
 			args: args{
@@ -334,6 +333,36 @@ import (
 )
 `,
 			wantChange: false,
+			wantErr:    false,
+		},
+		{
+			name: "success with multiple import statements",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+
+	import "sync"
+	import "testing"
+
+	// yolo
+	import "fmt"
+
+
+	// not sure why this is here but we shall find out soon enough
+	import "io"
+`,
+			},
+			want: `package testdata
+
+import (
+	"fmt"
+	"io"
+	"sync"
+	"testing"
+)
+`,
+			wantChange: true,
 			wantErr:    false,
 		},
 	}

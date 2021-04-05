@@ -80,6 +80,11 @@ func Execute(projectName, filePath, localPkgPrefixes string, options ...Option) 
 		importsWithMetadata,
 	)
 
+	decls, ok := hasMultipleImportTokens(pf)
+	if ok {
+		pf.Decls = decls
+	}
+
 	fixImports(pf, stdImports, generalImports, projectLocalPkgs, projectImports, importsWithMetadata)
 
 	fixedImportsContent, err := generateFile(fset, pf)
@@ -188,7 +193,6 @@ func fixImports(
 	commentsMetadata map[string]*commentsMetadata,
 ) {
 	var importsPositions []*importPosition
-
 	for _, decl := range f.Decls {
 		dd, ok := decl.(*ast.GenDecl)
 		if !ok {
@@ -211,6 +215,54 @@ func fixImports(
 
 	clearImportDocs(f, importsPositions)
 	removeEmptyImportNode(f)
+}
+
+// hasMultipleImportTokens will return combined import tokens to single declaration
+//
+// Ex.:
+// import "fmt"
+// import "io"
+// -----
+// to
+// -----
+// import (
+// 	"fmt"
+//	"io"
+// )
+func hasMultipleImportTokens(f *ast.File) ([]ast.Decl, bool) {
+	importSpecs := make([]ast.Spec, 0, len(f.Imports))
+	for _, importSpec := range f.Imports {
+		importSpecs = append(importSpecs, importSpec)
+	}
+
+	var hasMultipleImportTokens bool
+	decls := make([]ast.Decl, 0, len(f.Decls))
+	for _, decl := range f.Decls {
+		dd, ok := decl.(*ast.GenDecl)
+		if !ok {
+			decls = append(decls, decl)
+			continue
+		}
+
+		if dd.Tok != token.IMPORT {
+			decls = append(decls, dd)
+			continue
+		}
+
+		if hasMultipleImportTokens {
+			storedGenDecl := decls[len(decls)-1].(*ast.GenDecl)
+			if storedGenDecl.Tok == token.IMPORT {
+				storedGenDecl.Rparen = dd.End()
+			}
+			continue
+		}
+
+		dd.Specs = importSpecs
+		decls = append(decls, dd)
+		hasMultipleImportTokens = true
+	}
+
+	return decls, hasMultipleImportTokens
 }
 
 func removeEmptyImportNode(f *ast.File) {

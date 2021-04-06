@@ -390,7 +390,7 @@ func importWithComment(imprt string, commentsMetadata map[string]*commentsMetada
 	commentGroup, ok := commentsMetadata[imprt]
 	if ok {
 		if commentGroup != nil && commentGroup.Comment != nil && len(commentGroup.Comment.List) > 0 {
-			comment = fmt.Sprintf("// %s", commentGroup.Comment.Text())
+			comment = fmt.Sprintf("// %s", strings.ReplaceAll(commentGroup.Comment.Text(), "\n", ""))
 		}
 	}
 

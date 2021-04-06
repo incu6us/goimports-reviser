@@ -342,7 +342,7 @@ import (
 				filePath:    "./testdata/example.go",
 				fileContent: `package testdata
 
-	import "sync"
+	import "sync" //test comment
 	import "testing"
 
 	// yolo
@@ -358,7 +358,7 @@ import (
 import (
 	"fmt"
 	"io"
-	"sync"
+	"sync" // test comment
 	"testing"
 )
 `,

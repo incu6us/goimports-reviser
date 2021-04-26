@@ -129,7 +129,7 @@ import (
 )
 ```
 
-### Example with `-local`-option
+### Example with `-format`-option
 
 Before usage:
 ```go

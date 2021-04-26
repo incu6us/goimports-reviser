@@ -22,6 +22,7 @@ const (
 	setAliasArg            = "set-alias"
 	localPkgPrefixesArg    = "local"
 	outputArg              = "output"
+	formatArg              = "format"
 )
 
 // Project build specific vars
@@ -34,6 +35,7 @@ var (
 	shouldShowVersion         *bool
 	shouldRemoveUnusedImports *bool
 	shouldSetAlias            *bool
+	shouldFormat              *bool
 )
 
 var projectName, filePath, localPkgPrefixes, output string
@@ -78,6 +80,12 @@ func init() {
 		false,
 		"Set alias for versioned package names, like 'github.com/go-pg/pg/v9'. "+
 			"In this case import will be set as 'pg \"github.com/go-pg/pg/v9\"'. Optional parameter.",
+	)
+
+	shouldFormat = flag.Bool(
+		formatArg,
+		false,
+		"Option will perform additional formatting. Optional parameter.",
 	)
 
 	if Tag != "" {
@@ -136,6 +144,10 @@ func main() {
 
 	if shouldSetAlias != nil && *shouldSetAlias {
 		options = append(options, reviser.OptionUseAliasForVersionSuffix)
+	}
+
+	if shouldFormat != nil && *shouldFormat {
+		options = append(options, reviser.OptionFormat)
 	}
 
 	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, localPkgPrefixes, options...)

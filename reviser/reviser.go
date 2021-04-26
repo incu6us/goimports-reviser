@@ -30,6 +30,9 @@ const (
 
 	// OptionUseAliasForVersionSuffix is an option to set explicit package name in imports
 	OptionUseAliasForVersionSuffix
+
+	// OptionFormat use to format the code
+	OptionFormat
 )
 
 // Options is a slice of executing options
@@ -48,6 +51,16 @@ func (o Options) shouldRemoveUnusedImports() bool {
 func (o Options) shouldUseAliasForVersionSuffix() bool {
 	for _, option := range o {
 		if option == OptionUseAliasForVersionSuffix {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (o Options) shouldFormat() bool {
+	for _, option := range o {
+		if option == OptionFormat {
 			return true
 		}
 	}
@@ -87,6 +100,8 @@ func Execute(projectName, filePath, localPkgPrefixes string, options ...Option) 
 
 	fixImports(pf, stdImports, generalImports, projectLocalPkgs, projectImports, importsWithMetadata)
 
+	formatDecls(pf, options)
+
 	fixedImportsContent, err := generateFile(fset, pf)
 	if err != nil {
 		return nil, false, err
@@ -98,6 +113,34 @@ func Execute(projectName, filePath, localPkgPrefixes string, options ...Option) 
 	}
 
 	return formattedContent, !bytes.Equal(originalContent, formattedContent), nil
+}
+
+func formatDecls(f *ast.File, options Options) {
+	shouldFormat := options.shouldFormat()
+	if !shouldFormat {
+		return
+	}
+
+	for _, decl := range f.Decls {
+		if dd, ok := decl.(*ast.FuncDecl); ok {
+			var formattedComments []*ast.Comment
+			if dd.Doc != nil {
+				formattedComments = make([]*ast.Comment, len(dd.Doc.List))
+			}
+
+			formattedDoc := &ast.CommentGroup{
+				List: formattedComments,
+			}
+
+			if dd.Doc != nil {
+				for i, comment := range dd.Doc.List {
+					formattedDoc.List[i] = comment
+				}
+			}
+
+			dd.Doc = formattedDoc
+		}
+	}
 }
 
 func groupImports(

@@ -22,7 +22,7 @@ Use additional options `-rm-unused` to remove unused imports and `-set-alias` to
 ## Configuration:
 ### Cmd
 ```bash
-goimports-reviser -file-path ./reviser/reviser.go -rm-unused -set-alias
+goimports-reviser -file-path ./reviser/reviser.go -rm-unused -set-alias -format
 ```
 
 ### Example, to configure it with JetBrains IDEs (via file watcher plugin):
@@ -34,12 +34,14 @@ goimports-reviser -file-path ./reviser/reviser.go -rm-unused -set-alias
 Usage of goimports-reviser:
   -file-path string
         File path to fix imports(ex.: ./reviser/reviser.go). Required parameter.
-  -project-name string
-        Your project name(ex.: github.com/incu6us/goimports-reviser). Optional parameter.
+  -format
+        Option will perform additional formatting. Optional parameter.
   -local string
         Local package prefixes which will be placed after 3rd-party group(if defined). Values should be comma-separated. Optional parameters.
   -output string
         Can be "file" or "stdout". Whether to write the formatted content back to the file or to stdout. Optional parameter. (default "file")
+  -project-name string
+        Your project name(ex.: github.com/incu6us/goimports-reviser). Optional parameter.
   -rm-unused
         Remove unused imports. Optional parameter.
   -set-alias
@@ -127,6 +129,27 @@ import (
 )
 ```
 
+### Example with `-local`-option
+
+Before usage:
+```go
+package main
+func test(){
+}
+func additionalTest(){
+}
+```
+
+After usage:
+```go
+package main
+
+func test(){
+}
+
+func additionalTest(){
+}
+```
 
 ---
 

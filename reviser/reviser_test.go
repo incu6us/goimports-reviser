@@ -954,11 +954,25 @@ func TestExecute_WithFormat(t *testing.T) {
 				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",
 				fileContent: `package testdata
+type SomeStruct struct{}
+type SomeStruct1 struct{}
+// SomeStruct2 comments
+type SomeStruct2 struct{}
+func (s *SomeStruct2) test() {}
 func test(){}
 func test1(){}
 `,
 			},
 			want: `package testdata
+
+type SomeStruct struct{}
+
+type SomeStruct1 struct{}
+
+// SomeStruct2 comments
+type SomeStruct2 struct{}
+
+func (s *SomeStruct2) test() {}
 
 func test() {}
 

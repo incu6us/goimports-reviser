@@ -122,25 +122,33 @@ func formatDecls(f *ast.File, options Options) {
 	}
 
 	for _, decl := range f.Decls {
-		if dd, ok := decl.(*ast.FuncDecl); ok {
-			var formattedComments []*ast.Comment
-			if dd.Doc != nil {
-				formattedComments = make([]*ast.Comment, len(dd.Doc.List))
-			}
-
-			formattedDoc := &ast.CommentGroup{
-				List: formattedComments,
-			}
-
-			if dd.Doc != nil {
-				for i, comment := range dd.Doc.List {
-					formattedDoc.List[i] = comment
-				}
-			}
-
-			dd.Doc = formattedDoc
+		switch dd := decl.(type) {
+		case *ast.GenDecl:
+			dd.Doc = fixCommentGroup(dd.Doc)
+		case *ast.FuncDecl:
+			dd.Doc = fixCommentGroup(dd.Doc)
 		}
 	}
+}
+
+func fixCommentGroup(commentGroup *ast.CommentGroup) *ast.CommentGroup {
+	if commentGroup == nil {
+		formattedDoc := &ast.CommentGroup{
+			List: []*ast.Comment{},
+		}
+
+		return formattedDoc
+	}
+
+	formattedDoc := &ast.CommentGroup{
+		List: make([]*ast.Comment, len(commentGroup.List)),
+	}
+
+	for i, comment := range commentGroup.List {
+		formattedDoc.List[i] = comment
+	}
+
+	return formattedDoc
 }
 
 func groupImports(

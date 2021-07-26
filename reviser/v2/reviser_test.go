@@ -1,4 +1,4 @@
-package reviser
+package v2
 
 import (
 	"io/ioutil"

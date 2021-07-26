@@ -1,4 +1,4 @@
-package reviser
+package v2
 
 import (
 	"bytes"
@@ -13,8 +13,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/incu6us/goimports-reviser/v2/pkg/astutil"
-	"github.com/incu6us/goimports-reviser/v2/pkg/std"
+	"github.com/incu6us/goimports-reviser/pkg/astutil"
+	"github.com/incu6us/goimports-reviser/pkg/std"
 )
 
 const (

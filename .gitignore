@@ -1,4 +1,4 @@
-reviser/v2/testdata/*.go
-reviser/testdata/pkg
+v2/reviser/testdata/*.go
+v2/reviser/testdata/pkg
 dist
 coverage.txt

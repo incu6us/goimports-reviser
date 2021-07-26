@@ -10,8 +10,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/incu6us/goimports-reviser/pkg/module"
-	"github.com/incu6us/goimports-reviser/reviser/v2"
+	"github.com/incu6us/goimports-reviser/v2/pkg/module"
+	"github.com/incu6us/goimports-reviser/v2/reviser"
 )
 
 const (
@@ -137,20 +137,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	var options v2.Options
+	var options reviser.Options
 	if shouldRemoveUnusedImports != nil && *shouldRemoveUnusedImports {
-		options = append(options, v2.OptionRemoveUnusedImports)
+		options = append(options, reviser.OptionRemoveUnusedImports)
 	}
 
 	if shouldSetAlias != nil && *shouldSetAlias {
-		options = append(options, v2.OptionUseAliasForVersionSuffix)
+		options = append(options, reviser.OptionUseAliasForVersionSuffix)
 	}
 
 	if shouldFormat != nil && *shouldFormat {
-		options = append(options, v2.OptionFormat)
+		options = append(options, reviser.OptionFormat)
 	}
 
-	formattedOutput, hasChange, err := v2.Execute(projectName, filePath, localPkgPrefixes, options...)
+	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, localPkgPrefixes, options...)
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}

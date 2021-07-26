@@ -1,5 +1,7 @@
 package testdata
+
 // test -  test comment
-func test(){}
+func test() {}
+
 // test1 -  test comment
-func test1(){}
+func test1() {}

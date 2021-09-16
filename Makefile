@@ -15,3 +15,6 @@ release-check:
 .PHONY: release-dry-run
 release-dry-run:
 	@goreleaser release --skip-publish --rm-dist
+
+goimports:
+	@goimports-reviser -dir-path ./  -project-name github.com/incu6us/goimports-reviser  -ignore v2 -format -rm-unused

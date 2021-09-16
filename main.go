@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -15,6 +16,7 @@ import (
 )
 
 const (
+	fileDirArg             = "dir-path"
 	projectNameArg         = "project-name"
 	filePathArg            = "file-path"
 	versionArg             = "version"
@@ -23,6 +25,7 @@ const (
 	localPkgPrefixesArg    = "local"
 	outputArg              = "output"
 	formatArg              = "format"
+	ignoreArg              = "ignore"
 )
 
 // Project build specific vars
@@ -38,9 +41,26 @@ var (
 	shouldFormat              *bool
 )
 
-var projectName, filePath, localPkgPrefixes, output string
+var ignore string // 忽略指定的目录
+
+var projectName, filePath, dirPath, localPkgPrefixes, output string
 
 func init() {
+
+	flag.StringVar(
+		&ignore,
+		ignoreArg,
+		"",
+		"ignore dir path to fix imports",
+	)
+
+	flag.StringVar(
+		&dirPath,
+		fileDirArg,
+		"",
+		"dir path to fix imports",
+	)
+
 	flag.StringVar(
 		&filePath,
 		filePathArg,
@@ -124,11 +144,11 @@ func main() {
 		return
 	}
 
-	if err := validateRequiredParam(filePath); err != nil {
-		fmt.Printf("%s\n\n", err)
-		printUsage()
-		os.Exit(1)
-	}
+	// if err := validateRequiredParam(filePath); err != nil {
+	// 	fmt.Printf("%s\n\n", err)
+	// 	printUsage()
+	// 	os.Exit(1)
+	// }
 
 	projectName, err := determineProjectName(projectName, filePath)
 	if err != nil {
@@ -137,37 +157,114 @@ func main() {
 		os.Exit(1)
 	}
 
-	var options reviser.Options
-	if shouldRemoveUnusedImports != nil && *shouldRemoveUnusedImports {
-		options = append(options, reviser.OptionRemoveUnusedImports)
-	}
-
-	if shouldSetAlias != nil && *shouldSetAlias {
-		options = append(options, reviser.OptionUseAliasForVersionSuffix)
-	}
-
-	if shouldFormat != nil && *shouldFormat {
-		options = append(options, reviser.OptionFormat)
-	}
-
-	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, localPkgPrefixes, options...)
-	if err != nil {
-		log.Fatalf("%+v", errors.WithStack(err))
-	}
-
-	if output == "stdout" {
-		fmt.Print(string(formattedOutput))
-	} else if output == "file" {
-		if !hasChange {
+	do := func(filePath string) {
+		if !IsFormatFile(filePath) {
 			return
 		}
-
-		if err := ioutil.WriteFile(filePath, formattedOutput, 0644); err != nil {
-			log.Fatalf("failed to write fixed result to file(%s): %+v", filePath, errors.WithStack(err))
+		var options reviser.Options
+		if shouldRemoveUnusedImports != nil && *shouldRemoveUnusedImports {
+			options = append(options, reviser.OptionRemoveUnusedImports)
 		}
-	} else {
-		log.Fatalf(`invalid output "%s" specified`, output)
+
+		if shouldSetAlias != nil && *shouldSetAlias {
+			options = append(options, reviser.OptionUseAliasForVersionSuffix)
+		}
+
+		if shouldFormat != nil && *shouldFormat {
+			options = append(options, reviser.OptionFormat)
+		}
+
+		formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, localPkgPrefixes, options...)
+		if err != nil {
+			log.Fatalf("%+v", errors.WithStack(err))
+		}
+
+		if output == "stdout" {
+			fmt.Print(string(formattedOutput))
+		} else if output == "file" {
+			if !hasChange {
+				return
+			}
+
+			if err := ioutil.WriteFile(filePath, formattedOutput, 0644); err != nil {
+				log.Fatalf("failed to write fixed result to file(%s): %+v", filePath, errors.WithStack(err))
+			}
+		} else {
+			log.Fatalf(`invalid output "%s" specified`, output)
+		}
+
+		fmt.Println("----")
 	}
+
+	switch {
+	case dirPath == "./...":
+		load("./", do)
+	case dirPath == "./":
+		load(dirPath, do)
+	case dirPath != "":
+		load(dirPath, do)
+	case dirPath == "":
+		do(filePath)
+	}
+}
+
+func IsIgnore(path string) bool {
+	if ignore == "" {
+		return false
+	}
+	pi, err := filepath.Abs(ignore)
+	errorCheck(err)
+	p, err := filepath.Rel(PWD(), pi)
+	errorCheck(err)
+	return strings.Contains(path, p)
+}
+
+func IsDir(p string) bool {
+	s, err := os.Stat(p)
+	errorCheck(err)
+	return s.IsDir()
+}
+
+func errorCheck(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func PWD() string {
+	path, err := os.Getwd()
+	errorCheck(err)
+	return path
+}
+
+func load(rootPath string, do func(string)) {
+	err := filepath.Walk(
+		rootPath,
+		func(path string, info os.FileInfo, err error) error {
+			if IsIgnore(path) {
+				return nil
+			}
+
+			if info.IsDir() {
+				return nil
+			}
+
+			if IsFormatFile(path) {
+				fmt.Println(path)
+				do(path)
+			}
+			return err
+		},
+	)
+	errorCheck(err)
+}
+
+func IsFormatFile(p string) bool {
+	e := filepath.Ext(p)
+	if e == ".go" {
+		return true
+	}
+	return false
 }
 
 func determineProjectName(projectName, filePath string) (string, error) {

@@ -1,3 +1,4 @@
+//go:build gen
 // +build gen
 
 package main

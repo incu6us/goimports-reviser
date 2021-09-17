@@ -2,4 +2,3 @@ v2/reviser/testdata/*.go
 v2/reviser/testdata/pkg
 dist
 coverage.txt
-.idea

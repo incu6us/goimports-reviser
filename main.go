@@ -25,7 +25,7 @@ const (
 	localPkgPrefixesArg    = "local"
 	outputArg              = "output"
 	formatArg              = "format"
-	ignoreArg              = "ignore"
+	ignoreDirArg           = "ignore-dir"
 )
 
 // Project build specific vars
@@ -41,15 +41,13 @@ var (
 	shouldFormat              *bool
 )
 
-var ignore string // 忽略指定的目录
-
-var projectName, filePath, dirPath, localPkgPrefixes, output string
+var projectName, ignoreDir, filePath, dirPath, localPkgPrefixes, output string
 
 func init() {
 
 	flag.StringVar(
-		&ignore,
-		ignoreArg,
+		&ignoreDir,
+		ignoreDirArg,
 		"",
 		"ignore dir path to fix imports",
 	)
@@ -143,12 +141,13 @@ func main() {
 		printVersion()
 		return
 	}
-
-	// if err := validateRequiredParam(filePath); err != nil {
-	// 	fmt.Printf("%s\n\n", err)
-	// 	printUsage()
-	// 	os.Exit(1)
-	// }
+	err := validateRequiredParam(filePath)
+	errDir := validateDir(dirPath)
+	if err != nil && errDir != nil {
+		fmt.Printf("%s . and -dir-path %s\n\n", err, errDir)
+		printUsage()
+		os.Exit(1)
+	}
 
 	projectName, err := determineProjectName(projectName, filePath)
 	if err != nil {
@@ -157,21 +156,26 @@ func main() {
 		os.Exit(1)
 	}
 
-	do := func(filePath string) {
-		if !IsFormatFile(filePath) {
+	var options reviser.Options
+	if shouldRemoveUnusedImports != nil && *shouldRemoveUnusedImports {
+		options = append(options, reviser.OptionRemoveUnusedImports)
+	}
+
+	if shouldSetAlias != nil && *shouldSetAlias {
+		options = append(options, reviser.OptionUseAliasForVersionSuffix)
+	}
+
+	if shouldFormat != nil && *shouldFormat {
+		options = append(options, reviser.OptionFormat)
+	}
+
+	executor := func(filePath string) {
+		if !isFormatFile(filePath) {
 			return
 		}
-		var options reviser.Options
-		if shouldRemoveUnusedImports != nil && *shouldRemoveUnusedImports {
-			options = append(options, reviser.OptionRemoveUnusedImports)
-		}
 
-		if shouldSetAlias != nil && *shouldSetAlias {
-			options = append(options, reviser.OptionUseAliasForVersionSuffix)
-		}
-
-		if shouldFormat != nil && *shouldFormat {
-			options = append(options, reviser.OptionFormat)
+		if isIgnore(filePath) {
+			return
 		}
 
 		formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, localPkgPrefixes, options...)
@@ -185,44 +189,49 @@ func main() {
 			if !hasChange {
 				return
 			}
-
+			fmt.Println(filePath)
 			if err := ioutil.WriteFile(filePath, formattedOutput, 0644); err != nil {
 				log.Fatalf("failed to write fixed result to file(%s): %+v", filePath, errors.WithStack(err))
 			}
 		} else {
 			log.Fatalf(`invalid output "%s" specified`, output)
 		}
-
-		fmt.Println("----")
 	}
 
 	switch {
 	case dirPath == "./...":
-		load("./", do)
+		load("./", executor)
 	case dirPath == "./":
-		load(dirPath, do)
+		load(dirPath, executor)
 	case dirPath != "":
-		load(dirPath, do)
+		load(dirPath, executor)
 	case dirPath == "":
-		do(filePath)
+		executor(filePath)
 	}
+
+	executor(filePath)
 }
 
-func IsIgnore(path string) bool {
-	if ignore == "" {
+func isIgnore(path string) bool {
+	if ignoreDir == "" {
 		return false
 	}
-	pi, err := filepath.Abs(ignore)
+	pi, err := filepath.Abs(ignoreDir)
 	errorCheck(err)
-	p, err := filepath.Rel(PWD(), pi)
+	p, err := filepath.Rel(pwd(), pi)
 	errorCheck(err)
 	return strings.Contains(path, p)
 }
 
-func IsDir(p string) bool {
+func validateDir(p string) error {
 	s, err := os.Stat(p)
-	errorCheck(err)
-	return s.IsDir()
+	if err != nil {
+		return err
+	}
+	if !s.IsDir() {
+		return errors.Errorf("dir error")
+	}
+	return nil
 }
 
 func errorCheck(err error) {
@@ -231,35 +240,27 @@ func errorCheck(err error) {
 	}
 }
 
-func PWD() string {
+func pwd() string {
 	path, err := os.Getwd()
 	errorCheck(err)
 	return path
 }
 
-func load(rootPath string, do func(string)) {
+func load(rootPath string, executor func(string)) {
 	err := filepath.Walk(
 		rootPath,
 		func(path string, info os.FileInfo, err error) error {
-			if IsIgnore(path) {
-				return nil
-			}
-
 			if info.IsDir() {
 				return nil
 			}
-
-			if IsFormatFile(path) {
-				fmt.Println(path)
-				do(path)
-			}
+			executor(path)
 			return err
 		},
 	)
 	errorCheck(err)
 }
 
-func IsFormatFile(p string) bool {
+func isFormatFile(p string) bool {
 	e := filepath.Ext(p)
 	if e == ".go" {
 		return true

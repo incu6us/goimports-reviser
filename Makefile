@@ -1,3 +1,6 @@
+build:
+	@go build
+
 .PHONY: go-generate
 go-generate:
 	@go generate -tags gen ./...
@@ -18,3 +21,6 @@ release-dry-run:
 
 goimports:
 	@goimports-reviser -dir-path ./  -project-name github.com/incu6us/goimports-reviser  -ignore-dir v2 -format -rm-unused
+
+fmt:goimports
+	@go fmt ./...

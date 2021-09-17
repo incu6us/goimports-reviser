@@ -224,6 +224,10 @@ func isIgnore(path string) bool {
 }
 
 func validateDir(p string) error {
+	if p == "./..." {
+		return nil
+	}
+
 	s, err := os.Stat(p)
 	if err != nil {
 		return err

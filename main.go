@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/cheggaaa/pb/v3"
 	"github.com/pkg/errors"
 
 	"github.com/incu6us/goimports-reviser/v2/pkg/module"
@@ -169,6 +170,9 @@ func main() {
 		options = append(options, reviser.OptionFormat)
 	}
 
+	var count int64 = 0
+	// create and start new bar
+	bar := pb.StartNew(int(count))
 	executor := func(filePath string) {
 		if !isFormatFile(filePath) {
 			return
@@ -179,6 +183,10 @@ func main() {
 		}
 
 		formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, localPkgPrefixes, options...)
+		count++
+		bar.SetCurrent(count - 2)
+		bar.SetTotal(count)
+		bar.Increment()
 		if err != nil {
 			log.Fatalf("%+v", errors.WithStack(err))
 		}
@@ -210,6 +218,8 @@ func main() {
 	}
 
 	executor(filePath)
+	// finish bar
+	bar.Finish()
 }
 
 func isIgnore(path string) bool {

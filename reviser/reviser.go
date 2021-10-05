@@ -238,6 +238,19 @@ func generateFile(fset *token.FileSet, f *ast.File) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
+func isSingleCgoImport(dd *ast.GenDecl) bool {
+	if dd.Tok != token.IMPORT {
+		return false
+	}
+	if len(dd.Specs) != 1 {
+		return false
+	}
+	if dd.Specs[0].(*ast.ImportSpec).Path.Value != `"C"` {
+		return false
+	}
+	return true
+}
+
 func fixImports(
 	f *ast.File,
 	stdImports, generalImports, projectLocalPkgs, projectImports []string,
@@ -250,7 +263,7 @@ func fixImports(
 			continue
 		}
 
-		if dd.Tok != token.IMPORT {
+		if dd.Tok != token.IMPORT || isSingleCgoImport(dd){
 			continue
 		}
 
@@ -299,7 +312,7 @@ func hasMultipleImportDecls(f *ast.File) ([]ast.Decl, bool) {
 			continue
 		}
 
-		if dd.Tok != token.IMPORT {
+		if dd.Tok != token.IMPORT || isSingleCgoImport(dd) {
 			decls = append(decls, dd)
 			continue
 		}
@@ -468,6 +481,9 @@ func parseImports(f *ast.File, filePath string, options Options) (map[string]*co
 		switch decl.(type) {
 		case *ast.GenDecl:
 			dd := decl.(*ast.GenDecl)
+			if isSingleCgoImport(dd) {
+				continue
+			}
 			if dd.Tok == token.IMPORT {
 				for _, spec := range dd.Specs {
 					var importSpecStr string

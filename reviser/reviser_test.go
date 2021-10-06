@@ -610,7 +610,7 @@ func main() {
 				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",
 				fileContent: `// Some comments are here
-package main
+package testdata
 
 // OutputDir the output directory where the built version of Authelia is located.
 var OutputDir = "dist"
@@ -629,7 +629,7 @@ const webDirectory = "web"
 `,
 			},
 			want: `// Some comments are here
-package main
+package testdata
 
 // OutputDir the output directory where the built version of Authelia is located.
 var OutputDir = "dist"
@@ -714,7 +714,7 @@ func TestExecute_WithAliasForVersionSuffix(t *testing.T) {
 			args: args{
 				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",
-				fileContent: `package main
+				fileContent: `package testdata
 import(
 	"fmt"
 	"github.com/go-pg/pg/v9"
@@ -726,7 +726,7 @@ func main(){
 	fmt.Println(pg.In([]string{"test"}))
 }`,
 			},
-			want: `package main
+			want: `package testdata
 
 import (
 	"fmt"
@@ -748,7 +748,7 @@ func main() {
 			args: args{
 				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",
-				fileContent: `package main
+				fileContent: `package testdata
 import(
 	"fmt"
 	"github.com/pkg/errors"
@@ -760,7 +760,7 @@ func main(){
 	fmt.Println(pg.In([]string{"test"}))
 }`,
 			},
-			want: `package main
+			want: `package testdata
 
 import (
 	"fmt"

@@ -245,10 +245,7 @@ func isSingleCgoImport(dd *ast.GenDecl) bool {
 	if len(dd.Specs) != 1 {
 		return false
 	}
-	if dd.Specs[0].(*ast.ImportSpec).Path.Value != `"C"` {
-		return false
-	}
-	return true
+	return dd.Specs[0].(*ast.ImportSpec).Path.Value == `"C"`
 }
 
 func fixImports(

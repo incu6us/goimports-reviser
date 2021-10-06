@@ -365,6 +365,74 @@ import (
 			wantChange: true,
 			wantErr:    false,
 		},
+		{
+			name: "preserves cgo import",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/cgo_example.go",
+				fileContent: `package testdata
+
+/*
+#include <stdlib.h>
+*/
+import "C"
+
+import (
+	"errors"
+	"fmt"
+)
+`,
+			},
+			want:       `package testdata
+
+/*
+#include <stdlib.h>
+*/
+import "C"
+
+import (
+	"errors"
+	"fmt"
+)
+`,
+			wantChange: false,
+			wantErr:    false,
+		},
+		{
+			name: "preserves cgo import even when reordering",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/cgo_example.go",
+				fileContent: `package testdata
+
+import (
+	"fmt"
+	"errors"
+)
+
+/*
+#include <stdlib.h>
+*/
+import "C"
+
+import "errors"
+`,
+			},
+			want:       `package testdata
+
+import (
+	"errors"
+	"fmt"
+)
+
+/*
+#include <stdlib.h>
+*/
+import "C"
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
 	}
 	for _, tt := range tests {
 		if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
@@ -542,7 +610,7 @@ func main() {
 				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",
 				fileContent: `// Some comments are here
-package main
+package testdata
 
 // OutputDir the output directory where the built version of Authelia is located.
 var OutputDir = "dist"
@@ -561,7 +629,7 @@ const webDirectory = "web"
 `,
 			},
 			want: `// Some comments are here
-package main
+package testdata
 
 // OutputDir the output directory where the built version of Authelia is located.
 var OutputDir = "dist"
@@ -646,7 +714,7 @@ func TestExecute_WithAliasForVersionSuffix(t *testing.T) {
 			args: args{
 				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",
-				fileContent: `package main
+				fileContent: `package testdata
 import(
 	"fmt"
 	"github.com/go-pg/pg/v9"
@@ -658,7 +726,7 @@ func main(){
 	fmt.Println(pg.In([]string{"test"}))
 }`,
 			},
-			want: `package main
+			want: `package testdata
 
 import (
 	"fmt"
@@ -680,7 +748,7 @@ func main() {
 			args: args{
 				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",
-				fileContent: `package main
+				fileContent: `package testdata
 import(
 	"fmt"
 	"github.com/pkg/errors"
@@ -692,7 +760,7 @@ func main(){
 	fmt.Println(pg.In([]string{"test"}))
 }`,
 			},
-			want: `package main
+			want: `package testdata
 
 import (
 	"fmt"
@@ -759,6 +827,11 @@ import (
 	"goimports-reviser/pkg"
 )
 
+/*
+#include <stdlib.h>
+*/
+import "C"
+
 // nolint:gomnd
 func main(){
   _ = fmt.Println("test")
@@ -776,6 +849,11 @@ import (
 
 	"github.com/incu6us/goimports-reviser/pkg"
 )
+
+/*
+#include <stdlib.h>
+*/
+import "C"
 
 // nolint:gomnd
 func main() {

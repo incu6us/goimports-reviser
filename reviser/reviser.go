@@ -260,7 +260,7 @@ func fixImports(
 			continue
 		}
 
-		if dd.Tok != token.IMPORT || isSingleCgoImport(dd){
+		if dd.Tok != token.IMPORT || isSingleCgoImport(dd) {
 			continue
 		}
 

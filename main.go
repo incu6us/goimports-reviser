@@ -44,6 +44,8 @@ var (
 
 var projectName, ignoreDir, filePath, dirPath, localPkgPrefixes, output string
 
+var ignoreDirs []string
+
 func init() {
 
 	flag.StringVar(
@@ -137,7 +139,8 @@ func printVersion() {
 
 func main() {
 	flag.Parse()
-
+	ignoreDirs = strings.Split(ignoreDir, ",")
+	fmt.Println("ignore dir: ", ignoreDirs)
 	if shouldShowVersion != nil && *shouldShowVersion {
 		printVersion()
 		return
@@ -174,11 +177,11 @@ func main() {
 	// create and start new bar
 	bar := pb.StartNew(int(count))
 	executor := func(filePath string) {
-		if !isFormatFile(filePath) {
+		if isIgnore(filePath) {
 			return
 		}
 
-		if isIgnore(filePath) {
+		if !isFormatFile(filePath) {
 			return
 		}
 
@@ -223,14 +226,13 @@ func main() {
 }
 
 func isIgnore(path string) bool {
-	if ignoreDir == "" {
-		return false
+	for _, val := range ignoreDirs {
+		if strings.Contains(path, val) {
+			fmt.Println("ignore dir: ", path)
+			return true
+		}
 	}
-	pi, err := filepath.Abs(ignoreDir)
-	errorCheck(err)
-	p, err := filepath.Rel(pwd(), pi)
-	errorCheck(err)
-	return strings.Contains(path, p)
+	return false
 }
 
 func validateDir(p string) error {

@@ -20,7 +20,7 @@ release-dry-run:
 	@goreleaser release --skip-publish --rm-dist
 
 goimports:
-	@goimports-reviser -dir-path ./  -project-name github.com/incu6us/goimports-reviser  -ignore-dir v2 -format -rm-unused
+	@./goimports-reviser -dir-path ./  -project-name github.com/incu6us/goimports-reviser  -ignore-dir v2 -format -rm-unused
 
 fmt:goimports
 	@go fmt ./...

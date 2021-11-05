@@ -36,16 +36,21 @@ Usage of goimports-reviser:
         File path to fix imports(ex.: ./reviser/reviser.go). Required parameter.
   -format
         Option will perform additional formatting. Optional parameter.
+  -list
+    	Option will list files whose formatting differs from goimports-reviser. Optional parameter.
   -local string
         Local package prefixes which will be placed after 3rd-party group(if defined). Values should be comma-separated. Optional parameters.
   -output string
-        Can be "file" or "stdout". Whether to write the formatted content back to the file or to stdout. Optional parameter. (default "file")
+        Can be "file", "write" or "stdout". Whether to write the formatted content back to the file or to stdout. When "write" together with "-list" will list the file name and write back to the file. Optional parameter. (default "file")
   -project-name string
         Your project name(ex.: github.com/incu6us/goimports-reviser). Optional parameter.
   -rm-unused
         Remove unused imports. Optional parameter.
   -set-alias
         Set alias for versioned package names, like 'github.com/go-pg/pg/v9'. In this case import will be set as 'pg "github.com/go-pg/pg/v9"'. Optional parameter.
+  -set-exit-status
+    	set the exit status to 1 if a change is needed/made. Optional parameter.
+
 ```
 
 ## Install

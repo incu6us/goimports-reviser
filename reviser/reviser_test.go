@@ -2,6 +2,7 @@ package reviser
 
 import (
 	"io/ioutil"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -383,7 +384,7 @@ import (
 )
 `,
 			},
-			want:       `package testdata
+			want: `package testdata
 
 /*
 #include <stdlib.h>
@@ -418,7 +419,7 @@ import "C"
 import "errors"
 `,
 			},
-			want:       `package testdata
+			want: `package testdata
 
 import (
 	"errors"
@@ -433,10 +434,30 @@ import "C"
 			wantChange: true,
 			wantErr:    false,
 		},
+		{
+			name: "try to read from stdin",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    StandardInput,
+				fileContent: ``,
+			},
+			wantErr: true,
+		},
+		{
+			name: "error with non-existent file",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdatax/does-not-exist.go",
+				fileContent: ``,
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
-		if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
-			t.Errorf("write test file failed: %s", err)
+		if tt.args.filePath != StandardInput && !strings.Contains(tt.args.filePath, "does-not-exist") {
+			if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
+				t.Errorf("write test file failed: %s", err)
+			}
 		}
 
 		t.Run(tt.name, func(t *testing.T) {

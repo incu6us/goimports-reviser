@@ -5,13 +5,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/incu6us/goimports-reviser/v2/pkg/grouporder"
 )
 
 func TestExecute(t *testing.T) {
+	defaultOrder, _ := grouporder.NewImportGroupOrder("std,ext,org,prj")
+
 	type args struct {
 		projectName string
 		filePath    string
 		fileContent string
+		order       grouporder.ImportGroupOrder
 	}
 
 	tests := []struct {
@@ -40,6 +45,7 @@ import (
 
 // nolint:gomnd
 `,
+				order: defaultOrder,
 			},
 			want: `package testdata
 
@@ -77,6 +83,7 @@ import (
 
 // nolint:gomnd
 `,
+				order: defaultOrder,
 			},
 			want: `package testdata
 
@@ -110,6 +117,7 @@ import (
 
 // nolint:gomnd
 `,
+				order: defaultOrder,
 			},
 			want: `package testdata
 
@@ -141,6 +149,7 @@ import (
 
 // nolint:gomnd
 `,
+				order: defaultOrder,
 			},
 			want: `package testdata
 
@@ -169,6 +178,7 @@ import (
 
 // nolint:gomnd
 `,
+				order: defaultOrder,
 			},
 			want: `package testdata
 
@@ -197,6 +207,7 @@ import (
 
 // nolint:gomnd
 `,
+				order: defaultOrder,
 			},
 			want: `package testdata
 
@@ -227,6 +238,7 @@ import (
 
 // nolint:gomnd
 `,
+				order: defaultOrder,
 			},
 			want: `package testdata
 
@@ -258,6 +270,7 @@ import (
 
 // nolint:gomnd
 `,
+				order: defaultOrder,
 			},
 			want: `package testdata
 
@@ -286,6 +299,7 @@ import (
 
 // nolint:gomnd
 `,
+				order: defaultOrder,
 			},
 			want: `package testdata
 
@@ -317,6 +331,7 @@ import (
 	"github.com/incu6us/goimports-reviser/pkg/somepkg"
 )
 `,
+				order: defaultOrder,
 			},
 			want: `package testdata
 
@@ -352,6 +367,7 @@ import (
 	// not sure why this is here but we shall find out soon enough
 	import "io"
 `,
+				order: defaultOrder,
 			},
 			want: `package testdata
 
@@ -382,8 +398,9 @@ import (
 	"fmt"
 )
 `,
+				order: defaultOrder,
 			},
-			want:       `package testdata
+			want: `package testdata
 
 /*
 #include <stdlib.h>
@@ -417,8 +434,9 @@ import "C"
 
 import "errors"
 `,
+				order: defaultOrder,
 			},
-			want:       `package testdata
+			want: `package testdata
 
 import (
 	"errors"
@@ -433,14 +451,53 @@ import "C"
 			wantChange: true,
 			wantErr:    false,
 		},
+
+		{
+			name: "use reverse order",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"log"
+
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+
+	"bytes"
+
+	"github.com/pkg/errors"
+)
+
+// nolint:gomnd
+`,
+				order: grouporder.ImportGroupOrder{grouporder.GroupProject, grouporder.GroupOrganization, grouporder.GroupExternal, grouporder.GroupStd},
+			},
+			want: `package testdata
+
+import (
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+
+	"github.com/pkg/errors"
+
+	"bytes"
+	"log"
+)
+
+// nolint:gomnd
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
 	}
+
 	for _, tt := range tests {
 		if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
 			t.Errorf("write test file failed: %s", err)
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "")
+			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "", tt.args.order)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -678,13 +735,15 @@ func main() {
 		},
 	}
 
+	order, _ := grouporder.NewImportGroupOrder("std,ext,org,prj")
+
 	for _, tt := range tests {
 		if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
 			t.Errorf("write test file failed: %s", err)
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "", OptionRemoveUnusedImports)
+			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "", order, OptionRemoveUnusedImports)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -779,13 +838,15 @@ func main() {
 		},
 	}
 
+	order, _ := grouporder.NewImportGroupOrder("std,ext,org,prj")
+
 	for _, tt := range tests {
 		if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
 			t.Errorf("write test file failed: %s", err)
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "", OptionUseAliasForVersionSuffix)
+			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "", order, OptionUseAliasForVersionSuffix)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -994,13 +1055,15 @@ func main() {
 		},
 	}
 
+	order, _ := grouporder.NewImportGroupOrder("std,ext,org,prj")
+
 	for _, tt := range tests {
 		if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
 			t.Errorf("write test file failed: %s", err)
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, tt.args.localPkgPrefixes)
+			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, tt.args.localPkgPrefixes, order)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1083,13 +1146,16 @@ func test1() {}
 			wantErr:    false,
 		},
 	}
+
+	order, _ := grouporder.NewImportGroupOrder("std,ext,org,prj")
+
 	for _, tt := range tests {
 		if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
 			t.Errorf("write test file failed: %s", err)
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "", OptionFormat)
+			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "", order, OptionFormat)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
 				return

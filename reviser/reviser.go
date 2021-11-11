@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/incu6us/goimports-reviser/v2/pkg/astutil"
+	"github.com/incu6us/goimports-reviser/v2/pkg/grouporder"
 	"github.com/incu6us/goimports-reviser/v2/pkg/std"
 )
 
@@ -69,7 +70,7 @@ func (o Options) shouldFormat() bool {
 }
 
 // Execute is for revise imports and format the code
-func Execute(projectName, filePath, localPkgPrefixes string, options ...Option) ([]byte, bool, error) {
+func Execute(projectName, filePath, localPkgPrefixes string, order grouporder.ImportGroupOrder, options ...Option) ([]byte, bool, error) {
 	originalContent, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, false, err
@@ -98,7 +99,7 @@ func Execute(projectName, filePath, localPkgPrefixes string, options ...Option) 
 		pf.Decls = decls
 	}
 
-	fixImports(pf, stdImports, generalImports, projectLocalPkgs, projectImports, importsWithMetadata)
+	fixImports(pf, stdImports, generalImports, projectLocalPkgs, projectImports, importsWithMetadata, order)
 
 	formatDecls(pf, options)
 
@@ -252,6 +253,7 @@ func fixImports(
 	f *ast.File,
 	stdImports, generalImports, projectLocalPkgs, projectImports []string,
 	commentsMetadata map[string]*commentsMetadata,
+	order grouporder.ImportGroupOrder,
 ) {
 	var importsPositions []*importPosition
 	for _, decl := range f.Decls {
@@ -271,7 +273,7 @@ func fixImports(
 			},
 		)
 
-		dd.Specs = rebuildImports(dd.Tok, commentsMetadata, stdImports, generalImports, projectLocalPkgs, projectImports)
+		dd.Specs = rebuildImports(dd.Tok, commentsMetadata, order.GroupedImports(stdImports, projectLocalPkgs, projectImports, generalImports))
 	}
 
 	clearImportDocs(f, importsPositions)
@@ -364,66 +366,36 @@ func removeEmptyImportNode(f *ast.File) {
 func rebuildImports(
 	tok token.Token,
 	commentsMetadata map[string]*commentsMetadata,
-	stdImports []string,
-	generalImports []string,
-	projectLocalPkgs []string,
-	projectImports []string,
+	groupedImports [][]string,
 ) []ast.Spec {
 	var specs []ast.Spec
 
-	linesCounter := len(stdImports)
-	for _, stdImport := range stdImports {
-		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(stdImport, commentsMetadata), Kind: tok},
-		}
-		specs = append(specs, spec)
+	for i, imports := range groupedImports {
+		linesCounter := len(imports)
 
-		linesCounter--
-
-		if linesCounter == 0 && (len(generalImports) > 0 || len(projectLocalPkgs) > 0 || len(projectImports) > 0) {
-			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
-
+		for _, imprt := range imports {
+			spec := &ast.ImportSpec{
+				Path: &ast.BasicLit{Value: importWithComment(imprt, commentsMetadata), Kind: tok},
+			}
 			specs = append(specs, spec)
+
+			linesCounter--
+
+			if linesCounter == 0 {
+				haveMore := false
+				for i := i + 1; i < len(groupedImports); i++ {
+					if len(groupedImports[i]) > 0 {
+						haveMore = true
+						break
+					}
+				}
+
+				if haveMore {
+					spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
+					specs = append(specs, spec)
+				}
+			}
 		}
-	}
-
-	linesCounter = len(generalImports)
-	for _, generalImport := range generalImports {
-		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(generalImport, commentsMetadata), Kind: tok},
-		}
-		specs = append(specs, spec)
-
-		linesCounter--
-
-		if linesCounter == 0 && (len(projectLocalPkgs) > 0 || len(projectImports) > 0) {
-			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
-
-			specs = append(specs, spec)
-		}
-	}
-
-	linesCounter = len(projectLocalPkgs)
-	for _, projectLocalPkg := range projectLocalPkgs {
-		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(projectLocalPkg, commentsMetadata), Kind: tok},
-		}
-		specs = append(specs, spec)
-
-		linesCounter--
-
-		if linesCounter == 0 && len(projectImports) > 0 {
-			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
-
-			specs = append(specs, spec)
-		}
-	}
-
-	for _, projectImport := range projectImports {
-		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(projectImport, commentsMetadata), Kind: tok},
-		}
-		specs = append(specs, spec)
 	}
 
 	return specs

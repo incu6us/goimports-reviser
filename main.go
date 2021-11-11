@@ -10,6 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/incu6us/goimports-reviser/v2/pkg/grouporder"
 	"github.com/incu6us/goimports-reviser/v2/pkg/module"
 	"github.com/incu6us/goimports-reviser/v2/reviser"
 )
@@ -23,6 +24,7 @@ const (
 	localPkgPrefixesArg    = "local"
 	outputArg              = "output"
 	formatArg              = "format"
+	groupsOrderArg         = "groups-order"
 )
 
 // Project build specific vars
@@ -38,7 +40,7 @@ var (
 	shouldFormat              *bool
 )
 
-var projectName, filePath, localPkgPrefixes, output string
+var projectName, filePath, localPkgPrefixes, output, groupsOrder string
 
 func init() {
 	flag.StringVar(
@@ -67,6 +69,18 @@ func init() {
 		outputArg,
 		"file",
 		`Can be "file" or "stdout". Whether to write the formatted content back to the file or to stdout. Optional parameter.`,
+	)
+
+	flag.StringVar(
+		&groupsOrder,
+		groupsOrderArg,
+		"std,ext,org,prj",
+		`Sets the order of import groups. 
+Groups names: std - std libs, ext - external libs, org - organization libs, prj - project libs.
+Examples: 
+	"std,ext,org,prj"
+	"std,prj,org,ext"
+`,
 	)
 
 	shouldRemoveUnusedImports = flag.Bool(
@@ -137,6 +151,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	groupOrder, err := grouporder.NewImportGroupOrder(groupsOrder)
+	if err != nil {
+		fmt.Printf("%s\n\n", err)
+		printUsage()
+		os.Exit(1)
+	}
+
 	var options reviser.Options
 	if shouldRemoveUnusedImports != nil && *shouldRemoveUnusedImports {
 		options = append(options, reviser.OptionRemoveUnusedImports)
@@ -150,7 +171,7 @@ func main() {
 		options = append(options, reviser.OptionFormat)
 	}
 
-	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, localPkgPrefixes, options...)
+	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, localPkgPrefixes, groupOrder, options...)
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}

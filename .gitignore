@@ -1,3 +1,7 @@
 reviser/testdata
 dist
 coverage.txt
+.idea/
+goimports-reviser
+
+

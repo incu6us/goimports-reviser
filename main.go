@@ -23,6 +23,8 @@ const (
 	localPkgPrefixesArg    = "local"
 	outputArg              = "output"
 	formatArg              = "format"
+	listFileNameArg        = "list"
+	setExitStatusArg       = "set-exit-status"
 )
 
 // Project build specific vars
@@ -36,6 +38,8 @@ var (
 	shouldRemoveUnusedImports *bool
 	shouldSetAlias            *bool
 	shouldFormat              *bool
+	listFileName              *bool
+	setExitStatus             *bool
 )
 
 var projectName, filePath, localPkgPrefixes, output string
@@ -45,7 +49,7 @@ func init() {
 		&filePath,
 		filePathArg,
 		"",
-		"File path to fix imports(ex.: ./reviser/reviser.go). Required parameter.",
+		"File path to fix imports(ex.: ./reviser/reviser.go). Optional parameter.",
 	)
 
 	flag.StringVar(
@@ -66,7 +70,19 @@ func init() {
 		&output,
 		outputArg,
 		"file",
-		`Can be "file" or "stdout". Whether to write the formatted content back to the file or to stdout. Optional parameter.`,
+		`Can be "file", "write" or "stdout". Whether to write the formatted content back to the file or to stdout. When "write" together with "-list" will list the file name and write back to the file. Optional parameter.`,
+	)
+
+	listFileName = flag.Bool(
+		listFileNameArg,
+		false,
+		"Option will list files whose formatting differs from goimports-reviser. Optional parameter.",
+	)
+
+	setExitStatus = flag.Bool(
+		setExitStatusArg,
+		false,
+		"set the exit status to 1 if a change is needed/made. Optional parameter.",
 	)
 
 	shouldRemoveUnusedImports = flag.Bool(
@@ -124,6 +140,9 @@ func main() {
 		return
 	}
 
+	if filePath == "" {
+		filePath = reviser.StandardInput
+	}
 	if err := validateRequiredParam(filePath); err != nil {
 		fmt.Printf("%s\n\n", err)
 		printUsage()
@@ -155,9 +174,14 @@ func main() {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}
 
-	if output == "stdout" {
+	if !hasChange && *listFileName {
+		return
+	}
+	if hasChange && *listFileName && output != "write" {
+		fmt.Println(filePath)
+	} else if output == "stdout" || filePath == reviser.StandardInput {
 		fmt.Print(string(formattedOutput))
-	} else if output == "file" {
+	} else if output == "file" || output == "write" {
 		if !hasChange {
 			return
 		}
@@ -165,8 +189,14 @@ func main() {
 		if err := ioutil.WriteFile(filePath, formattedOutput, 0644); err != nil {
 			log.Fatalf("failed to write fixed result to file(%s): %+v", filePath, errors.WithStack(err))
 		}
+		if *listFileName {
+			fmt.Println(filePath)
+		}
 	} else {
 		log.Fatalf(`invalid output "%s" specified`, output)
+	}
+	if hasChange && *setExitStatus {
+		os.Exit(1)
 	}
 }
 
@@ -182,6 +212,7 @@ func determineProjectName(projectName, filePath string) (string, error) {
 			return "", err
 		}
 
+		//fmt.Printf("projectName: '%v', moduleName: '%v'\n", projectName, moduleName)
 		return moduleName, nil
 	}
 
@@ -189,9 +220,12 @@ func determineProjectName(projectName, filePath string) (string, error) {
 }
 
 func validateRequiredParam(filePath string) error {
-	if filePath == "" {
-		return errors.Errorf("-%s should be set", filePathArg)
+	if filePath == reviser.StandardInput {
+		stat, _ := os.Stdin.Stat()
+		if stat.Mode()&os.ModeNamedPipe == 0 {
+			// no data on stdin
+			return errors.Errorf("-%s should be set", filePathArg)
+		}
 	}
-
 	return nil
 }

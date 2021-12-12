@@ -9,6 +9,7 @@ import (
 	"go/printer"
 	"go/token"
 	"io/ioutil"
+	"os"
 	"path"
 	"sort"
 	"strings"
@@ -19,6 +20,7 @@ import (
 
 const (
 	stringValueSeparator = ","
+	StandardInput        = "<standard-input>"
 )
 
 // Option is an int alias for options
@@ -70,7 +72,13 @@ func (o Options) shouldFormat() bool {
 
 // Execute is for revise imports and format the code
 func Execute(projectName, filePath, localPkgPrefixes string, options ...Option) ([]byte, bool, error) {
-	originalContent, err := ioutil.ReadFile(filePath)
+	var originalContent []byte
+	var err error
+	if filePath == StandardInput {
+		originalContent, err = ioutil.ReadAll(os.Stdin)
+	} else {
+		originalContent, err = ioutil.ReadFile(filePath)
+	}
 	if err != nil {
 		return nil, false, err
 	}

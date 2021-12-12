@@ -55,3 +55,21 @@ func GoModRootPath(path string) (string, error) {
 
 	return "", nil
 }
+
+func DetermineProjectName(projectName, filePath string) (string, error) {
+	if projectName == "" {
+		projectRootPath, err := GoModRootPath(filePath)
+		if err != nil {
+			return "", err
+		}
+
+		moduleName, err := Name(projectRootPath)
+		if err != nil {
+			return "", err
+		}
+
+		return moduleName, nil
+	}
+
+	return projectName, nil
+}

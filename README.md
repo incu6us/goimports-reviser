@@ -13,7 +13,7 @@
 !['logo'](./images/reviser-muscot_200.png)
 
 
-Tool for Golang to sort goimports by 3-4 groups: std, general, local(which is optional) and project dependencies.
+Tool for Golang to sort goimports by 3-4 groups(with own [linter]('./linter/README.md')): std, general, local(which is optional) and project dependencies.
 Also, formatting for your code will be prepared(so, you don't need to use `gofmt` or `goimports` separately). 
 Use additional options `-rm-unused` to remove unused imports and `-set-alias` to rewrite import aliases for versioned packages or for packages with additional prefix/suffix(example: `opentracing "github.com/opentracing/opentracing-go"`).
 `-local` - will create group for local imports. Values should be comma-separated.
@@ -36,12 +36,12 @@ Usage of goimports-reviser:
         File path to fix imports(ex.: ./reviser/reviser.go). Required parameter.
   -format
         Option will perform additional formatting. Optional parameter.
-  -list
-    	Option will list files whose formatting differs from goimports-reviser. Optional parameter.
+  -list-diff
+    	Option will list-diff files whose formatting differs from goimports-reviser. Optional parameter.
   -local string
         Local package prefixes which will be placed after 3rd-party group(if defined). Values should be comma-separated. Optional parameters.
   -output string
-        Can be "file", "write" or "stdout". Whether to write the formatted content back to the file or to stdout. When "write" together with "-list" will list the file name and write back to the file. Optional parameter. (default "file")
+        Can be "file", "write" or "stdout". Whether to write the formatted content back to the file or to stdout. When "write" together with "-list-diff" will list the file name and write back to the file. Optional parameter. (default "file")
   -project-name string
         Your project name(ex.: github.com/incu6us/goimports-reviser). Optional parameter.
   -rm-unused

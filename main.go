@@ -23,7 +23,7 @@ const (
 	localPkgPrefixesArg    = "local"
 	outputArg              = "output"
 	formatArg              = "format"
-	listFileNameArg        = "list"
+	listDiffFileNameArg    = "list-diff"
 	setExitStatusArg       = "set-exit-status"
 )
 
@@ -74,7 +74,7 @@ func init() {
 	)
 
 	listFileName = flag.Bool(
-		listFileNameArg,
+		listDiffFileNameArg,
 		false,
 		"Option will list files whose formatting differs from goimports-reviser. Optional parameter.",
 	)
@@ -212,7 +212,7 @@ func determineProjectName(projectName, filePath string) (string, error) {
 			return "", err
 		}
 
-		//fmt.Printf("projectName: '%v', moduleName: '%v'\n", projectName, moduleName)
+		// fmt.Printf("projectName: '%v', moduleName: '%v'\n", projectName, moduleName)
 		return moduleName, nil
 	}
 

@@ -13,4 +13,4 @@ go vet -vettool=bin/macos-amd64/goimportsreviserlint ./...
 ```
 
 Output:
-!['linter output'](./images/linter-example.png)
+!['linter output'](../images/linter-example.png)

@@ -143,14 +143,8 @@ func main() {
 	if filePath == "" {
 		filePath = reviser.StandardInput
 	}
-	if err := validateRequiredParam(filePath); err != nil {
-		fmt.Printf("%s\n\n", err)
-		printUsage()
-		os.Exit(1)
-	}
 
-	projectName, err := determineProjectName(projectName, filePath)
-	if err != nil {
+	if err := validateRequiredParam(filePath); err != nil {
 		fmt.Printf("%s\n\n", err)
 		printUsage()
 		os.Exit(1)
@@ -167,6 +161,13 @@ func main() {
 
 	if shouldFormat != nil && *shouldFormat {
 		options = append(options, reviser.OptionFormat)
+	}
+
+	projectName, err := module.DetermineProjectName(projectName, filePath)
+	if err != nil {
+		fmt.Printf("%s\n\n", err)
+		printUsage()
+		os.Exit(1)
 	}
 
 	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, localPkgPrefixes, options...)
@@ -195,28 +196,10 @@ func main() {
 	} else {
 		log.Fatalf(`invalid output "%s" specified`, output)
 	}
+
 	if hasChange && *setExitStatus {
 		os.Exit(1)
 	}
-}
-
-func determineProjectName(projectName, filePath string) (string, error) {
-	if projectName == "" {
-		projectRootPath, err := module.GoModRootPath(filePath)
-		if err != nil {
-			return "", err
-		}
-
-		moduleName, err := module.Name(projectRootPath)
-		if err != nil {
-			return "", err
-		}
-
-		// fmt.Printf("projectName: '%v', moduleName: '%v'\n", projectName, moduleName)
-		return moduleName, nil
-	}
-
-	return projectName, nil
 }
 
 func validateRequiredParam(filePath string) error {

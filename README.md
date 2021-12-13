@@ -13,7 +13,7 @@
 !['logo'](./images/reviser-muscot_200.png)
 
 
-Tool for Golang to sort goimports by 3-4 groups: std, general, local(which is optional) and project dependencies.
+Tool for Golang to sort goimports by 3-4 groups(with own [linter](linter/README.md)): std, general, local(which is optional) and project dependencies.
 Also, formatting for your code will be prepared(so, you don't need to use `gofmt` or `goimports` separately). 
 Use additional options `-rm-unused` to remove unused imports and `-set-alias` to rewrite import aliases for versioned packages or for packages with additional prefix/suffix(example: `opentracing "github.com/opentracing/opentracing-go"`).
 `-local` - will create group for local imports. Values should be comma-separated.

@@ -10,7 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/incu6us/goimports-reviser/v2/pkg/module"
+	"github.com/incu6us/goimports-reviser/v2/helper"
 	"github.com/incu6us/goimports-reviser/v2/reviser"
 )
 
@@ -163,7 +163,7 @@ func main() {
 		options = append(options, reviser.OptionFormat)
 	}
 
-	projectName, err := module.DetermineProjectName(projectName, filePath)
+	projectName, err := helper.DetermineProjectName(projectName, filePath)
 	if err != nil {
 		fmt.Printf("%s\n\n", err)
 		printUsage()

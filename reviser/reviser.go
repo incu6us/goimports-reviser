@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	stringValueSeparator = ","
 	StandardInput        = "<standard-input>"
+	stringValueSeparator = ","
 )
 
 // Option is an int alias for options

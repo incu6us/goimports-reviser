@@ -1,7 +1,7 @@
-<center>
-  <h1 align="center">Russian warship, go f*ck yourself!</h1>
+<h1 align="center">
+  <p>Russian warship, go f*ck yourself!</p>
   <img src="images/warship.jpeg">
-</center>
+</h1>
 
 # goimports-reviser [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Right%20golang%20imports%20sorting%20and%20code%20formatting%20tool%20(goimports%20alternative)&url=https://github.com/incu6us/goimports-reviser&hashtags=golang,code,goimports-reviser,goimports,gofmt,developers)
 !['Status Badge'](https://github.com/incu6us/goimports-reviser/workflows/build/badge.svg)

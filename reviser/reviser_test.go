@@ -697,6 +697,52 @@ func main() {
 			wantChange: true,
 			wantErr:    false,
 		},
+		{
+			name: `success with "C""`,
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+/*
+#cgo CFLAGS: -I
+#cgo LDFLAGS: -L
+#include <stdio.h>
+#include <stdlib.h>
+*/
+import "C"
+import(
+	"fmt"
+	"github.com/pkg/errors"
+	"strconv"
+)
+
+func main(){
+	_ = strconv.Itoa(1)
+	fmt.Println(pg.In([]string{"test"}))
+}`,
+			},
+			want: `package testdata
+
+/*
+#cgo CFLAGS: -I
+#cgo LDFLAGS: -L
+#include <stdio.h>
+#include <stdlib.h>
+*/
+import "C"
+import (
+	"fmt"
+	"strconv"
+)
+
+func main() {
+	_ = strconv.Itoa(1)
+	fmt.Println(pg.In([]string{"test"}))
+}
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -783,6 +829,54 @@ func main(){
 			},
 			want: `package testdata
 
+import (
+	"fmt"
+	"strconv"
+
+	"github.com/pkg/errors"
+)
+
+func main() {
+	_ = strconv.Itoa(1)
+	fmt.Println(pg.In([]string{"test"}))
+}
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+		{
+			name: `success with "C""`,
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+/*
+#cgo CFLAGS: -I
+#cgo LDFLAGS: -L
+#include <stdio.h>
+#include <stdlib.h>
+*/
+import "C"
+import(
+	"fmt"
+	"github.com/pkg/errors"
+	"strconv"
+)
+
+func main(){
+	_ = strconv.Itoa(1)
+	fmt.Println(pg.In([]string{"test"}))
+}`,
+			},
+			want: `package testdata
+
+/*
+#cgo CFLAGS: -I
+#cgo LDFLAGS: -L
+#include <stdio.h>
+#include <stdlib.h>
+*/
+import "C"
 import (
 	"fmt"
 	"strconv"

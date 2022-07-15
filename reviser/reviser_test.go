@@ -698,7 +698,7 @@ func main() {
 			wantErr:    false,
 		},
 		{
-			name: `success with "C""`,
+			name: `success with "C"`,
 			args: args{
 				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",
@@ -845,7 +845,7 @@ func main() {
 			wantErr:    false,
 		},
 		{
-			name: `success with "C""`,
+			name: `success with "C"`,
 			args: args{
 				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",

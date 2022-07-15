@@ -1,4 +1,4 @@
-// +build test
+//go:build test
 
 package testdata
 

@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	buildTagPrefix = "+build"
+	buildTagPrefix = "//go:build "
 )
 
 // PackageImports is map of imports with their package names
@@ -97,10 +97,13 @@ func LoadPackageDependencies(dir, buildTag string) (PackageImports, error) {
 
 // ParseBuildTag parse `// +build ...` on a first line of *ast.File
 func ParseBuildTag(f *ast.File) string {
-	comments := f.Comments
-
-	if len(comments) > 0 && strings.Contains(comments[0].Text(), buildTagPrefix) {
-		return strings.TrimSpace(strings.Trim(comments[0].Text(), buildTagPrefix))
+	for _, g := range f.Comments {
+		for _, c := range g.List {
+			if !strings.HasPrefix(c.Text, buildTagPrefix) {
+				continue
+			}
+			return strings.TrimSpace(strings.TrimPrefix(c.Text, buildTagPrefix))
+		}
 	}
 
 	return ""

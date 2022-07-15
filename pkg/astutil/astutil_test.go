@@ -167,7 +167,8 @@ func main(){
 
 func TestLoadPackageDeps(t *testing.T) {
 	type args struct {
-		dir string
+		dir      string
+		filename string
 	}
 
 	tests := []struct {
@@ -179,7 +180,20 @@ func TestLoadPackageDeps(t *testing.T) {
 		{
 			name: "success",
 			args: args{
-				dir: "./testdata/",
+				dir:      "./testdata/",
+				filename: "testdata.go",
+			},
+			want: map[string]string{
+				"fmt":                   "fmt",
+				"github.com/pkg/errors": "errors",
+			},
+			wantErr: false,
+		},
+		{
+			name: "success with deprecated build tag",
+			args: args{
+				dir:      "./testdata/",
+				filename: "testdata_with_deprecated_build_tag.go",
 			},
 			want: map[string]string{
 				"fmt":                   "fmt",
@@ -193,7 +207,7 @@ func TestLoadPackageDeps(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			f, err := parser.ParseFile(
 				token.NewFileSet(),
-				fmt.Sprintf("%s/%s", tt.args.dir, "testdata.go"),
+				fmt.Sprintf("%s/%s", tt.args.dir, tt.args.filename),
 				nil,
 				parser.ParseComments,
 			)

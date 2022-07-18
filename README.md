@@ -1,6 +1,8 @@
 <br/>
 <div align="center">
-  <img src="images/dove.png" class="this" alt="Stand With Ukraine" style="width: 60%;">
+  <a href="https://www.standwithukraine.dev">
+    <img src="images/dove.png" class="this" alt="Stand With Ukraine" style="width: 60%;">
+  </a>
   <h3 align="center">🇺🇦 #StandWithUkraine 🇺🇦</h3>
 </div>
 

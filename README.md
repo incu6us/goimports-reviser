@@ -1,7 +1,8 @@
-<h1 align="center">
-  <p>Russian warship, go f*ck yourself!</p>
-  <img src="images/warship.jpeg">
-</h1>
+<br/>
+<div align="center">
+  <img src="images/dove.png" class="this" alt="Stand With Ukraine" style="width: 60%;">
+  <h3 align="center">🇺🇦 #StandWithUkraine 🇺🇦</h3>
+</div>
 
 # goimports-reviser [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Right%20golang%20imports%20sorting%20and%20code%20formatting%20tool%20(goimports%20alternative)&url=https://github.com/incu6us/goimports-reviser&hashtags=golang,code,goimports-reviser,goimports,gofmt,developers)
 !['Status Badge'](https://github.com/incu6us/goimports-reviser/workflows/build/badge.svg)
@@ -14,6 +15,7 @@
 ![license](https://img.shields.io/github/license/incu6us/goimports-reviser)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go) 
 
+<a href="https://www.buymeacoffee.com/slavka" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;"></a>
 
 !['logo'](./images/reviser-muscot_200.png)
 
@@ -163,9 +165,9 @@ func additionalTest(){
 
 ---
 
-### If you like the project 
+## Give a Star! ⭐
+If you like or are using this project, please give it a **star**.
 
-<a href="https://www.buymeacoffee.com/slavka" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;"></a>
 
 ### Stargazers
 

@@ -461,9 +461,9 @@ import "C"
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "")
+			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).Fix()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Fix() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
@@ -751,9 +751,10 @@ func main() {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "", OptionRemoveUnusedImports)
+			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).
+				Fix(WithRemovingUnusedImports)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Fix() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
@@ -900,9 +901,10 @@ func main() {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "", OptionUseAliasForVersionSuffix)
+			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).
+				Fix(WithUsingAliasForVersionSuffix)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Fix() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
@@ -1115,9 +1117,10 @@ func main() {
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, tt.args.localPkgPrefixes)
+			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).
+				Fix(WithLocalPackagePrefix(tt.args.localPkgPrefixes))
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Fix() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
@@ -1204,9 +1207,9 @@ func test1() {}
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			got, hasChange, err := Execute(tt.args.projectName, tt.args.filePath, "", OptionFormat)
+			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).Fix(WithCodeFormatting)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Execute() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Fix() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 

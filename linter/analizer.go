@@ -1,3 +1,4 @@
+//go:build linter
 // +build linter
 
 package main
@@ -10,8 +11,8 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 
-	"github.com/incu6us/goimports-reviser/v2/pkg/module"
-	"github.com/incu6us/goimports-reviser/v2/reviser"
+	"github.com/incu6us/goimports-reviser/v3/pkg/module"
+	"github.com/incu6us/goimports-reviser/v3/reviser"
 )
 
 const errMessage = "imports must be formatted"
@@ -79,7 +80,7 @@ func run(localPkgPrefixes string, options ...reviser.Option) func(pass *analysis
 				}
 			}
 
-			formattedFileContent, hasChanged, err := reviser.Execute(projectName, filePath, localPkgPrefixes, options...)
+			formattedFileContent, hasChanged, err := reviser.Fix(projectName, filePath, localPkgPrefixes, options...)
 			if err != nil {
 				return nil, err
 			}

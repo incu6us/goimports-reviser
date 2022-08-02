@@ -10,8 +10,8 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/incu6us/goimports-reviser/v2/helper"
-	"github.com/incu6us/goimports-reviser/v2/reviser"
+	"github.com/incu6us/goimports-reviser/v3/helper"
+	"github.com/incu6us/goimports-reviser/v3/reviser"
 )
 
 const (
@@ -152,25 +152,29 @@ func main() {
 
 	var options reviser.Options
 	if shouldRemoveUnusedImports != nil && *shouldRemoveUnusedImports {
-		options = append(options, reviser.OptionRemoveUnusedImports)
+		options = append(options, reviser.WithRemovingUnusedImports)
 	}
 
 	if shouldSetAlias != nil && *shouldSetAlias {
-		options = append(options, reviser.OptionUseAliasForVersionSuffix)
+		options = append(options, reviser.WithUsingAliasForVersionSuffix)
 	}
 
 	if shouldFormat != nil && *shouldFormat {
-		options = append(options, reviser.OptionFormat)
+		options = append(options, reviser.WithCodeFormatting)
 	}
 
-	projectName, err := helper.DetermineProjectName(projectName, filePath)
+	if localPkgPrefixes != "" {
+		options = append(options, reviser.WithLocalPackagePrefix(localPkgPrefixes))
+	}
+
+	originProjectName, err := helper.DetermineProjectName(projectName, filePath)
 	if err != nil {
 		fmt.Printf("%s\n\n", err)
 		printUsage()
 		os.Exit(1)
 	}
 
-	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, localPkgPrefixes, options...)
+	formattedOutput, hasChange, err := reviser.NewSourceFile(originProjectName, filePath).Fix(options...)
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}

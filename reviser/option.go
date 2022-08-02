@@ -26,13 +26,21 @@ func WithCodeFormatting(f *SourceFile) error {
 	return nil
 }
 
-// WithLocalPackagePrefix option for 4th group, like inter-org package prefixes
-func WithLocalPackagePrefix(s string) Option {
-	return func(i *SourceFile) error {
+// WithCompanyPackagePrefixes option for 3d group(by default), like inter-org or company package prefixes
+func WithCompanyPackagePrefixes(s string) Option {
+	return func(f *SourceFile) error {
 		prefixes := strings.Split(s, stringValueSeparator)
 		for _, prefix := range prefixes {
-			i.localPackagePrefixes = append(i.localPackagePrefixes, strings.TrimSpace(prefix))
+			f.companyPackagePrefixes = append(f.companyPackagePrefixes, strings.TrimSpace(prefix))
 		}
+		return nil
+	}
+}
+
+// WithImportsOrder will sort by needed order. Default order is "std,general,company,project"
+func WithImportsOrder(orders []ImportsOrder) Option {
+	return func(f *SourceFile) error {
+		f.importsOrders = orders
 		return nil
 	}
 }

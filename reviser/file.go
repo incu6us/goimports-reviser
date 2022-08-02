@@ -28,7 +28,8 @@ type SourceFile struct {
 	shouldRemoveUnusedImports      bool
 	shouldUseAliasForVersionSuffix bool
 	shouldFormatCode               bool
-	localPackagePrefixes           []string
+	companyPackagePrefixes         []string
+	importsOrders                  ImportsOrders
 
 	projectName string
 	filePath    string
@@ -45,7 +46,10 @@ func NewSourceFile(projectName, filePath string) *SourceFile {
 // Fix is for revise imports and format the code
 func (f *SourceFile) Fix(options ...Option) ([]byte, bool, error) {
 	for _, option := range options {
-		option(f)
+		err := option(f)
+		if err != nil {
+			return nil, false, err
+		}
 	}
 
 	var originalContent []byte
@@ -73,7 +77,7 @@ func (f *SourceFile) Fix(options ...Option) ([]byte, bool, error) {
 
 	stdImports, generalImports, projectLocalPkgs, projectImports := groupImports(
 		f.projectName,
-		f.localPackagePrefixes,
+		f.companyPackagePrefixes,
 		importsWithMetadata,
 	)
 
@@ -82,7 +86,7 @@ func (f *SourceFile) Fix(options ...Option) ([]byte, bool, error) {
 		pf.Decls = decls
 	}
 
-	fixImports(pf, stdImports, generalImports, projectLocalPkgs, projectImports, importsWithMetadata)
+	f.fixImports(pf, stdImports, generalImports, projectLocalPkgs, projectImports, importsWithMetadata)
 
 	f.formatDecls(pf)
 
@@ -212,13 +216,13 @@ func isSingleCgoImport(dd *ast.GenDecl) bool {
 	return dd.Specs[0].(*ast.ImportSpec).Path.Value == `"C"`
 }
 
-func fixImports(
-	f *ast.File,
+func (f *SourceFile) fixImports(
+	file *ast.File,
 	stdImports, generalImports, projectLocalPkgs, projectImports []string,
 	commentsMetadata map[string]*commentsMetadata,
 ) {
 	var importsPositions []*importPosition
-	for _, decl := range f.Decls {
+	for _, decl := range file.Decls {
 		dd, ok := decl.(*ast.GenDecl)
 		if !ok {
 			continue
@@ -235,11 +239,12 @@ func fixImports(
 			},
 		)
 
-		dd.Specs = rebuildImports(dd.Tok, commentsMetadata, stdImports, generalImports, projectLocalPkgs, projectImports)
+		one, two, three, four := f.importsOrders.sortImportsByOrder(stdImports, generalImports, projectLocalPkgs, projectImports)
+		dd.Specs = rebuildImports(dd.Tok, commentsMetadata, one, two, three, four)
 	}
 
-	clearImportDocs(f, importsPositions)
-	removeEmptyImportNode(f)
+	clearImportDocs(file, importsPositions)
+	removeEmptyImportNode(file)
 }
 
 // hasMultipleImportDecls will return combined import declarations to single declaration
@@ -328,64 +333,64 @@ func removeEmptyImportNode(f *ast.File) {
 func rebuildImports(
 	tok token.Token,
 	commentsMetadata map[string]*commentsMetadata,
-	stdImports []string,
-	generalImports []string,
-	projectLocalPkgs []string,
-	projectImports []string,
+	firstImportGroup []string,
+	secondImportsGroup []string,
+	thirdImportsGroup []string,
+	fourthImportGroup []string,
 ) []ast.Spec {
 	var specs []ast.Spec
 
-	linesCounter := len(stdImports)
-	for _, stdImport := range stdImports {
+	linesCounter := len(firstImportGroup)
+	for _, imprt := range firstImportGroup {
 		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(stdImport, commentsMetadata), Kind: tok},
+			Path: &ast.BasicLit{Value: importWithComment(imprt, commentsMetadata), Kind: tok},
 		}
 		specs = append(specs, spec)
 
 		linesCounter--
 
-		if linesCounter == 0 && (len(generalImports) > 0 || len(projectLocalPkgs) > 0 || len(projectImports) > 0) {
+		if linesCounter == 0 && (len(secondImportsGroup) > 0 || len(thirdImportsGroup) > 0 || len(fourthImportGroup) > 0) {
 			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
 
 			specs = append(specs, spec)
 		}
 	}
 
-	linesCounter = len(generalImports)
-	for _, generalImport := range generalImports {
+	linesCounter = len(secondImportsGroup)
+	for _, imprt := range secondImportsGroup {
 		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(generalImport, commentsMetadata), Kind: tok},
+			Path: &ast.BasicLit{Value: importWithComment(imprt, commentsMetadata), Kind: tok},
 		}
 		specs = append(specs, spec)
 
 		linesCounter--
 
-		if linesCounter == 0 && (len(projectLocalPkgs) > 0 || len(projectImports) > 0) {
+		if linesCounter == 0 && (len(thirdImportsGroup) > 0 || len(fourthImportGroup) > 0) {
 			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
 
 			specs = append(specs, spec)
 		}
 	}
 
-	linesCounter = len(projectLocalPkgs)
-	for _, projectLocalPkg := range projectLocalPkgs {
+	linesCounter = len(thirdImportsGroup)
+	for _, imprt := range thirdImportsGroup {
 		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(projectLocalPkg, commentsMetadata), Kind: tok},
+			Path: &ast.BasicLit{Value: importWithComment(imprt, commentsMetadata), Kind: tok},
 		}
 		specs = append(specs, spec)
 
 		linesCounter--
 
-		if linesCounter == 0 && len(projectImports) > 0 {
+		if linesCounter == 0 && len(fourthImportGroup) > 0 {
 			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
 
 			specs = append(specs, spec)
 		}
 	}
 
-	for _, projectImport := range projectImports {
+	for _, imprt := range fourthImportGroup {
 		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(projectImport, commentsMetadata), Kind: tok},
+			Path: &ast.BasicLit{Value: importWithComment(imprt, commentsMetadata), Kind: tok},
 		}
 		specs = append(specs, spec)
 	}

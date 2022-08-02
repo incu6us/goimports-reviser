@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestExecute(t *testing.T) {
+func TestSourceFile_Fix(t *testing.T) {
 	type args struct {
 		projectName string
 		filePath    string
@@ -473,7 +473,157 @@ import "C"
 	}
 }
 
-func TestExecute_WithRemoveUnusedImports(t *testing.T) {
+func TestSourceFile_Fix_WithImportsOrder(t *testing.T) {
+	type args struct {
+		projectName  string
+		filePath     string
+		fileContent  string
+		importsOrder string
+	}
+
+	tests := []struct {
+		name       string
+		args       args
+		want       string
+		wantChange bool
+		wantErr    bool
+	}{
+		{
+			name: "success with default order",
+			args: args{
+				projectName:  "github.com/incu6us/goimports-reviser",
+				filePath:     "./testdata/example.go",
+				importsOrder: "",
+				fileContent: `package testdata
+
+import (
+	"log"
+
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+
+	"bytes"
+
+	"github.com/pkg/errors"
+)
+
+// nolint:gomnd
+`,
+			},
+			want: `package testdata
+
+import (
+	"bytes"
+	"log"
+
+	"github.com/pkg/errors"
+
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+)
+
+// nolint:gomnd
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+		{
+			name: "success std,general,company,project",
+			args: args{
+				projectName:  "github.com/incu6us/goimports-reviser",
+				filePath:     "./testdata/example.go",
+				importsOrder: "std,general,company,project",
+				fileContent: `package testdata
+
+import (
+	"log"
+
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+
+	"bytes"
+
+	"github.com/pkg/errors"
+)
+
+// nolint:gomnd
+`,
+			},
+			want: `package testdata
+
+import (
+	"bytes"
+	"log"
+
+	"github.com/pkg/errors"
+
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+)
+
+// nolint:gomnd
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+		{
+			name: "success project,company,general,std",
+			args: args{
+				projectName:  "github.com/incu6us/goimports-reviser",
+				filePath:     "./testdata/example.go",
+				importsOrder: "project,company,general,std",
+				fileContent: `package testdata
+
+import (
+	"log"
+
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+
+	"bytes"
+
+	"github.com/pkg/errors"
+)
+
+// nolint:gomnd
+`,
+			},
+			want: `package testdata
+
+import (
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+
+	"github.com/pkg/errors"
+
+	"bytes"
+	"log"
+)
+
+// nolint:gomnd
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+	}
+	for _, tt := range tests {
+		if tt.args.filePath != StandardInput && !strings.Contains(tt.args.filePath, "does-not-exist") {
+			if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
+				t.Errorf("write test file failed: %s", err)
+			}
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			order, err := StringToImportsOrders(tt.args.importsOrder)
+			assert.Nil(t, err)
+			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).
+				Fix(WithImportsOrder(order))
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Fix() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			assert.Equal(t, tt.wantChange, hasChange)
+			assert.Equal(t, tt.want, string(got))
+		})
+	}
+}
+
+func TestSourceFile_Fix_WithRemoveUnusedImports(t *testing.T) {
 	type args struct {
 		projectName string
 		filePath    string
@@ -764,7 +914,7 @@ func main() {
 	}
 }
 
-func TestExecute_WithAliasForVersionSuffix(t *testing.T) {
+func TestSourceFile_Fix_WithAliasForVersionSuffix(t *testing.T) {
 	type args struct {
 		projectName string
 		filePath    string
@@ -914,7 +1064,7 @@ func main() {
 	}
 }
 
-func TestExecute_WithLocalPackagePrefixes(t *testing.T) {
+func TestSourceFile_Fix_WithLocalPackagePrefixes(t *testing.T) {
 	type args struct {
 		projectName      string
 		filePath         string
@@ -1118,7 +1268,7 @@ func main() {
 
 		t.Run(tt.name, func(t *testing.T) {
 			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).
-				Fix(WithLocalPackagePrefix(tt.args.localPkgPrefixes))
+				Fix(WithCompanyPackagePrefixes(tt.args.localPkgPrefixes))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Fix() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1130,7 +1280,7 @@ func main() {
 	}
 }
 
-func TestExecute_WithFormat(t *testing.T) {
+func TestSourceFile_Fix_WithFormat(t *testing.T) {
 	type args struct {
 		projectName string
 		filePath    string

@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"sync"
 
 	"github.com/pkg/errors"
 
@@ -172,7 +171,7 @@ func main() {
 
 	originFilePath := flag.Arg(0)
 	if filePath != "" {
-		deprecatedMessagesCh <- fmt.Sprintf("-%s is deprecated. Put file name as last argument to the command(Example: goimports-reviser -rm-unused -set-alias -format goimports-reviser/main.go)\n", filePathArg)
+		deprecatedMessagesCh <- fmt.Sprintf("-%s is deprecated. Put file name as last argument to the command(Example: goimports-reviser -rm-unused -set-alias -format goimports-reviser/main.go)", filePathArg)
 		originFilePath = filePath
 	}
 
@@ -203,7 +202,7 @@ func main() {
 		if companyPkgPrefixes != "" {
 			companyPkgPrefixes = localPkgPrefixes
 		}
-		deprecatedMessagesCh <- fmt.Sprintf(`-%s is deprecated and will be removed soon. Use -%s instead.\n`, localArg, companyPkgPrefixesArg)
+		deprecatedMessagesCh <- fmt.Sprintf(`-%s is deprecated and will be removed soon. Use -%s instead.`, localArg, companyPkgPrefixesArg)
 	}
 
 	if companyPkgPrefixes != "" {
@@ -277,19 +276,13 @@ func validateRequiredParam(filePath string) error {
 }
 
 func printDeprecations(deprecatedMessagesCh chan string) {
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		var hasDeprecations bool
-		for deprecatedMessage := range deprecatedMessagesCh {
-			hasDeprecations = true
-			fmt.Printf("%s\n", deprecatedMessage)
-		}
-		if hasDeprecations {
-			fmt.Printf("All changes to file are applied, but command-line syntax should be fixed\n")
-			os.Exit(1)
-		}
-		wg.Done()
-	}()
-	wg.Wait()
+	var hasDeprecations bool
+	for deprecatedMessage := range deprecatedMessagesCh {
+		hasDeprecations = true
+		fmt.Printf("%s\n", deprecatedMessage)
+	}
+	if hasDeprecations {
+		fmt.Printf("All changes to file are applied, but command-line syntax should be fixed\n")
+		os.Exit(1)
+	}
 }

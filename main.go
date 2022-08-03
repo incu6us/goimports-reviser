@@ -7,24 +7,29 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/pkg/errors"
 
-	"github.com/incu6us/goimports-reviser/v2/helper"
-	"github.com/incu6us/goimports-reviser/v2/reviser"
+	"github.com/incu6us/goimports-reviser/v3/helper"
+	"github.com/incu6us/goimports-reviser/v3/reviser"
 )
 
 const (
 	projectNameArg         = "project-name"
-	filePathArg            = "file-path"
 	versionArg             = "version"
 	removeUnusedImportsArg = "rm-unused"
 	setAliasArg            = "set-alias"
-	localPkgPrefixesArg    = "local"
+	companyPkgPrefixesArg  = "company-prefixes"
 	outputArg              = "output"
+	importsOrderArg        = "imports-order"
 	formatArg              = "format"
 	listDiffFileNameArg    = "list-diff"
 	setExitStatusArg       = "set-exit-status"
+
+	// Deprecated options
+	localArg    = "local"
+	filePathArg = "file-path"
 )
 
 // Project build specific vars
@@ -42,14 +47,19 @@ var (
 	setExitStatus             *bool
 )
 
-var projectName, filePath, localPkgPrefixes, output string
+var (
+	projectName, filePath, companyPkgPrefixes, output, importsOrder string
+
+	// Deprecated
+	localPkgPrefixes string
+)
 
 func init() {
 	flag.StringVar(
 		&filePath,
 		filePathArg,
 		"",
-		"File path to fix imports(ex.: ./reviser/reviser.go). Optional parameter.",
+		"Deprecated. Put file name as an argument(last item) of command line.",
 	)
 
 	flag.StringVar(
@@ -60,10 +70,17 @@ func init() {
 	)
 
 	flag.StringVar(
-		&localPkgPrefixes,
-		localPkgPrefixesArg,
+		&companyPkgPrefixes,
+		companyPkgPrefixesArg,
 		"",
-		"Local package prefixes which will be placed after 3rd-party group(if defined). Values should be comma-separated. Optional parameters.",
+		"Company package prefixes which will be placed after 3rd-party group by default(if defined). Values should be comma-separated. Optional parameters.",
+	)
+
+	flag.StringVar(
+		&localPkgPrefixes,
+		localArg,
+		"",
+		"Deprecated",
 	)
 
 	flag.StringVar(
@@ -71,6 +88,18 @@ func init() {
 		outputArg,
 		"file",
 		`Can be "file", "write" or "stdout". Whether to write the formatted content back to the file or to stdout. When "write" together with "-list" will list the file name and write back to the file. Optional parameter.`,
+	)
+
+	flag.StringVar(
+		&importsOrder,
+		importsOrderArg,
+		"std,general,company,project",
+		`Your imports groups can be sorted in your way. 
+std - std import group; 
+general - libs for general purpose; 
+company - inter-org libs(if you set '-local'-option, then 4th group will be split separately. In other case, it will be the part of general purpose libs); 
+project - your local project dependencies. 
+Optional parameter.`,
 	)
 
 	listFileName = flag.Bool(
@@ -133,6 +162,7 @@ func printVersion() {
 }
 
 func main() {
+	deprecatedMessagesCh := make(chan string, 10)
 	flag.Parse()
 
 	if shouldShowVersion != nil && *shouldShowVersion {
@@ -140,11 +170,17 @@ func main() {
 		return
 	}
 
-	if filePath == "" {
-		filePath = reviser.StandardInput
+	originFilePath := flag.Arg(0)
+	if filePath != "" {
+		deprecatedMessagesCh <- fmt.Sprintf("-%s is deprecated. Put file name as last argument to the command(Example: goimports-reviser -rm-unused -set-alias -format goimports-reviser/main.go)\n", filePathArg)
+		originFilePath = filePath
 	}
 
-	if err := validateRequiredParam(filePath); err != nil {
+	if originFilePath == "" {
+		originFilePath = reviser.StandardInput
+	}
+
+	if err := validateRequiredParam(originFilePath); err != nil {
 		fmt.Printf("%s\n\n", err)
 		printUsage()
 		os.Exit(1)
@@ -152,46 +188,71 @@ func main() {
 
 	var options reviser.Options
 	if shouldRemoveUnusedImports != nil && *shouldRemoveUnusedImports {
-		options = append(options, reviser.OptionRemoveUnusedImports)
+		options = append(options, reviser.WithRemovingUnusedImports)
 	}
 
 	if shouldSetAlias != nil && *shouldSetAlias {
-		options = append(options, reviser.OptionUseAliasForVersionSuffix)
+		options = append(options, reviser.WithUsingAliasForVersionSuffix)
 	}
 
 	if shouldFormat != nil && *shouldFormat {
-		options = append(options, reviser.OptionFormat)
+		options = append(options, reviser.WithCodeFormatting)
 	}
 
-	projectName, err := helper.DetermineProjectName(projectName, filePath)
+	if localPkgPrefixes != "" {
+		if companyPkgPrefixes != "" {
+			companyPkgPrefixes = localPkgPrefixes
+		}
+		deprecatedMessagesCh <- fmt.Sprintf(`-%s is deprecated and will be removed soon. Use -%s instead.\n`, localArg, companyPkgPrefixesArg)
+	}
+
+	if companyPkgPrefixes != "" {
+		options = append(options, reviser.WithCompanyPackagePrefixes(companyPkgPrefixes))
+	}
+
+	if importsOrder != "" {
+		order, err := reviser.StringToImportsOrders(importsOrder)
+		if err != nil {
+			fmt.Printf("%s\n\n", err)
+			printUsage()
+			os.Exit(1)
+		}
+		options = append(options, reviser.WithImportsOrder(order))
+	}
+
+	originProjectName, err := helper.DetermineProjectName(projectName, originFilePath)
 	if err != nil {
 		fmt.Printf("%s\n\n", err)
 		printUsage()
 		os.Exit(1)
 	}
 
-	formattedOutput, hasChange, err := reviser.Execute(projectName, filePath, localPkgPrefixes, options...)
+	close(deprecatedMessagesCh)
+
+	formattedOutput, hasChange, err := reviser.NewSourceFile(originProjectName, originFilePath).Fix(options...)
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}
 
 	if !hasChange && *listFileName {
+		printDeprecations(deprecatedMessagesCh)
 		return
 	}
 	if hasChange && *listFileName && output != "write" {
-		fmt.Println(filePath)
-	} else if output == "stdout" || filePath == reviser.StandardInput {
+		fmt.Println(originFilePath)
+	} else if output == "stdout" || originFilePath == reviser.StandardInput {
 		fmt.Print(string(formattedOutput))
 	} else if output == "file" || output == "write" {
 		if !hasChange {
+			printDeprecations(deprecatedMessagesCh)
 			return
 		}
 
-		if err := ioutil.WriteFile(filePath, formattedOutput, 0644); err != nil {
-			log.Fatalf("failed to write fixed result to file(%s): %+v", filePath, errors.WithStack(err))
+		if err := ioutil.WriteFile(originFilePath, formattedOutput, 0644); err != nil {
+			log.Fatalf("failed to write fixed result to file(%s): %+v", originFilePath, errors.WithStack(err))
 		}
 		if *listFileName {
-			fmt.Println(filePath)
+			fmt.Println(originFilePath)
 		}
 	} else {
 		log.Fatalf(`invalid output "%s" specified`, output)
@@ -200,6 +261,8 @@ func main() {
 	if hasChange && *setExitStatus {
 		os.Exit(1)
 	}
+
+	printDeprecations(deprecatedMessagesCh)
 }
 
 func validateRequiredParam(filePath string) error {
@@ -211,4 +274,22 @@ func validateRequiredParam(filePath string) error {
 		}
 	}
 	return nil
+}
+
+func printDeprecations(deprecatedMessagesCh chan string) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		var hasDeprecations bool
+		for deprecatedMessage := range deprecatedMessagesCh {
+			hasDeprecations = true
+			fmt.Printf("%s\n", deprecatedMessage)
+		}
+		if hasDeprecations {
+			fmt.Printf("All changes to file are applied, but command-line syntax should be fixed\n")
+			os.Exit(1)
+		}
+		wg.Done()
+	}()
+	wg.Wait()
 }

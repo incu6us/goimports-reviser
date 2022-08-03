@@ -49,4 +49,4 @@ build-lint-linux-arm64:
 
 .PHONY: update-std-package-list
 update-std-package-list:
-	@go run -tags gen github.com/incu6us/goimports-reviser/v2/pkg/std/gen
+	@go run -tags gen github.com/incu6us/goimports-reviser/v3/pkg/std/gen

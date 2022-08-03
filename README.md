@@ -24,16 +24,16 @@
 !['logo'](./images/reviser-muscot_200.png)
 
 
-Tool for Golang to sort goimports by 3-4 groups(with own [linter](linter/README.md)): std, general, local(which is optional) and project dependencies.
+Tool for Golang to sort goimports by 3-4 groups(with own [linter](linter/README.md)): std, general, company(which is optional) and project dependencies.
 Also, formatting for your code will be prepared(so, you don't need to use `gofmt` or `goimports` separately). 
 Use additional options `-rm-unused` to remove unused imports and `-set-alias` to rewrite import aliases for versioned packages or for packages with additional prefix/suffix(example: `opentracing "github.com/opentracing/opentracing-go"`).
-`-local` - will create group for local imports. Values should be comma-separated.
+`-company-prefixes` - will create group for company imports(libs inside your organization). Values should be comma-separated.
 
 
 ## Configuration:
 ### Cmd
 ```bash
-goimports-reviser -file-path ./reviser/reviser.go -rm-unused -set-alias -format
+goimports-reviser -rm-unused -set-alias -format ./reviser/reviser.go
 ```
 
 ### Example, to configure it with JetBrains IDEs (via file watcher plugin):
@@ -43,14 +43,19 @@ goimports-reviser -file-path ./reviser/reviser.go -rm-unused -set-alias -format
 ### Options:
 ```text
 Usage of goimports-reviser:
-  -file-path string
-        File path to fix imports(ex.: ./reviser/reviser.go). Required parameter.
   -format
         Option will perform additional formatting. Optional parameter.
+  -imports-order string
+        Your imports groups can be sorted in your way. 
+        std - std import group; 
+        general - libs for general purpose; 
+        company - inter-org or your company libs(if you set '-company-prefixes'-option, then 4th group will be split separately. In other case, it will be the part of general purpose libs); 
+        project - your local project dependencies. 
+        Optional parameter. (default "std,general,company,project")
   -list-diff
     	Option will list-diff files whose formatting differs from goimports-reviser. Optional parameter.
-  -local string
-        Local package prefixes which will be placed after 3rd-party group(if defined). Values should be comma-separated. Optional parameters.
+  -company-prefixes string
+        Company package prefixes which will be placed after 3rd-party group(if defined). Values should be comma-separated. Optional parameters.
   -output string
         Can be "file", "write" or "stdout". Whether to write the formatted content back to the file or to stdout. When "write" together with "-list-diff" will list the file name and write back to the file. Optional parameter. (default "file")
   -project-name string
@@ -61,7 +66,6 @@ Usage of goimports-reviser:
         Set alias for versioned package names, like 'github.com/go-pg/pg/v9'. In this case import will be set as 'pg "github.com/go-pg/pg/v9"'. Optional parameter.
   -set-exit-status
     	set the exit status to 1 if a change is needed/made. Optional parameter.
-
 ```
 
 ## Install
@@ -115,7 +119,7 @@ import (
 )
 ```  
 
-### Example with `-local`-option
+### Example with `-company-prefixes`-option
 
 Before usage:
 
@@ -125,7 +129,7 @@ package testdata // goimports-reviser/testdata
 import (
 	"fmt" //fmt package
 	"github.com/pkg/errors" //custom package
-	"github.com/incu6us/goimports-reviser/pkg" // this is a local package which is not a part of the project
+	"github.com/incu6us/goimports-reviser/pkg" // this is a company package which is not a part of the project, but is a part of your organization
 	"goimports-reviser/pkg"
 )
 ```
@@ -139,7 +143,7 @@ import (
 
 	"github.com/pkg/errors" // custom package
 
-	"github.com/incu6us/goimports-reviser/pkg" // this is a local package which is not a part of the project
+	"github.com/incu6us/goimports-reviser/pkg" // this is a company package which is not a part of the project, but is a part of your organization
 
 	"goimports-reviser/pkg"
 )

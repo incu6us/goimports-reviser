@@ -14,8 +14,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/incu6us/goimports-reviser/v2/pkg/astutil"
-	"github.com/incu6us/goimports-reviser/v2/pkg/std"
+	"github.com/incu6us/goimports-reviser/v3/pkg/astutil"
+	"github.com/incu6us/goimports-reviser/v3/pkg/std"
 )
 
 const (
@@ -23,61 +23,41 @@ const (
 	stringValueSeparator = ","
 )
 
-// Option is an int alias for options
-type Option int
+// SourceFile main struct for fixing an existing code
+type SourceFile struct {
+	shouldRemoveUnusedImports      bool
+	shouldUseAliasForVersionSuffix bool
+	shouldFormatCode               bool
+	companyPackagePrefixes         []string
+	importsOrders                  ImportsOrders
 
-const (
-	// OptionRemoveUnusedImports is an option to remove unused imports
-	OptionRemoveUnusedImports Option = iota + 1
+	projectName string
+	filePath    string
+}
 
-	// OptionUseAliasForVersionSuffix is an option to set explicit package name in imports
-	OptionUseAliasForVersionSuffix
+// NewSourceFile constructor
+func NewSourceFile(projectName, filePath string) *SourceFile {
+	return &SourceFile{
+		projectName: projectName,
+		filePath:    filePath,
+	}
+}
 
-	// OptionFormat use to format the code
-	OptionFormat
-)
-
-// Options is a slice of executing options
-type Options []Option
-
-func (o Options) shouldRemoveUnusedImports() bool {
-	for _, option := range o {
-		if option == OptionRemoveUnusedImports {
-			return true
+// Fix is for revise imports and format the code
+func (f *SourceFile) Fix(options ...Option) ([]byte, bool, error) {
+	for _, option := range options {
+		err := option(f)
+		if err != nil {
+			return nil, false, err
 		}
 	}
 
-	return false
-}
-
-func (o Options) shouldUseAliasForVersionSuffix() bool {
-	for _, option := range o {
-		if option == OptionUseAliasForVersionSuffix {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (o Options) shouldFormat() bool {
-	for _, option := range o {
-		if option == OptionFormat {
-			return true
-		}
-	}
-
-	return false
-}
-
-// Execute is for revise imports and format the code
-func Execute(projectName, filePath, localPkgPrefixes string, options ...Option) ([]byte, bool, error) {
 	var originalContent []byte
 	var err error
-	if filePath == StandardInput {
+	if f.filePath == StandardInput {
 		originalContent, err = ioutil.ReadAll(os.Stdin)
 	} else {
-		originalContent, err = ioutil.ReadFile(filePath)
+		originalContent, err = ioutil.ReadFile(f.filePath)
 	}
 	if err != nil {
 		return nil, false, err
@@ -90,14 +70,14 @@ func Execute(projectName, filePath, localPkgPrefixes string, options ...Option) 
 		return nil, false, err
 	}
 
-	importsWithMetadata, err := parseImports(pf, filePath, options)
+	importsWithMetadata, err := f.parseImports(pf)
 	if err != nil {
 		return nil, false, err
 	}
 
 	stdImports, generalImports, projectLocalPkgs, projectImports := groupImports(
-		projectName,
-		localPkgPrefixes,
+		f.projectName,
+		f.companyPackagePrefixes,
 		importsWithMetadata,
 	)
 
@@ -106,9 +86,9 @@ func Execute(projectName, filePath, localPkgPrefixes string, options ...Option) 
 		pf.Decls = decls
 	}
 
-	fixImports(pf, stdImports, generalImports, projectLocalPkgs, projectImports, importsWithMetadata)
+	f.fixImports(pf, stdImports, generalImports, projectLocalPkgs, projectImports, importsWithMetadata)
 
-	formatDecls(pf, options)
+	f.formatDecls(pf)
 
 	fixedImportsContent, err := generateFile(fset, pf)
 	if err != nil {
@@ -123,13 +103,12 @@ func Execute(projectName, filePath, localPkgPrefixes string, options ...Option) 
 	return formattedContent, !bytes.Equal(originalContent, formattedContent), nil
 }
 
-func formatDecls(f *ast.File, options Options) {
-	shouldFormat := options.shouldFormat()
-	if !shouldFormat {
+func (f *SourceFile) formatDecls(file *ast.File) {
+	if !f.shouldFormatCode {
 		return
 	}
 
-	for _, decl := range f.Decls {
+	for _, decl := range file.Decls {
 		switch dd := decl.(type) {
 		case *ast.GenDecl:
 			dd.Doc = fixCommentGroup(dd.Doc)
@@ -161,7 +140,7 @@ func fixCommentGroup(commentGroup *ast.CommentGroup) *ast.CommentGroup {
 
 func groupImports(
 	projectName string,
-	localPkgPrefixes string,
+	localPkgPrefixes []string,
 	importsWithMetadata map[string]*commentsMetadata,
 ) ([]string, []string, []string, []string) {
 	var (
@@ -170,8 +149,6 @@ func groupImports(
 		projectLocalPkgs []string
 		generalImports   []string
 	)
-
-	localPackagePrefixes := commaValueToSlice(localPkgPrefixes)
 
 	for imprt := range importsWithMetadata {
 		pkgWithoutAlias := skipPackageAlias(imprt)
@@ -182,7 +159,7 @@ func groupImports(
 		}
 
 		var isLocalPackageFound bool
-		for _, localPackagePrefix := range localPackagePrefixes {
+		for _, localPackagePrefix := range localPkgPrefixes {
 			if strings.HasPrefix(pkgWithoutAlias, localPackagePrefix) && !strings.HasPrefix(pkgWithoutAlias, projectName) {
 				projectLocalPkgs = append(projectLocalPkgs, imprt)
 				isLocalPackageFound = true
@@ -208,23 +185,6 @@ func groupImports(
 	sort.Strings(projectImports)
 
 	return stdImports, generalImports, projectLocalPkgs, projectImports
-}
-
-func commaValueToSlice(s string) []string {
-	values := strings.Split(s, stringValueSeparator)
-	result := make([]string, 0, len(values))
-
-	for _, value := range values {
-		value = strings.TrimSpace(value)
-
-		if value == "" {
-			continue
-		}
-
-		result = append(result, value)
-	}
-
-	return result
 }
 
 func skipPackageAlias(pkg string) string {
@@ -256,13 +216,13 @@ func isSingleCgoImport(dd *ast.GenDecl) bool {
 	return dd.Specs[0].(*ast.ImportSpec).Path.Value == `"C"`
 }
 
-func fixImports(
-	f *ast.File,
+func (f *SourceFile) fixImports(
+	file *ast.File,
 	stdImports, generalImports, projectLocalPkgs, projectImports []string,
 	commentsMetadata map[string]*commentsMetadata,
 ) {
 	var importsPositions []*importPosition
-	for _, decl := range f.Decls {
+	for _, decl := range file.Decls {
 		dd, ok := decl.(*ast.GenDecl)
 		if !ok {
 			continue
@@ -279,11 +239,12 @@ func fixImports(
 			},
 		)
 
-		dd.Specs = rebuildImports(dd.Tok, commentsMetadata, stdImports, generalImports, projectLocalPkgs, projectImports)
+		one, two, three, four := f.importsOrders.sortImportsByOrder(stdImports, generalImports, projectLocalPkgs, projectImports)
+		dd.Specs = rebuildImports(dd.Tok, commentsMetadata, one, two, three, four)
 	}
 
-	clearImportDocs(f, importsPositions)
-	removeEmptyImportNode(f)
+	clearImportDocs(file, importsPositions)
+	removeEmptyImportNode(file)
 }
 
 // hasMultipleImportDecls will return combined import declarations to single declaration
@@ -372,64 +333,64 @@ func removeEmptyImportNode(f *ast.File) {
 func rebuildImports(
 	tok token.Token,
 	commentsMetadata map[string]*commentsMetadata,
-	stdImports []string,
-	generalImports []string,
-	projectLocalPkgs []string,
-	projectImports []string,
+	firstImportGroup []string,
+	secondImportsGroup []string,
+	thirdImportsGroup []string,
+	fourthImportGroup []string,
 ) []ast.Spec {
 	var specs []ast.Spec
 
-	linesCounter := len(stdImports)
-	for _, stdImport := range stdImports {
+	linesCounter := len(firstImportGroup)
+	for _, imprt := range firstImportGroup {
 		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(stdImport, commentsMetadata), Kind: tok},
+			Path: &ast.BasicLit{Value: importWithComment(imprt, commentsMetadata), Kind: tok},
 		}
 		specs = append(specs, spec)
 
 		linesCounter--
 
-		if linesCounter == 0 && (len(generalImports) > 0 || len(projectLocalPkgs) > 0 || len(projectImports) > 0) {
+		if linesCounter == 0 && (len(secondImportsGroup) > 0 || len(thirdImportsGroup) > 0 || len(fourthImportGroup) > 0) {
 			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
 
 			specs = append(specs, spec)
 		}
 	}
 
-	linesCounter = len(generalImports)
-	for _, generalImport := range generalImports {
+	linesCounter = len(secondImportsGroup)
+	for _, imprt := range secondImportsGroup {
 		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(generalImport, commentsMetadata), Kind: tok},
+			Path: &ast.BasicLit{Value: importWithComment(imprt, commentsMetadata), Kind: tok},
 		}
 		specs = append(specs, spec)
 
 		linesCounter--
 
-		if linesCounter == 0 && (len(projectLocalPkgs) > 0 || len(projectImports) > 0) {
+		if linesCounter == 0 && (len(thirdImportsGroup) > 0 || len(fourthImportGroup) > 0) {
 			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
 
 			specs = append(specs, spec)
 		}
 	}
 
-	linesCounter = len(projectLocalPkgs)
-	for _, projectLocalPkg := range projectLocalPkgs {
+	linesCounter = len(thirdImportsGroup)
+	for _, imprt := range thirdImportsGroup {
 		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(projectLocalPkg, commentsMetadata), Kind: tok},
+			Path: &ast.BasicLit{Value: importWithComment(imprt, commentsMetadata), Kind: tok},
 		}
 		specs = append(specs, spec)
 
 		linesCounter--
 
-		if linesCounter == 0 && len(projectImports) > 0 {
+		if linesCounter == 0 && len(fourthImportGroup) > 0 {
 			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
 
 			specs = append(specs, spec)
 		}
 	}
 
-	for _, projectImport := range projectImports {
+	for _, imprt := range fourthImportGroup {
 		spec := &ast.ImportSpec{
-			Path: &ast.BasicLit{Value: importWithComment(projectImport, commentsMetadata), Kind: tok},
+			Path: &ast.BasicLit{Value: importWithComment(imprt, commentsMetadata), Kind: tok},
 		}
 		specs = append(specs, spec)
 	}
@@ -466,23 +427,23 @@ func importWithComment(imprt string, commentsMetadata map[string]*commentsMetada
 	return fmt.Sprintf("%s %s", imprt, comment)
 }
 
-func parseImports(f *ast.File, filePath string, options Options) (map[string]*commentsMetadata, error) {
+func (f *SourceFile) parseImports(file *ast.File) (map[string]*commentsMetadata, error) {
 	importsWithMetadata := map[string]*commentsMetadata{}
 
-	shouldRemoveUnusedImports := options.shouldRemoveUnusedImports()
-	shouldUseAliasForVersionSuffix := options.shouldUseAliasForVersionSuffix()
+	shouldRemoveUnusedImports := f.shouldRemoveUnusedImports
+	shouldUseAliasForVersionSuffix := f.shouldUseAliasForVersionSuffix
 
 	var packageImports map[string]string
 	var err error
 
 	if shouldRemoveUnusedImports || shouldUseAliasForVersionSuffix {
-		packageImports, err = astutil.LoadPackageDependencies(path.Dir(filePath), astutil.ParseBuildTag(f))
+		packageImports, err = astutil.LoadPackageDependencies(path.Dir(f.filePath), astutil.ParseBuildTag(file))
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	for _, decl := range f.Decls {
+	for _, decl := range file.Decls {
 		switch decl.(type) {
 		case *ast.GenDecl:
 			dd := decl.(*ast.GenDecl)
@@ -495,7 +456,7 @@ func parseImports(f *ast.File, filePath string, options Options) (map[string]*co
 					importSpec := spec.(*ast.ImportSpec)
 
 					if shouldRemoveUnusedImports && !astutil.UsesImport(
-						f, packageImports, strings.Trim(importSpec.Path.Value, `"`),
+						file, packageImports, strings.Trim(importSpec.Path.Value, `"`),
 					) {
 						continue
 					}

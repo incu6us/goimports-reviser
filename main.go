@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/pkg/errors"
 
@@ -161,6 +162,7 @@ func printVersion() {
 }
 
 func main() {
+	deprecatedMessagesCh := make(chan string, 10)
 	flag.Parse()
 
 	if shouldShowVersion != nil && *shouldShowVersion {
@@ -170,7 +172,7 @@ func main() {
 
 	originFilePath := flag.Arg(0)
 	if filePath != "" {
-		fmt.Printf("-%s is deprecated. Use file name instead as a last argument\n", filePathArg)
+		deprecatedMessagesCh <- fmt.Sprintf("-%s is deprecated. Put file name as last argument to the command(Example: goimports-reviser -rm-unused -set-alias -format goimports-reviser/main.go)\n", filePathArg)
 		originFilePath = filePath
 	}
 
@@ -201,7 +203,7 @@ func main() {
 		if companyPkgPrefixes != "" {
 			companyPkgPrefixes = localPkgPrefixes
 		}
-		fmt.Printf(`-%s is deprecated and will be removed soon. Use -%s instead.\n`, localArg, companyPkgPrefixesArg)
+		deprecatedMessagesCh <- fmt.Sprintf(`-%s is deprecated and will be removed soon. Use -%s instead.\n`, localArg, companyPkgPrefixesArg)
 	}
 
 	if companyPkgPrefixes != "" {
@@ -225,12 +227,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	close(deprecatedMessagesCh)
+
 	formattedOutput, hasChange, err := reviser.NewSourceFile(originProjectName, originFilePath).Fix(options...)
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}
 
 	if !hasChange && *listFileName {
+		printDeprecations(deprecatedMessagesCh)
 		return
 	}
 	if hasChange && *listFileName && output != "write" {
@@ -239,6 +244,7 @@ func main() {
 		fmt.Print(string(formattedOutput))
 	} else if output == "file" || output == "write" {
 		if !hasChange {
+			printDeprecations(deprecatedMessagesCh)
 			return
 		}
 
@@ -255,6 +261,8 @@ func main() {
 	if hasChange && *setExitStatus {
 		os.Exit(1)
 	}
+
+	printDeprecations(deprecatedMessagesCh)
 }
 
 func validateRequiredParam(filePath string) error {
@@ -266,4 +274,22 @@ func validateRequiredParam(filePath string) error {
 		}
 	}
 	return nil
+}
+
+func printDeprecations(deprecatedMessagesCh chan string) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		var hasDeprecations bool
+		for deprecatedMessage := range deprecatedMessagesCh {
+			hasDeprecations = true
+			fmt.Printf("%s\n", deprecatedMessage)
+		}
+		if hasDeprecations {
+			fmt.Printf("All changes to file are applied, but command-line syntax should be fixed\n")
+			os.Exit(1)
+		}
+		wg.Done()
+	}()
+	wg.Wait()
 }

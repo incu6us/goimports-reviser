@@ -44,7 +44,7 @@ func NewSourceFile(projectName, filePath string) *SourceFile {
 }
 
 // Fix is for revise imports and format the code
-func (f *SourceFile) Fix(options ...Option) ([]byte, bool, error) {
+func (f *SourceFile) Fix(options ...SourceFileOption) ([]byte, bool, error) {
 	for _, option := range options {
 		err := option(f)
 		if err != nil {

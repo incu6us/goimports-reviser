@@ -25,6 +25,7 @@ const (
 	formatArg              = "format"
 	listDiffFileNameArg    = "list-diff"
 	setExitStatusArg       = "set-exit-status"
+	recursiveArg           = "recursive"
 
 	// Deprecated options
 	localArg    = "local"
@@ -44,13 +45,14 @@ var (
 	shouldFormat              *bool
 	listFileName              *bool
 	setExitStatus             *bool
+	isRecursive               *bool
 )
 
 var (
-	projectName, filePath, companyPkgPrefixes, output, importsOrder string
+	projectName, companyPkgPrefixes, output, importsOrder string
 
 	// Deprecated
-	localPkgPrefixes string
+	localPkgPrefixes, filePath string
 )
 
 func init() {
@@ -132,6 +134,12 @@ Optional parameter.`,
 		"Option will perform additional formatting. Optional parameter.",
 	)
 
+	isRecursive = flag.Bool(
+		recursiveArg,
+		false,
+		"Apply rules recursively if target is a directory. In case of ./... execution will be recursively applied by default. Optional parameter.",
+	)
+
 	if Tag != "" {
 		shouldShowVersion = flag.Bool(
 			versionArg,
@@ -169,23 +177,23 @@ func main() {
 		return
 	}
 
-	originFilePath := flag.Arg(0)
+	originPath := flag.Arg(0)
 	if filePath != "" {
 		deprecatedMessagesCh <- fmt.Sprintf("-%s is deprecated. Put file name as last argument to the command(Example: goimports-reviser -rm-unused -set-alias -format goimports-reviser/main.go)", filePathArg)
-		originFilePath = filePath
+		originPath = filePath
 	}
 
-	if originFilePath == "" {
-		originFilePath = reviser.StandardInput
+	if originPath == "" {
+		originPath = reviser.StandardInput
 	}
 
-	if err := validateRequiredParam(originFilePath); err != nil {
+	if err := validateRequiredParam(originPath); err != nil {
 		fmt.Printf("%s\n\n", err)
 		printUsage()
 		os.Exit(1)
 	}
 
-	var options reviser.Options
+	var options reviser.SourceFileOptions
 	if shouldRemoveUnusedImports != nil && *shouldRemoveUnusedImports {
 		options = append(options, reviser.WithRemovingUnusedImports)
 	}
@@ -219,7 +227,7 @@ func main() {
 		options = append(options, reviser.WithImportsOrder(order))
 	}
 
-	originProjectName, err := helper.DetermineProjectName(projectName, originFilePath)
+	originProjectName, err := helper.DetermineProjectName(projectName, originPath)
 	if err != nil {
 		fmt.Printf("%s\n\n", err)
 		printUsage()
@@ -228,11 +236,23 @@ func main() {
 
 	close(deprecatedMessagesCh)
 
-	formattedOutput, hasChange, err := reviser.NewSourceFile(originProjectName, originFilePath).Fix(options...)
+	if _, ok := reviser.IsDir(originPath); ok {
+		err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive).Fix(options...)
+		if err != nil {
+			log.Fatalf("%+v", errors.WithStack(err))
+		}
+		return
+	}
+
+	formattedOutput, hasChange, err := reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}
 
+	resultPostProcess(hasChange, deprecatedMessagesCh, originPath, formattedOutput)
+}
+
+func resultPostProcess(hasChange bool, deprecatedMessagesCh chan string, originFilePath string, formattedOutput []byte) {
 	if !hasChange && *listFileName {
 		printDeprecations(deprecatedMessagesCh)
 		return

@@ -36,6 +36,15 @@ Use additional options `-rm-unused` to remove unused imports and `-set-alias` to
 goimports-reviser -rm-unused -set-alias -format ./reviser/reviser.go
 ```
 
+You can also apply rules to a dir or recursively apply using ./... as a target:
+```bash
+goimports-reviser -rm-unused -set-alias -format -recursive reviser
+```
+
+```bash
+goimports-reviser -rm-unused -set-alias -format ./...
+```
+
 ### Example, to configure it with JetBrains IDEs (via file watcher plugin):
 ![example](./images/image.png)
 
@@ -60,6 +69,8 @@ Usage of goimports-reviser:
         Can be "file", "write" or "stdout". Whether to write the formatted content back to the file or to stdout. When "write" together with "-list-diff" will list the file name and write back to the file. Optional parameter. (default "file")
   -project-name string
         Your project name(ex.: github.com/incu6us/goimports-reviser). Optional parameter.
+  -recursive
+        Apply rules recursively if target is a directory. In case of ./... execution will be recursively applied by default. Optional parameter.
   -rm-unused
         Remove unused imports. Optional parameter.
   -set-alias

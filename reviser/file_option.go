@@ -2,11 +2,11 @@ package reviser
 
 import "strings"
 
-// Option is an int alias for options
-type Option func(f *SourceFile) error
+// SourceFileOption is an int alias for options
+type SourceFileOption func(f *SourceFile) error
 
-// Options is a slice of executing options
-type Options []Option
+// SourceFileOptions is a slice of executing options
+type SourceFileOptions []SourceFileOption
 
 // WithRemovingUnusedImports is an option to remove unused imports
 func WithRemovingUnusedImports(f *SourceFile) error {
@@ -27,7 +27,7 @@ func WithCodeFormatting(f *SourceFile) error {
 }
 
 // WithCompanyPackagePrefixes option for 3d group(by default), like inter-org or company package prefixes
-func WithCompanyPackagePrefixes(s string) Option {
+func WithCompanyPackagePrefixes(s string) SourceFileOption {
 	return func(f *SourceFile) error {
 		prefixes := strings.Split(s, stringValueSeparator)
 		for _, prefix := range prefixes {
@@ -38,7 +38,7 @@ func WithCompanyPackagePrefixes(s string) Option {
 }
 
 // WithImportsOrder will sort by needed order. Default order is "std,general,company,project"
-func WithImportsOrder(orders []ImportsOrder) Option {
+func WithImportsOrder(orders []ImportsOrder) SourceFileOption {
 	return func(f *SourceFile) error {
 		f.importsOrders = orders
 		return nil

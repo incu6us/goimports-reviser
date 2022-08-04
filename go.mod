@@ -5,8 +5,9 @@ go 1.18
 require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.6.1
-	golang.org/x/mod v0.5.1
-	golang.org/x/tools v0.1.8
+	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
+	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
+	golang.org/x/tools v0.1.10
 )
 
 require (

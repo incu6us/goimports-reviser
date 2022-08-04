@@ -2,15 +2,22 @@ package reviser
 
 import (
 	"io/fs"
+	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 const (
 	goExtension   = ".go"
 	recursivePath = "./..."
+)
+
+var (
+	currentPaths = []string{".", "." + string(filepath.Separator)}
 )
 
 var (
@@ -52,9 +59,14 @@ func (d *SourceDir) walk(options ...SourceFileOption) fs.WalkDirFunc {
 			return filepath.SkipDir
 		}
 		if isGoFile(path) && !dirEntry.IsDir() {
-			_, _, err := NewSourceFile(d.projectName, path).Fix(options...)
+			content, hasChange, err := NewSourceFile(d.projectName, path).Fix(options...)
 			if err != nil {
 				return errors.WithStack(err)
+			}
+			if hasChange {
+				if err := ioutil.WriteFile(path, content, 0644); err != nil {
+					log.Fatalf("failed to write fixed result to file(%s): %+v", path, errors.WithStack(err))
+				}
 			}
 		}
 		return nil
@@ -62,7 +74,7 @@ func (d *SourceDir) walk(options ...SourceFileOption) fs.WalkDirFunc {
 }
 
 func IsDir(path string) (string, bool) {
-	if path == recursivePath {
+	if path == recursivePath || slices.Contains(currentPaths, path) {
 		var err error
 		path, err = os.Getwd()
 		if err != nil {

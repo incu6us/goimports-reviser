@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/incu6us/goimports-reviser/v3/helper"
 	"github.com/incu6us/goimports-reviser/v3/reviser"
@@ -26,10 +27,6 @@ const (
 	listDiffFileNameArg    = "list-diff"
 	setExitStatusArg       = "set-exit-status"
 	recursiveArg           = "recursive"
-
-	// Deprecated options
-	localArg    = "local"
-	filePathArg = "file-path"
 )
 
 // Project build specific vars
@@ -50,19 +47,9 @@ var (
 
 var (
 	projectName, companyPkgPrefixes, output, importsOrder string
-
-	// Deprecated
-	localPkgPrefixes, filePath string
 )
 
 func init() {
-	flag.StringVar(
-		&filePath,
-		filePathArg,
-		"",
-		"Deprecated. Put file name as an argument(last item) of command line.",
-	)
-
 	flag.StringVar(
 		&projectName,
 		projectNameArg,
@@ -75,13 +62,6 @@ func init() {
 		companyPkgPrefixesArg,
 		"",
 		"Company package prefixes which will be placed after 3rd-party group by default(if defined). Values should be comma-separated. Optional parameters.",
-	)
-
-	flag.StringVar(
-		&localPkgPrefixes,
-		localArg,
-		"",
-		"Deprecated",
 	)
 
 	flag.StringVar(
@@ -169,28 +149,11 @@ func printVersion() {
 }
 
 func main() {
-	deprecatedMessagesCh := make(chan string, 10)
 	flag.Parse()
 
 	if shouldShowVersion != nil && *shouldShowVersion {
 		printVersion()
 		return
-	}
-
-	originPath := flag.Arg(0)
-	if filePath != "" {
-		deprecatedMessagesCh <- fmt.Sprintf("-%s is deprecated. Put file name as last argument to the command(Example: goimports-reviser -rm-unused -set-alias -format goimports-reviser/main.go)", filePathArg)
-		originPath = filePath
-	}
-
-	if originPath == "" {
-		originPath = reviser.StandardInput
-	}
-
-	if err := validateRequiredParam(originPath); err != nil {
-		fmt.Printf("%s\n\n", err)
-		printUsage()
-		os.Exit(1)
 	}
 
 	var options reviser.SourceFileOptions
@@ -204,13 +167,6 @@ func main() {
 
 	if shouldFormat != nil && *shouldFormat {
 		options = append(options, reviser.WithCodeFormatting)
-	}
-
-	if localPkgPrefixes != "" {
-		if companyPkgPrefixes != "" {
-			companyPkgPrefixes = localPkgPrefixes
-		}
-		deprecatedMessagesCh <- fmt.Sprintf(`-%s is deprecated and will be removed soon. Use -%s instead.`, localArg, companyPkgPrefixesArg)
 	}
 
 	if companyPkgPrefixes != "" {
@@ -227,17 +183,45 @@ func main() {
 		options = append(options, reviser.WithImportsOrder(order))
 	}
 
-	originProjectName, err := helper.DetermineProjectName(projectName, originPath)
-	if err != nil {
-		fmt.Printf("%s\n\n", err)
+	originPaths := flag.Args()
+	if len(originPaths) == 0 {
 		printUsage()
 		os.Exit(1)
 	}
 
-	close(deprecatedMessagesCh)
+	var eg errgroup.Group
+	for _, originPath := range originPaths {
+		originPath := originPath
+		eg.Go(func() error {
+			gen(originPath, options)
+			return nil
+		})
+	}
+	if err := eg.Wait(); err != nil {
+		fmt.Printf("%s\n\n", err)
+		os.Exit(1)
+	}
+}
+
+func gen(originPath string, options reviser.SourceFileOptions) {
+	if originPath == "" {
+		originPath = reviser.StandardInput
+	}
+
+	if err := validateRequiredParam(originPath); err != nil {
+		fmt.Printf("%s\n\n", err)
+		printUsage()
+		os.Exit(1)
+		return
+	}
+
+	originProjectName, err := helper.DetermineProjectName(projectName, originPath)
+	if err != nil {
+		return
+	}
 
 	if _, ok := reviser.IsDir(originPath); ok {
-		err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive).Fix(options...)
+		err = reviser.NewSourceDir(originProjectName, originPath, *isRecursive).Fix(options...)
 		if err != nil {
 			log.Fatalf("%+v", errors.WithStack(err))
 		}
@@ -249,12 +233,11 @@ func main() {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}
 
-	resultPostProcess(hasChange, deprecatedMessagesCh, originPath, formattedOutput)
+	resultPostProcess(hasChange, originPath, formattedOutput)
 }
 
-func resultPostProcess(hasChange bool, deprecatedMessagesCh chan string, originFilePath string, formattedOutput []byte) {
+func resultPostProcess(hasChange bool, originFilePath string, formattedOutput []byte) {
 	if !hasChange && *listFileName {
-		printDeprecations(deprecatedMessagesCh)
 		return
 	}
 	if hasChange && *listFileName && output != "write" {
@@ -263,7 +246,6 @@ func resultPostProcess(hasChange bool, deprecatedMessagesCh chan string, originF
 		fmt.Print(string(formattedOutput))
 	} else if output == "file" || output == "write" {
 		if !hasChange {
-			printDeprecations(deprecatedMessagesCh)
 			return
 		}
 
@@ -281,7 +263,6 @@ func resultPostProcess(hasChange bool, deprecatedMessagesCh chan string, originF
 		os.Exit(1)
 	}
 
-	printDeprecations(deprecatedMessagesCh)
 }
 
 func validateRequiredParam(filePath string) error {
@@ -289,20 +270,8 @@ func validateRequiredParam(filePath string) error {
 		stat, _ := os.Stdin.Stat()
 		if stat.Mode()&os.ModeNamedPipe == 0 {
 			// no data on stdin
-			return errors.Errorf("-%s should be set", filePathArg)
+			return errors.Errorf("args must not empty")
 		}
 	}
 	return nil
-}
-
-func printDeprecations(deprecatedMessagesCh chan string) {
-	var hasDeprecations bool
-	for deprecatedMessage := range deprecatedMessagesCh {
-		hasDeprecations = true
-		fmt.Printf("%s\n", deprecatedMessage)
-	}
-	if hasDeprecations {
-		fmt.Printf("All changes to file are applied, but command-line syntax should be fixed\n")
-		os.Exit(1)
-	}
 }

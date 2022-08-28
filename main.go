@@ -177,18 +177,14 @@ func main() {
 		return
 	}
 
-	originPath := flag.Arg(0)
+	originPaths := flag.Args()
 	if filePath != "" {
-		deprecatedMessagesCh <- fmt.Sprintf("-%s is deprecated. Put file name as last argument to the command(Example: goimports-reviser -rm-unused -set-alias -format goimports-reviser/main.go)", filePathArg)
-		originPath = filePath
+		deprecatedMessagesCh <- fmt.Sprintf("-%s is deprecated. Put file names as arguments to the command(Example: goimports-reviser -rm-unused -set-alias -format goimports-reviser/main.go goimports-reviser/file.go)", filePathArg)
+		originPaths = append(originPaths, filePath)
 	}
 
-	if originPath == "" {
-		originPath = reviser.StandardInput
-	}
-
-	if err := validateRequiredParam(originPath); err != nil {
-		fmt.Printf("%s\n\n", err)
+	if len(originPaths) == 0 {
+		fmt.Print("files to revise should be set")
 		printUsage()
 		os.Exit(1)
 	}
@@ -227,29 +223,39 @@ func main() {
 		options = append(options, reviser.WithImportsOrder(order))
 	}
 
-	originProjectName, err := helper.DetermineProjectName(projectName, originPath)
-	if err != nil {
-		fmt.Printf("%s\n\n", err)
-		printUsage()
-		os.Exit(1)
-	}
-
 	close(deprecatedMessagesCh)
 
-	if _, ok := reviser.IsDir(originPath); ok {
-		err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive).Fix(options...)
+	fileChangedFlag := false
+	for _, originPath := range originPaths {
+		originProjectName, err := helper.DetermineProjectName(projectName, originPath)
+		if err != nil {
+			fmt.Printf("%s\n\n", err)
+			printUsage()
+			os.Exit(1)
+		}
+
+		if _, ok := reviser.IsDir(originPath); ok {
+			err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive).Fix(options...)
+			if err != nil {
+				log.Fatalf("%+v", errors.WithStack(err))
+			}
+			continue
+		}
+
+		formattedOutput, hasChange, err := reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
+		if hasChange {
+			fileChangedFlag = true
+		}
 		if err != nil {
 			log.Fatalf("%+v", errors.WithStack(err))
 		}
-		return
+
+		resultPostProcess(hasChange, deprecatedMessagesCh, originPath, formattedOutput)
 	}
 
-	formattedOutput, hasChange, err := reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
-	if err != nil {
-		log.Fatalf("%+v", errors.WithStack(err))
+	if fileChangedFlag && *setExitStatus {
+		os.Exit(1)
 	}
-
-	resultPostProcess(hasChange, deprecatedMessagesCh, originPath, formattedOutput)
 }
 
 func resultPostProcess(hasChange bool, deprecatedMessagesCh chan string, originFilePath string, formattedOutput []byte) {
@@ -259,7 +265,7 @@ func resultPostProcess(hasChange bool, deprecatedMessagesCh chan string, originF
 	}
 	if hasChange && *listFileName && output != "write" {
 		fmt.Println(originFilePath)
-	} else if output == "stdout" || originFilePath == reviser.StandardInput {
+	} else if output == "stdout" {
 		fmt.Print(string(formattedOutput))
 	} else if output == "file" || output == "write" {
 		if !hasChange {
@@ -277,22 +283,7 @@ func resultPostProcess(hasChange bool, deprecatedMessagesCh chan string, originF
 		log.Fatalf(`invalid output "%s" specified`, output)
 	}
 
-	if hasChange && *setExitStatus {
-		os.Exit(1)
-	}
-
 	printDeprecations(deprecatedMessagesCh)
-}
-
-func validateRequiredParam(filePath string) error {
-	if filePath == reviser.StandardInput {
-		stat, _ := os.Stdin.Stat()
-		if stat.Mode()&os.ModeNamedPipe == 0 {
-			// no data on stdin
-			return errors.Errorf("-%s should be set", filePathArg)
-		}
-	}
-	return nil
 }
 
 func printDeprecations(deprecatedMessagesCh chan string) {

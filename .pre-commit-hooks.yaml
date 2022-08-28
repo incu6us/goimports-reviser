@@ -1,0 +1,9 @@
+- id: goimports-reviser
+  name: goimports-reviser
+  description: Sort and revise golang imports.
+  entry: goimports-reviser
+  types: [go]
+  # types: [file]
+  # files: \.go$
+  language: golang
+  args: [-rm-unused, -set-alias, -format]

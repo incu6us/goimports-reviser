@@ -44,3 +44,9 @@ func WithImportsOrder(orders []ImportsOrder) SourceFileOption {
 		return nil
 	}
 }
+
+// WithGeneratedFilesFormatting will format generated files.
+func WithGeneratedFilesFormatting(f *SourceFile) error {
+	f.shouldFormatGeneratedFiles = true
+	return nil
+}

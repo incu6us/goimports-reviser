@@ -14,6 +14,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/shurcooL/go/generated"
+
 	"github.com/incu6us/goimports-reviser/v3/pkg/astutil"
 	"github.com/incu6us/goimports-reviser/v3/pkg/std"
 )
@@ -30,6 +32,7 @@ type SourceFile struct {
 	shouldFormatCode               bool
 	companyPackagePrefixes         []string
 	importsOrders                  ImportsOrders
+	shouldFormatGeneratedFiles     bool
 
 	projectName string
 	filePath    string
@@ -61,6 +64,17 @@ func (f *SourceFile) Fix(options ...SourceFileOption) ([]byte, bool, error) {
 	}
 	if err != nil {
 		return nil, false, err
+	}
+
+	// Check whether file is generated.
+	isGeneratedFile, err := generated.Parse(bytes.NewReader(originalContent))
+	if err != nil {
+		return nil, false, err
+	}
+
+	// If the user doesn't want to format generated files, return.
+	if isGeneratedFile && !f.shouldFormatGeneratedFiles {
+		return originalContent, false, nil
 	}
 
 	fset := token.NewFileSet()

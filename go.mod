@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/pkg/errors v0.9.1
+	github.com/shurcooL/go v0.0.0-20200502201357-93f07166e636
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
@@ -11,6 +12,7 @@ require (
 )
 
 require (
+	dmitri.shuralyov.com/go/generated v0.0.0-20211227232225-c5b6cf572ec5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

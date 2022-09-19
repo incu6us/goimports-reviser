@@ -17,7 +17,7 @@
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/incu6us/goimports-reviser?color=green)
 [![goimports-reviser](https://snapcraft.io//goimports-reviser/badge.svg)](https://snapcraft.io/goimports-reviser)
 ![license](https://img.shields.io/github/license/incu6us/goimports-reviser)
-[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go) 
+[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
 <a href="https://www.buymeacoffee.com/slavka" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;"></a>
 
@@ -25,7 +25,7 @@
 
 
 Tool for Golang to sort goimports by 3-4 groups(with own [linter](linter/README.md)): std, general, company(which is optional) and project dependencies.
-Also, formatting for your code will be prepared(so, you don't need to use `gofmt` or `goimports` separately). 
+Also, formatting for your code will be prepared(so, you don't need to use `gofmt` or `goimports` separately).
 Use additional options `-rm-unused` to remove unused imports and `-set-alias` to rewrite import aliases for versioned packages or for packages with additional prefix/suffix(example: `opentracing "github.com/opentracing/opentracing-go"`).
 `-company-prefixes` - will create group for company imports(libs inside your organization). Values should be comma-separated.
 
@@ -52,19 +52,25 @@ goimports-reviser -rm-unused -set-alias -format ./...
 ### Options:
 ```text
 Usage of goimports-reviser:
+  -company-prefixes string
+        Company package prefixes which will be placed after 3rd-party group(if defined). Values should be comma-separated. Optional parameters.
+  -file-path string
+        Deprecated. Put file name as an argument(last item) of command line.
   -format
         Option will perform additional formatting. Optional parameter.
   -imports-order string
-        Your imports groups can be sorted in your way. 
-        std - std import group; 
-        general - libs for general purpose; 
-        company - inter-org or your company libs(if you set '-company-prefixes'-option, then 4th group will be split separately. In other case, it will be the part of general purpose libs); 
-        project - your local project dependencies. 
+        Your imports groups can be sorted in your way.
+        std - std import group;
+        general - libs for general purpose;
+        company - inter-org or your company libs(if you set '-company-prefixes'-option, then 4th group will be split separately. In other case, it will be the part of general purpose libs);
+        project - your local project dependencies.
         Optional parameter. (default "std,general,company,project")
+  -include-generated-files
+        Format generated files. Optional parameter.
   -list-diff
     	Option will list-diff files whose formatting differs from goimports-reviser. Optional parameter.
-  -company-prefixes string
-        Company package prefixes which will be placed after 3rd-party group(if defined). Values should be comma-separated. Optional parameters.
+  -local string
+        Deprecated
   -output string
         Can be "file", "write" or "stdout". Whether to write the formatted content back to the file or to stdout. When "write" together with "-list-diff" will list the file name and write back to the file. Optional parameter. (default "file")
   -project-name string
@@ -105,7 +111,7 @@ import (
 
 	"github.com/pkg/errors"
 )
-``` 
+```
 
 After usage:
 ```go
@@ -114,9 +120,9 @@ package testdata
 import (
 	"bytes"
 	"log"
-	
+
 	"github.com/pkg/errors"
-	
+
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
 ```
@@ -128,7 +134,7 @@ package testdata
 import (
     "fmt" // comments to the package here
 )
-```  
+```
 
 ### Example with `-company-prefixes`-option
 

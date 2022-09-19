@@ -15,17 +15,18 @@ import (
 )
 
 const (
-	projectNameArg         = "project-name"
-	versionArg             = "version"
-	removeUnusedImportsArg = "rm-unused"
-	setAliasArg            = "set-alias"
-	companyPkgPrefixesArg  = "company-prefixes"
-	outputArg              = "output"
-	importsOrderArg        = "imports-order"
-	formatArg              = "format"
-	listDiffFileNameArg    = "list-diff"
-	setExitStatusArg       = "set-exit-status"
-	recursiveArg           = "recursive"
+	projectNameArg           = "project-name"
+	versionArg               = "version"
+	removeUnusedImportsArg   = "rm-unused"
+	setAliasArg              = "set-alias"
+	companyPkgPrefixesArg    = "company-prefixes"
+	outputArg                = "output"
+	importsOrderArg          = "imports-order"
+	formatArg                = "format"
+	listDiffFileNameArg      = "list-diff"
+	setExitStatusArg         = "set-exit-status"
+	recursiveArg             = "recursive"
+	includeGeneratedFilesArg = "include-generated-files"
 
 	// Deprecated options
 	localArg    = "local"
@@ -46,6 +47,7 @@ var (
 	listFileName              *bool
 	setExitStatus             *bool
 	isRecursive               *bool
+	includeGeneratedFiles     *bool
 )
 
 var (
@@ -95,11 +97,11 @@ func init() {
 		&importsOrder,
 		importsOrderArg,
 		"std,general,company,project",
-		`Your imports groups can be sorted in your way. 
-std - std import group; 
-general - libs for general purpose; 
-company - inter-org libs(if you set '-local'-option, then 4th group will be split separately. In other case, it will be the part of general purpose libs); 
-project - your local project dependencies. 
+		`Your imports groups can be sorted in your way.
+std - std import group;
+general - libs for general purpose;
+company - inter-org libs(if you set '-local'-option, then 4th group will be split separately. In other case, it will be the part of general purpose libs);
+project - your local project dependencies.
 Optional parameter.`,
 	)
 
@@ -138,6 +140,12 @@ Optional parameter.`,
 		recursiveArg,
 		false,
 		"Apply rules recursively if target is a directory. In case of ./... execution will be recursively applied by default. Optional parameter.",
+	)
+
+	includeGeneratedFiles = flag.Bool(
+		includeGeneratedFilesArg,
+		false,
+		"Format generated files. Optional parameter.",
 	)
 
 	if Tag != "" {
@@ -225,6 +233,10 @@ func main() {
 			os.Exit(1)
 		}
 		options = append(options, reviser.WithImportsOrder(order))
+	}
+
+	if includeGeneratedFiles != nil && *includeGeneratedFiles {
+		options = append(options, reviser.WithGeneratedFilesFormatting)
 	}
 
 	originProjectName, err := helper.DetermineProjectName(projectName, originPath)

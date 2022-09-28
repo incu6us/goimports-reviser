@@ -3,6 +3,7 @@ module github.com/incu6us/goimports-reviser/v3
 go 1.18
 
 require (
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e

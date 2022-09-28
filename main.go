@@ -1,13 +1,18 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 
 	"github.com/incu6us/goimports-reviser/v3/helper"
@@ -26,6 +31,7 @@ const (
 	listDiffFileNameArg    = "list-diff"
 	setExitStatusArg       = "set-exit-status"
 	recursiveArg           = "recursive"
+	useCacheArg            = "use-cache"
 
 	// Deprecated options
 	localArg    = "local"
@@ -46,6 +52,7 @@ var (
 	listFileName              *bool
 	setExitStatus             *bool
 	isRecursive               *bool
+	isUseCache                *bool
 )
 
 var (
@@ -138,6 +145,12 @@ Optional parameter.`,
 		recursiveArg,
 		false,
 		"Apply rules recursively if target is a directory. In case of ./... execution will be recursively applied by default. Optional parameter.",
+	)
+
+	isUseCache = flag.Bool(
+		useCacheArg,
+		false,
+		"Use cache to improve performance. Optional parameter.",
 	)
 
 	if Tag != "" {
@@ -244,9 +257,66 @@ func main() {
 		return
 	}
 
-	formattedOutput, hasChange, err := reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
+	originPath, err = filepath.Abs(originPath)
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
+	}
+
+	var formattedOutput []byte
+	var hasChange bool
+	if *isUseCache {
+		hash := md5.Sum([]byte(originPath))
+
+		var home string
+		if home, err = homedir.Dir(); err != nil {
+			log.Fatalf("%+v\n", errors.WithStack(err))
+		}
+		cacheDir := path.Join(home, ".cache", "goimports-reviser")
+		if err = os.MkdirAll(cacheDir, os.ModePerm); err != nil {
+			log.Fatalf("%+v\n", errors.WithStack(err))
+		}
+		cacheFile := path.Join(cacheDir, hex.EncodeToString(hash[:]))
+
+		var cacheContent, fileContent []byte
+		if cacheContent, err = ioutil.ReadFile(cacheFile); err == nil {
+			// compare file content hash
+			var fileHashHex string
+			if fileContent, err = ioutil.ReadFile(originPath); err == nil {
+				fileHash := md5.Sum(fileContent)
+				fileHashHex = hex.EncodeToString(fileHash[:])
+			}
+			if string(cacheContent) == fileHashHex {
+				// point to cache
+				return
+			}
+		}
+		formattedOutput, hasChange, err = reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
+		if err != nil {
+			log.Fatalf("%+v", errors.WithStack(err))
+		}
+		fileHash := md5.Sum(formattedOutput)
+		fileHashHex := hex.EncodeToString(fileHash[:])
+		if fileInfo, err := os.Stat(cacheFile); err != nil || fileInfo.IsDir() {
+			if _, err = os.Create(cacheFile); err != nil {
+				log.Fatalf("%+v", errors.WithStack(err))
+			}
+		}
+		file, _ := os.OpenFile(cacheFile, os.O_RDWR, os.ModePerm)
+		defer file.Close()
+		if err = file.Truncate(0); err != nil {
+			log.Fatalf("%+v", errors.WithStack(err))
+		}
+		if _, err = file.Seek(0, 0); err != nil {
+			log.Fatalf("%+v", errors.WithStack(err))
+		}
+		if _, err = file.WriteString(fileHashHex); err != nil {
+			log.Fatalf("%+v", errors.WithStack(err))
+		}
+	} else {
+		formattedOutput, hasChange, err = reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
+		if err != nil {
+			log.Fatalf("%+v", errors.WithStack(err))
+		}
 	}
 
 	resultPostProcess(hasChange, deprecatedMessagesCh, originPath, formattedOutput)

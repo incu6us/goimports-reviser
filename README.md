@@ -77,6 +77,8 @@ Usage of goimports-reviser:
         Set alias for versioned package names, like 'github.com/go-pg/pg/v9'. In this case import will be set as 'pg "github.com/go-pg/pg/v9"'. Optional parameter.
   -set-exit-status
     	set the exit status to 1 if a change is needed/made. Optional parameter.
+  -use-cache
+        Use cache to improve performance. Optional parameter.
 ```
 
 ## Install

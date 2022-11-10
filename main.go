@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/mitchellh/go-homedir"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 
 	"github.com/incu6us/goimports-reviser/v3/helper"
@@ -32,6 +32,7 @@ const (
 	setExitStatusArg       = "set-exit-status"
 	recursiveArg           = "recursive"
 	useCacheArg            = "use-cache"
+	applyToGeneratedFiles  = "apply-to-generated-files"
 
 	// Deprecated options
 	localArg    = "local"
@@ -45,14 +46,15 @@ var (
 	SourceURL string
 	GoVersion string
 
-	shouldShowVersion         *bool
-	shouldRemoveUnusedImports *bool
-	shouldSetAlias            *bool
-	shouldFormat              *bool
-	listFileName              *bool
-	setExitStatus             *bool
-	isRecursive               *bool
-	isUseCache                *bool
+	shouldShowVersion           *bool
+	shouldRemoveUnusedImports   *bool
+	shouldSetAlias              *bool
+	shouldFormat                *bool
+	shouldApplyToGeneratedFiles *bool
+	listFileName                *bool
+	setExitStatus               *bool
+	isRecursive                 *bool
+	isUseCache                  *bool
 )
 
 var (
@@ -95,7 +97,7 @@ func init() {
 		&output,
 		outputArg,
 		"file",
-		`Can be "file", "write" or "stdout". Whether to write the formatted content back to the file or to stdout. When "write" together with "-list" will list the file name and write back to the file. Optional parameter.`,
+		`Can be "file", "write" or "stdout". Whether to write the formatted content back to the file or to stdout. When "write" together with "-list-diff" will list the file name and write back to the file. Optional parameter.`,
 	)
 
 	flag.StringVar(
@@ -105,7 +107,7 @@ func init() {
 		`Your imports groups can be sorted in your way. 
 std - std import group; 
 general - libs for general purpose; 
-company - inter-org libs(if you set '-local'-option, then 4th group will be split separately. In other case, it will be the part of general purpose libs); 
+company - inter-org or your company libs(if you set '-company-prefixes'-option, then 4th group will be split separately. In other case, it will be the part of general purpose libs); 
 project - your local project dependencies. 
 Optional parameter.`,
 	)
@@ -151,6 +153,12 @@ Optional parameter.`,
 		useCacheArg,
 		false,
 		"Use cache to improve performance. Optional parameter.",
+	)
+
+	shouldApplyToGeneratedFiles = flag.Bool(
+		applyToGeneratedFiles,
+		false,
+		"Apply imports sorting and formatting(if the option is set) to generated files. Generated file is a file with first comment which starts with comment '// Code generated'. Optional parameter.",
 	)
 
 	if Tag != "" {
@@ -217,6 +225,10 @@ func main() {
 
 	if shouldFormat != nil && *shouldFormat {
 		options = append(options, reviser.WithCodeFormatting)
+	}
+
+	if shouldApplyToGeneratedFiles != nil && !*shouldApplyToGeneratedFiles {
+		options = append(options, reviser.WithSkipGeneratedFile)
 	}
 
 	if localPkgPrefixes != "" {

@@ -52,6 +52,10 @@ goimports-reviser -rm-unused -set-alias -format ./...
 ### Options:
 ```text
 Usage of goimports-reviser:
+  -apply-to-generated-files
+        Apply imports sorting and formatting(if the option is set) to generated files. Generated file is a file with first comment which starts with comment '// Code generated'. Optional parameter.
+  -company-prefixes string
+        Company package prefixes which will be placed after 3rd-party group by default(if defined). Values should be comma-separated. Optional parameters.
   -format
         Option will perform additional formatting. Optional parameter.
   -imports-order string
@@ -62,9 +66,7 @@ Usage of goimports-reviser:
         project - your local project dependencies. 
         Optional parameter. (default "std,general,company,project")
   -list-diff
-    	Option will list-diff files whose formatting differs from goimports-reviser. Optional parameter.
-  -company-prefixes string
-        Company package prefixes which will be placed after 3rd-party group(if defined). Values should be comma-separated. Optional parameters.
+        Option will list files whose formatting differs from goimports-reviser. Optional parameter.
   -output string
         Can be "file", "write" or "stdout". Whether to write the formatted content back to the file or to stdout. When "write" together with "-list-diff" will list the file name and write back to the file. Optional parameter. (default "file")
   -project-name string
@@ -76,7 +78,7 @@ Usage of goimports-reviser:
   -set-alias
         Set alias for versioned package names, like 'github.com/go-pg/pg/v9'. In this case import will be set as 'pg "github.com/go-pg/pg/v9"'. Optional parameter.
   -set-exit-status
-    	set the exit status to 1 if a change is needed/made. Optional parameter.
+        set the exit status to 1 if a change is needed/made. Optional parameter.
   -use-cache
         Use cache to improve performance. Optional parameter.
 ```

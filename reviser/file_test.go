@@ -60,6 +60,42 @@ import (
 		},
 
 		{
+			name: "success with directive",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"fmt"
+	"crypto/sha1" //nolint:gosec // Usage is for collision avoidance not security.
+)
+
+func main() {
+	s := sha1.New()
+	s.Write([]byte("example"))
+	fmt.Printf("%x\n", s.Sum(nil))
+}
+`,
+			},
+			want: `package testdata
+
+import (
+	"crypto/sha1" //nolint:gosec // Usage is for collision avoidance not security.
+	"fmt"
+)
+
+func main() {
+	s := sha1.New()
+	s.Write([]byte("example"))
+	fmt.Printf("%x\n", s.Sum(nil))
+}
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+
+		{
 			name: "success with std & project deps",
 			args: args{
 				projectName: "github.com/incu6us/goimports-reviser",
@@ -263,7 +299,7 @@ import (
 			want: `package testdata
 
 import (
-	"fmt" // test2
+	"fmt" //test2
 
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg" // test1
 )
@@ -359,7 +395,7 @@ import (
 import (
 	"fmt"
 	"io"
-	"sync" // test comment
+	"sync" //test comment
 	"testing"
 )
 `,
@@ -658,7 +694,7 @@ func main(){
 			want: `package testdata
 
 import (
-	"fmt" // fmt package
+	"fmt" //fmt package
 )
 
 // nolint:gomnd
@@ -691,7 +727,7 @@ func main(){
 			want: `package testdata
 
 import (
-	"fmt" // fmt package
+	"fmt" //fmt package
 )
 
 // nolint:gomnd
@@ -724,9 +760,9 @@ func main(){
 			want: `package testdata
 
 import (
-	"fmt" // fmt package
+	"fmt" //fmt package
 
-	_ "github.com/pkg/errors" // custom package
+	_ "github.com/pkg/errors" //custom package
 )
 
 // nolint:gomnd
@@ -762,9 +798,9 @@ package testdata
 
 // test
 import (
-	"fmt" // fmt package
+	"fmt" //fmt package
 
-	_ "github.com/pkg/errors" // custom package
+	_ "github.com/pkg/errors" //custom package
 )
 
 // nolint:gomnd
@@ -1108,9 +1144,9 @@ func main(){
 			want: `package testdata
 
 import (
-	"fmt" // fmt package
+	"fmt" //fmt package
 
-	"github.com/pkg/errors" // custom package
+	"github.com/pkg/errors" //custom package
 
 	"goimports-reviser/pkg"
 
@@ -1139,7 +1175,7 @@ func main() {
 				fileContent: `package testdata
 
 import (
-	"fmt" //fmt package
+	"fmt" // fmt package
 	"github.com/pkg/errors" //custom package
 	"github.com/incu6us/goimports-reviser/pkg"
 	"goimports-reviser/pkg"
@@ -1155,7 +1191,7 @@ func main(){
 import (
 	"fmt" // fmt package
 
-	"github.com/pkg/errors" // custom package
+	"github.com/pkg/errors" //custom package
 
 	"github.com/incu6us/goimports-reviser/pkg"
 

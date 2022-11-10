@@ -227,7 +227,7 @@ func main() {
 		options = append(options, reviser.WithCodeFormatting)
 	}
 
-	if shouldApplyToGeneratedFiles != nil && !*shouldApplyToGeneratedFiles {
+	if shouldApplyToGeneratedFiles == nil || !*shouldApplyToGeneratedFiles {
 		options = append(options, reviser.WithSkipGeneratedFile)
 	}
 

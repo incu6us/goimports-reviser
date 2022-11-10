@@ -418,10 +418,14 @@ func clearImportDocs(f *ast.File, importsPositions []*importPosition) {
 func importWithComment(imprt string, commentsMetadata map[string]*commentsMetadata) string {
 	var comment string
 	commentGroup, ok := commentsMetadata[imprt]
-	if ok {
-		if commentGroup != nil && commentGroup.Comment != nil && len(commentGroup.Comment.List) > 0 {
-			comment = fmt.Sprintf("// %s", strings.ReplaceAll(commentGroup.Comment.Text(), "\n", ""))
+	if ok && commentGroup != nil && commentGroup.Comment != nil {
+		for _, c := range commentGroup.Comment.List {
+			comment += c.Text
 		}
+	}
+
+	if comment == "" {
+		return imprt
 	}
 
 	return fmt.Sprintf("%s %s", imprt, comment)

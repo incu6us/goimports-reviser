@@ -111,11 +111,8 @@ func (f *SourceFile) Fix(options ...SourceFileOption) ([]byte, bool, error) {
 func isFileAutoGenerate(pf *ast.File) bool {
 	for _, comment := range pf.Comments {
 		for _, c := range comment.List {
-			if c.Slash == 1 && strings.HasPrefix(c.Text, "// Code generated") {
+			if strings.HasPrefix(c.Text, "// Code generated") {
 				return true
-			}
-			if c.Slash > 1 {
-				return false
 			}
 		}
 	}

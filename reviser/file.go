@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -21,6 +22,10 @@ import (
 const (
 	StandardInput        = "<standard-input>"
 	stringValueSeparator = ","
+)
+
+var (
+	codeGeneratedPattern = regexp.MustCompile(`^// Code generated .* DO NOT EDIT\.$`)
 )
 
 // SourceFile main struct for fixing an existing code
@@ -111,7 +116,7 @@ func (f *SourceFile) Fix(options ...SourceFileOption) ([]byte, bool, error) {
 func isFileAutoGenerate(pf *ast.File) bool {
 	for _, comment := range pf.Comments {
 		for _, c := range comment.List {
-			if strings.HasPrefix(c.Text, "// Code generated") {
+			if codeGeneratedPattern.MatchString(c.Text) && c.Pos() < pf.Package {
 				return true
 			}
 		}

@@ -53,7 +53,7 @@ goimports-reviser -rm-unused -set-alias -format ./...
 ```text
 Usage of goimports-reviser:
   -apply-to-generated-files
-        Apply imports sorting and formatting(if the option is set) to generated files. Generated file is a file with comment which starts with comment '// Code generated'. Optional parameter.
+        Apply imports sorting and formatting(if the option is set) to generated files. Generated file is a file with comment which starts with comment '^// Code generated .* DO NOT EDIT\.$'. Generated comment must before package fragment. Optional parameter.
   -company-prefixes string
         Company package prefixes which will be placed after 3rd-party group by default(if defined). Values should be comma-separated. Optional parameters.
   -format

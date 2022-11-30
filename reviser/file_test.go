@@ -1,7 +1,7 @@
 package reviser
 
 import (
-	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -569,7 +569,7 @@ import "C"
 	}
 	for _, tt := range tests {
 		if tt.args.filePath != StandardInput && !strings.Contains(tt.args.filePath, "does-not-exist") {
-			if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
+			if err := os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
 				t.Errorf("write test file failed: %s", err)
 			}
 		}
@@ -716,7 +716,7 @@ import (
 	}
 	for _, tt := range tests {
 		if tt.args.filePath != StandardInput && !strings.Contains(tt.args.filePath, "does-not-exist") {
-			if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
+			if err := os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
 				t.Errorf("write test file failed: %s", err)
 			}
 		}
@@ -1010,7 +1010,7 @@ func main() {
 	}
 
 	for _, tt := range tests {
-		if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
+		if err := os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
 			t.Errorf("write test file failed: %s", err)
 		}
 
@@ -1160,7 +1160,7 @@ func main() {
 	}
 
 	for _, tt := range tests {
-		if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
+		if err := os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
 			t.Errorf("write test file failed: %s", err)
 		}
 
@@ -1376,7 +1376,7 @@ func main() {
 	}
 
 	for _, tt := range tests {
-		if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
+		if err := os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
 			t.Errorf("write test file failed: %s", err)
 		}
 
@@ -1466,7 +1466,7 @@ func test1() {}
 		},
 	}
 	for _, tt := range tests {
-		if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
+		if err := os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
 			t.Errorf("write test file failed: %s", err)
 		}
 
@@ -1842,7 +1842,7 @@ import (
 	}
 	for _, tt := range tests {
 		if tt.args.filePath != StandardInput && !strings.Contains(tt.args.filePath, "does-not-exist") {
-			if err := ioutil.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
+			if err := os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
 				t.Errorf("write test file failed: %s", err)
 			}
 		}

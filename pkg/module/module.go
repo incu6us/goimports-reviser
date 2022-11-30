@@ -1,7 +1,6 @@
 package module
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -14,7 +13,7 @@ const goModFilename = "go.mod"
 func Name(goModRootPath string) (string, error) {
 	goModFile := filepath.Join(goModRootPath, goModFilename)
 
-	data, err := ioutil.ReadFile(goModFile)
+	data, err := os.ReadFile(goModFile)
 	if err != nil {
 		return "", err
 	}

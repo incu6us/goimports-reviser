@@ -8,7 +8,7 @@ import (
 	"go/parser"
 	"go/printer"
 	"go/token"
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 	"regexp"
@@ -61,9 +61,9 @@ func (f *SourceFile) Fix(options ...SourceFileOption) ([]byte, bool, error) {
 	var originalContent []byte
 	var err error
 	if f.filePath == StandardInput {
-		originalContent, err = ioutil.ReadAll(os.Stdin)
+		originalContent, err = io.ReadAll(os.Stdin)
 	} else {
-		originalContent, err = ioutil.ReadFile(f.filePath)
+		originalContent, err = os.ReadFile(f.filePath)
 	}
 	if err != nil {
 		return nil, false, err

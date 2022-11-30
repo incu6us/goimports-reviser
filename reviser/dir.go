@@ -2,7 +2,6 @@ package reviser
 
 import (
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -64,7 +63,7 @@ func (d *SourceDir) walk(options ...SourceFileOption) fs.WalkDirFunc {
 				return errors.WithStack(err)
 			}
 			if hasChange {
-				if err := ioutil.WriteFile(path, content, 0644); err != nil {
+				if err := os.WriteFile(path, content, 0644); err != nil {
 					log.Fatalf("failed to write fixed result to file(%s): %+v", path, errors.WithStack(err))
 				}
 			}

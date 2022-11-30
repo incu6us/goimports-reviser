@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -290,10 +289,10 @@ func main() {
 		cacheFile := path.Join(cacheDir, hex.EncodeToString(hash[:]))
 
 		var cacheContent, fileContent []byte
-		if cacheContent, err = ioutil.ReadFile(cacheFile); err == nil {
+		if cacheContent, err = os.ReadFile(cacheFile); err == nil {
 			// compare file content hash
 			var fileHashHex string
-			if fileContent, err = ioutil.ReadFile(originPath); err == nil {
+			if fileContent, err = os.ReadFile(originPath); err == nil {
 				fileHash := md5.Sum(fileContent)
 				fileHashHex = hex.EncodeToString(fileHash[:])
 			}
@@ -349,7 +348,7 @@ func resultPostProcess(hasChange bool, deprecatedMessagesCh chan string, originF
 			return
 		}
 
-		if err := ioutil.WriteFile(originFilePath, formattedOutput, 0644); err != nil {
+		if err := os.WriteFile(originFilePath, formattedOutput, 0644); err != nil {
 			log.Fatalf("failed to write fixed result to file(%s): %+v", originFilePath, errors.WithStack(err))
 		}
 		if *listFileName {

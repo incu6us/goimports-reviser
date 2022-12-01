@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/user"
 	"path"
 	"path/filepath"
 	"strings"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 
 	"github.com/incu6us/goimports-reviser/v3/helper"
@@ -278,11 +278,11 @@ func main() {
 	if *isUseCache {
 		hash := md5.Sum([]byte(originPath))
 
-		var home string
-		if home, err = homedir.Dir(); err != nil {
+		u, err := user.Current()
+		if err != nil {
 			log.Fatalf("%+v\n", errors.WithStack(err))
 		}
-		cacheDir := path.Join(home, ".cache", "goimports-reviser")
+		cacheDir := path.Join(u.HomeDir, ".cache", "goimports-reviser")
 		if err = os.MkdirAll(cacheDir, os.ModePerm); err != nil {
 			log.Fatalf("%+v\n", errors.WithStack(err))
 		}

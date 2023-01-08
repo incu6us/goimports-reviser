@@ -84,6 +84,11 @@ Usage of goimports-reviser:
 ```
 
 ## Install
+### With Go
+```bash
+go install -v github.com/incu6us/goimports-reviser/v3@latest
+```
+
 ### With Brew
 ```bash
 brew tap incu6us/homebrew-tap

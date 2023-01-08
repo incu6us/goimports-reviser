@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"go/parser"
 	"go/token"
-	"reflect"
-	"sort"
-	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -154,13 +152,11 @@ func main(){
 		t.Run(tt.name, func(t *testing.T) {
 			fset := token.NewFileSet()
 			f, err := parser.ParseFile(fset, "", []byte(fileData), parser.ParseComments)
-			if err != nil {
-				require.Nil(t, err)
-			}
+			require.NoError(t, err)
 
-			if got := UsesImport(f, tt.args.packageImports, tt.args.path); got != tt.want {
-				t.Errorf("UsesImport() = %v, want %v", got, tt.want)
-			}
+			got := UsesImport(f, tt.args.packageImports, tt.args.path)
+
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -211,32 +207,16 @@ func TestLoadPackageDeps(t *testing.T) {
 				nil,
 				parser.ParseComments,
 			)
-			if err != nil {
-				t.Errorf("parser.ParseFile() error = %v", err)
-				return
-			}
+			require.NoError(t, err)
 
 			got, err := LoadPackageDependencies(tt.args.dir, ParseBuildTag(f))
-			if (err != nil) != tt.wantErr {
-				t.Errorf("LoadPackageDependencies() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assert.Error(t, err)
 				return
 			}
 
-			gotList := make([]string, 0, len(got))
-			for pkg, name := range got {
-				gotList = append(gotList, strings.Join([]string{pkg, name}, " - "))
-			}
-			sort.Strings(gotList)
-
-			wantList := make([]string, 0, len(got))
-			for pkg, name := range tt.want {
-				wantList = append(wantList, strings.Join([]string{pkg, name}, " - "))
-			}
-			sort.Strings(wantList)
-
-			if !reflect.DeepEqual(gotList, wantList) {
-				t.Errorf("LoadPackageDependencies() got = %v, want %v", got, tt.want)
-			}
+			assert.NoError(t, err)
+			assert.EqualValues(t, tt.want, got)
 		})
 	}
 }

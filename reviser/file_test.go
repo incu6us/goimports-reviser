@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSourceFile_Fix(t *testing.T) {
@@ -569,18 +570,17 @@ import "C"
 	}
 	for _, tt := range tests {
 		if tt.args.filePath != StandardInput && !strings.Contains(tt.args.filePath, "does-not-exist") {
-			if err := os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
-				t.Errorf("write test file failed: %s", err)
-			}
+			require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644))
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
 			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).Fix()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Fix() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assert.Error(t, err)
 				return
 			}
 
+			assert.NoError(t, err)
 			assert.Equal(t, tt.wantChange, hasChange)
 			assert.Equal(t, tt.want, string(got))
 		})
@@ -716,9 +716,7 @@ import (
 	}
 	for _, tt := range tests {
 		if tt.args.filePath != StandardInput && !strings.Contains(tt.args.filePath, "does-not-exist") {
-			if err := os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
-				t.Errorf("write test file failed: %s", err)
-			}
+			require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644))
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -726,11 +724,12 @@ import (
 			assert.Nil(t, err)
 			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).
 				Fix(WithImportsOrder(order))
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Fix() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assert.Error(t, err)
 				return
 			}
 
+			assert.NoError(t, err)
 			assert.Equal(t, tt.wantChange, hasChange)
 			assert.Equal(t, tt.want, string(got))
 		})
@@ -1010,18 +1009,17 @@ func main() {
 	}
 
 	for _, tt := range tests {
-		if err := os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
-			t.Errorf("write test file failed: %s", err)
-		}
+		require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644))
 
 		t.Run(tt.name, func(t *testing.T) {
 			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).
 				Fix(WithRemovingUnusedImports)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Fix() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assert.Error(t, err)
 				return
 			}
 
+			assert.NoError(t, err)
 			assert.Equal(t, tt.wantChange, hasChange)
 			assert.Equal(t, tt.want, string(got))
 		})
@@ -1160,18 +1158,17 @@ func main() {
 	}
 
 	for _, tt := range tests {
-		if err := os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
-			t.Errorf("write test file failed: %s", err)
-		}
+		require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644))
 
 		t.Run(tt.name, func(t *testing.T) {
 			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).
 				Fix(WithUsingAliasForVersionSuffix)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Fix() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assert.Error(t, err)
 				return
 			}
 
+			assert.NoError(t, err)
 			assert.Equal(t, tt.wantChange, hasChange)
 			assert.Equal(t, tt.want, string(got))
 		})
@@ -1376,18 +1373,17 @@ func main() {
 	}
 
 	for _, tt := range tests {
-		if err := os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
-			t.Errorf("write test file failed: %s", err)
-		}
+		require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644))
 
 		t.Run(tt.name, func(t *testing.T) {
 			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).
 				Fix(WithCompanyPackagePrefixes(tt.args.localPkgPrefixes))
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Fix() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assert.Error(t, err)
 				return
 			}
 
+			assert.NoError(t, err)
 			assert.Equal(t, tt.wantChange, hasChange)
 			assert.Equal(t, tt.want, string(got))
 		})
@@ -1466,17 +1462,16 @@ func test1() {}
 		},
 	}
 	for _, tt := range tests {
-		if err := os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
-			t.Errorf("write test file failed: %s", err)
-		}
+		require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644))
 
 		t.Run(tt.name, func(t *testing.T) {
 			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).Fix(WithCodeFormatting)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Fix() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assert.Error(t, err)
 				return
 			}
 
+			assert.NoError(t, err)
 			assert.Equal(t, tt.wantChange, hasChange)
 			assert.Equal(t, tt.want, string(got))
 		})
@@ -1842,18 +1837,17 @@ import (
 	}
 	for _, tt := range tests {
 		if tt.args.filePath != StandardInput && !strings.Contains(tt.args.filePath, "does-not-exist") {
-			if err := os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644); err != nil {
-				t.Errorf("write test file failed: %s", err)
-			}
+			require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644))
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
 			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).Fix(WithSkipGeneratedFile)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Fix() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				assert.Error(t, err)
 				return
 			}
 
+			assert.NoError(t, err)
 			assert.Equal(t, tt.wantChange, hasChange)
 			assert.Equal(t, tt.want, string(got))
 		})

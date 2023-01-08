@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"go/format"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -77,7 +76,7 @@ func main() {
 
 	filePath := filepath.Join(filepath.Join(currentDir, "pkg/std"), fileName)
 	log.Printf("file path to be updated: %s", filePath)
-	if err := ioutil.WriteFile(filePath, data, 0644); err != nil {
+	if err := os.WriteFile(filePath, data, 0644); err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
 	}
 }

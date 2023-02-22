@@ -3,6 +3,8 @@ package module
 import "testing"
 
 func TestPathIsNotSetError_Error(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		want string
@@ -24,6 +26,8 @@ func TestPathIsNotSetError_Error(t *testing.T) {
 }
 
 func TestUndefinedModuleError_Error(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name string
 		want string

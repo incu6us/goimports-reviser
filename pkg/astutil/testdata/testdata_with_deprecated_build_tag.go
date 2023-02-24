@@ -5,9 +5,9 @@ package testdata
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 func main() {
-	fmt.Printf("%s", errors.New("some error here"))
+	fmt.Println(slices.IsSorted([]int{1, 2, 3}))
 }

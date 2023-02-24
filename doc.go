@@ -12,7 +12,7 @@
 //
 //		"bytes"
 //
-//		"github.com/pkg/errors"
+//		"golang.org/x/exp/slices"
 // 	)
 //
 // Output:
@@ -21,7 +21,7 @@
 //		"bytes"
 //		"log"
 //
-//		"github.com/pkg/errors"
+//		"golang.org/x/exp/slices"
 //
 //		"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 //	 )

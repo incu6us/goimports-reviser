@@ -112,7 +112,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 ``` 
 
@@ -123,9 +123,9 @@ package testdata
 import (
 	"bytes"
 	"log"
-	
-	"github.com/pkg/errors"
-	
+
+	"golang.org/x/exp/slices"
+
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
 ```
@@ -148,7 +148,7 @@ package testdata // goimports-reviser/testdata
 
 import (
 	"fmt" //fmt package
-	"github.com/pkg/errors" //custom package
+	"golang.org/x/exp/slices" //custom package
 	"github.com/incu6us/goimports-reviser/pkg" // this is a company package which is not a part of the project, but is a part of your organization
 	"goimports-reviser/pkg"
 )
@@ -161,7 +161,7 @@ package testdata // goimports-reviser/testdata
 import (
 	"fmt" // fmt package
 
-	"github.com/pkg/errors" // custom package
+	"golang.org/x/exp/slices" // custom package
 
 	"github.com/incu6us/goimports-reviser/pkg" // this is a company package which is not a part of the project, but is a part of your organization
 

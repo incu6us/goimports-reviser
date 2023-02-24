@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -42,13 +41,13 @@ func main() {
 	tpl := template.New("tpl")
 	tpl, err := tpl.Parse(fileTemplate)
 	if err != nil {
-		log.Fatalf("%+v", errors.WithStack(err))
+		log.Fatalf("Failed to parse template: %+v\n", err)
 		return
 	}
 
 	packageList, err := packages.Load(nil, "std")
 	if err != nil {
-		log.Fatalf("%+v", errors.WithStack(err))
+		log.Fatalf("Failed to load packages: %+v\n", err)
 		return
 	}
 
@@ -59,24 +58,24 @@ func main() {
 	}
 
 	if err := tpl.Execute(w, packageList); err != nil {
-		log.Fatalf("%+v", errors.WithStack(err))
+		log.Fatalf("Failed to execute template: %+v\n", err)
 		return
 	}
 
 	data, err := format.Source(w.Bytes())
 	if err != nil {
-		log.Fatalf("%+v", errors.WithStack(err))
+		log.Fatalf("Failed to format source: %+v\n", err)
 		return
 	}
 
 	currentDir, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("%+v", errors.WithStack(err))
+		log.Fatalf("Failed to get current directory: %+v\n", err)
 	}
 
 	filePath := filepath.Join(filepath.Join(currentDir, "pkg/std"), fileName)
 	log.Printf("file path to be updated: %s", filePath)
 	if err := os.WriteFile(filePath, data, 0644); err != nil {
-		log.Fatalf("%+v", errors.WithStack(err))
+		log.Fatalf("Failed to write file: %+v\n", err)
 	}
 }

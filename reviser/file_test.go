@@ -37,7 +37,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -49,7 +49,7 @@ import (
 	"bytes"
 	"log"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
@@ -75,7 +75,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -88,7 +88,7 @@ import (
 	"bytes"
 	"log"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
@@ -114,7 +114,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -127,7 +127,7 @@ import (
 	"bytes"
 	"log"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
@@ -215,13 +215,13 @@ import (
 				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",
 				fileContent: `package testdata
-		
+
 import (
 "log"
 
 "bytes"
 
-"github.com/pkg/errors"
+"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -233,7 +233,7 @@ import (
 	"bytes"
 	"log"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -280,7 +280,7 @@ import (
 
 import (
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -289,7 +289,7 @@ import (
 			want: `package testdata
 
 import (
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -427,8 +427,8 @@ import (
 	"fmt"
 
 	_ "github.com/lib/pq" // configure database/sql with postgres driver
-	"github.com/pkg/errors"
 	"go.uber.org/fx"
+	"golang.org/x/exp/slices"
 
 	"github.com/incu6us/goimports-reviser/pkg/somepkg"
 )
@@ -442,8 +442,8 @@ import (
 	"fmt"
 
 	_ "github.com/lib/pq" // configure database/sql with postgres driver
-	"github.com/pkg/errors"
 	"go.uber.org/fx"
+	"golang.org/x/exp/slices"
 
 	"github.com/incu6us/goimports-reviser/pkg/somepkg"
 )
@@ -617,7 +617,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -629,7 +629,7 @@ import (
 	"bytes"
 	"log"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
@@ -654,7 +654,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -666,7 +666,7 @@ import (
 	"bytes"
 	"log"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
@@ -691,7 +691,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -702,7 +702,7 @@ import (
 import (
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 
 	"bytes"
 	"log"
@@ -759,7 +759,7 @@ func TestSourceFile_Fix_WithRemoveUnusedImports(t *testing.T) {
 
 import (
 	"fmt" //fmt package
-	"github.com/pkg/errors" //custom package
+	"golang.org/x/exp/slices" //custom package
 )
 
 // nolint:gomnd
@@ -792,7 +792,7 @@ func main() {
 
 import (
 	"fmt" //fmt package
-	p "github.com/pkg/errors" //p package
+	p "golang.org/x/exp/slices" //p package
 )
 
 // nolint:gomnd
@@ -825,7 +825,7 @@ func main() {
 
 import (
 	"fmt" //fmt package
-	_ "github.com/pkg/errors" //custom package
+	_ "golang.org/x/exp/slices" //custom package
 )
 
 // nolint:gomnd
@@ -839,7 +839,7 @@ func main(){
 import (
 	"fmt" //fmt package
 
-	_ "github.com/pkg/errors" //custom package
+	_ "golang.org/x/exp/slices" //custom package
 )
 
 // nolint:gomnd
@@ -861,7 +861,7 @@ package testdata
 // test
 import (
 	"fmt" //fmt package
-	_ "github.com/pkg/errors" //custom package
+	_ "golang.org/x/exp/slices" //custom package
 )
 
 // nolint:gomnd
@@ -877,7 +877,7 @@ package testdata
 import (
 	"fmt" //fmt package
 
-	_ "github.com/pkg/errors" //custom package
+	_ "golang.org/x/exp/slices" //custom package
 )
 
 // nolint:gomnd
@@ -975,7 +975,7 @@ func main() {
 import "C"
 import(
 	"fmt"
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 	"strconv"
 )
 
@@ -1074,14 +1074,14 @@ func main() {
 			wantErr:    false,
 		},
 		{
-			name: "success with github.com/pkg/errors",
+			name: "success with golang.org/x/exp/slices",
 			args: args{
 				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",
 				fileContent: `package testdata
 import(
 	"fmt"
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 	"strconv"
 )
 
@@ -1096,7 +1096,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 func main() {
@@ -1122,7 +1122,7 @@ func main() {
 import "C"
 import(
 	"fmt"
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 	"strconv"
 )
 
@@ -1144,7 +1144,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 func main() {
@@ -1200,7 +1200,7 @@ func TestSourceFile_Fix_WithLocalPackagePrefixes(t *testing.T) {
 
 import (
 	"fmt" //fmt package
-	"github.com/pkg/errors" //custom package
+	"golang.org/x/exp/slices" //custom package
 	"github.com/incu6us/goimports-reviser/pkg"
 	"goimports-reviser/pkg"
 )
@@ -1221,7 +1221,7 @@ func main(){
 import (
 	"fmt" //fmt package
 
-	"github.com/pkg/errors" //custom package
+	"golang.org/x/exp/slices" //custom package
 
 	"goimports-reviser/pkg"
 
@@ -1251,7 +1251,7 @@ func main() {
 
 import (
 	"fmt" // fmt package
-	"github.com/pkg/errors" //custom package
+	"golang.org/x/exp/slices" //custom package
 	"github.com/incu6us/goimports-reviser/pkg"
 	"goimports-reviser/pkg"
 )
@@ -1266,7 +1266,7 @@ func main(){
 import (
 	"fmt" // fmt package
 
-	"github.com/pkg/errors" //custom package
+	"golang.org/x/exp/slices" //custom package
 
 	"github.com/incu6us/goimports-reviser/pkg"
 
@@ -1507,7 +1507,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -1520,7 +1520,7 @@ import (
 	"bytes"
 	"log"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
@@ -1546,7 +1546,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -1562,7 +1562,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -1586,7 +1586,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -1602,7 +1602,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -1631,7 +1631,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -1652,7 +1652,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -1681,7 +1681,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -1699,7 +1699,7 @@ import (
 	"bytes"
 	"log"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
@@ -1726,7 +1726,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // nolint:gomnd
@@ -1740,7 +1740,7 @@ import (
 	"bytes"
 	"log"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
@@ -1765,7 +1765,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // Code generated by some tool DO NOT EDIT.
@@ -1778,7 +1778,7 @@ import (
 	"bytes"
 	"log"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )
@@ -1804,7 +1804,7 @@ import (
 
 	"bytes"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 )
 
 // Inner comment
@@ -1820,7 +1820,7 @@ import (
 	"bytes"
 	"log"
 
-	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
 )

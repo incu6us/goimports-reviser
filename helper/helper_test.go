@@ -8,6 +8,8 @@ import (
 )
 
 func TestDetermineProjectName(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		projectName string
 		filePath    string
@@ -25,7 +27,7 @@ func TestDetermineProjectName(t *testing.T) {
 				filePath: func() string {
 					dir, err := os.Getwd()
 					if err != nil {
-						panic(err)
+						t.Fatal(err)
 					}
 
 					return dir
@@ -47,7 +49,10 @@ func TestDetermineProjectName(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := DetermineProjectName(tt.args.projectName, tt.args.filePath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DetermineProjectName() error = %v, wantErr %v", err, tt.wantErr)

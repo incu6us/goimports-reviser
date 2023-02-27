@@ -12,8 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/incu6us/goimports-reviser/v3/helper"
 	"github.com/incu6us/goimports-reviser/v3/reviser"
 )
@@ -263,14 +261,14 @@ func main() {
 	if _, ok := reviser.IsDir(originPath); ok {
 		err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive).Fix(options...)
 		if err != nil {
-			log.Fatalf("%+v", errors.WithStack(err))
+			log.Fatalf("Failed to fix directory: %+v\n", err)
 		}
 		return
 	}
 
 	originPath, err = filepath.Abs(originPath)
 	if err != nil {
-		log.Fatalf("%+v", errors.WithStack(err))
+		log.Fatalf("Failed to get abs path: %+v\n", err)
 	}
 
 	var formattedOutput []byte
@@ -280,11 +278,11 @@ func main() {
 
 		u, err := user.Current()
 		if err != nil {
-			log.Fatalf("%+v\n", errors.WithStack(err))
+			log.Fatalf("Failed to get current user: %+v\n", err)
 		}
 		cacheDir := path.Join(u.HomeDir, ".cache", "goimports-reviser")
 		if err = os.MkdirAll(cacheDir, os.ModePerm); err != nil {
-			log.Fatalf("%+v\n", errors.WithStack(err))
+			log.Fatalf("Failed to create cache directory: %+v\n", err)
 		}
 		cacheFile := path.Join(cacheDir, hex.EncodeToString(hash[:]))
 
@@ -303,30 +301,30 @@ func main() {
 		}
 		formattedOutput, hasChange, err = reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
 		if err != nil {
-			log.Fatalf("%+v", errors.WithStack(err))
+			log.Fatalf("Failed to fix file: %+v\n", err)
 		}
 		fileHash := md5.Sum(formattedOutput)
 		fileHashHex := hex.EncodeToString(fileHash[:])
 		if fileInfo, err := os.Stat(cacheFile); err != nil || fileInfo.IsDir() {
 			if _, err = os.Create(cacheFile); err != nil {
-				log.Fatalf("%+v", errors.WithStack(err))
+				log.Fatalf("Failed to create cache file: %+v\n", err)
 			}
 		}
 		file, _ := os.OpenFile(cacheFile, os.O_RDWR, os.ModePerm)
 		defer file.Close()
 		if err = file.Truncate(0); err != nil {
-			log.Fatalf("%+v", errors.WithStack(err))
+			log.Fatalf("Failed file truncate: %+v\n", err)
 		}
 		if _, err = file.Seek(0, 0); err != nil {
-			log.Fatalf("%+v", errors.WithStack(err))
+			log.Fatalf("Failed file seek: %+v\n", err)
 		}
 		if _, err = file.WriteString(fileHashHex); err != nil {
-			log.Fatalf("%+v", errors.WithStack(err))
+			log.Fatalf("Failed to write file hash: %+v\n", err)
 		}
 	} else {
 		formattedOutput, hasChange, err = reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
 		if err != nil {
-			log.Fatalf("%+v", errors.WithStack(err))
+			log.Fatalf("Failed to fix file: %+v\n", err)
 		}
 	}
 
@@ -349,7 +347,7 @@ func resultPostProcess(hasChange bool, deprecatedMessagesCh chan string, originF
 		}
 
 		if err := os.WriteFile(originFilePath, formattedOutput, 0644); err != nil {
-			log.Fatalf("failed to write fixed result to file(%s): %+v", originFilePath, errors.WithStack(err))
+			log.Fatalf("failed to write fixed result to file(%s): %+v\n", originFilePath, err)
 		}
 		if *listFileName {
 			fmt.Println(originFilePath)
@@ -370,7 +368,7 @@ func validateRequiredParam(filePath string) error {
 		stat, _ := os.Stdin.Stat()
 		if stat.Mode()&os.ModeNamedPipe == 0 {
 			// no data on stdin
-			return errors.Errorf("-%s should be set", filePathArg)
+			return fmt.Errorf("-%s should be set", filePathArg)
 		}
 	}
 	return nil

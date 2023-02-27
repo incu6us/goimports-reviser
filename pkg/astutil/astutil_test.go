@@ -11,6 +11,8 @@ import (
 )
 
 func TestUsesImport(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		fileData       string
 		path           string
@@ -146,10 +148,12 @@ func main(){
 		},
 	}
 	for _, tt := range tests {
-
+		tt := tt
 		fileData := tt.args.fileData
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			fset := token.NewFileSet()
 			f, err := parser.ParseFile(fset, "", []byte(fileData), parser.ParseComments)
 			require.NoError(t, err)
@@ -162,6 +166,8 @@ func main(){
 }
 
 func TestLoadPackageDeps(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		dir      string
 		filename string
@@ -180,8 +186,8 @@ func TestLoadPackageDeps(t *testing.T) {
 				filename: "testdata.go",
 			},
 			want: map[string]string{
-				"fmt":                   "fmt",
-				"github.com/pkg/errors": "errors",
+				"fmt":                     "fmt",
+				"golang.org/x/exp/slices": "slices",
 			},
 			wantErr: false,
 		},
@@ -192,15 +198,18 @@ func TestLoadPackageDeps(t *testing.T) {
 				filename: "testdata_with_deprecated_build_tag.go",
 			},
 			want: map[string]string{
-				"fmt":                   "fmt",
-				"github.com/pkg/errors": "errors",
+				"fmt":                     "fmt",
+				"golang.org/x/exp/slices": "slices",
 			},
 			wantErr: false,
 		},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			f, err := parser.ParseFile(
 				token.NewFileSet(),
 				fmt.Sprintf("%s/%s", tt.args.dir, tt.args.filename),

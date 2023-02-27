@@ -2,10 +2,13 @@ package module
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 )
 
 func TestGoModRootPathAndName(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		dir string
 	}
@@ -21,9 +24,8 @@ func TestGoModRootPathAndName(t *testing.T) {
 				dir: func() string {
 					dir, err := os.Getwd()
 					if err != nil {
-						panic(err)
+						t.Fatal(err)
 					}
-
 					return dir
 				}(),
 			},
@@ -49,7 +51,10 @@ func TestGoModRootPathAndName(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			goModRootPath, err := GoModRootPath(tt.args.dir)
 			if err != nil && !tt.wantErr {
 				t.Errorf("GoModRootPath() error = %v, wantErr %v", err, tt.wantErr)
@@ -70,71 +75,52 @@ func TestGoModRootPathAndName(t *testing.T) {
 }
 
 func TestName(t *testing.T) {
-	type args struct {
-		goModRootPath string
-	}
+	t.Parallel()
+
 	tests := []struct {
 		name      string
-		prepareFn func()
-		args      args
+		prepareFn func() string
 		want      string
 		wantErr   bool
 	}{
 		{
 			name: "read empty go.mod",
-			prepareFn: func() {
-				const f = "/tmp/go.mod"
-
-				if _, err := os.Stat(f); os.IsExist(err) {
-					if err := os.Remove(f); err != nil {
-						panic(err)
-					}
-				}
-
-				_, err := os.Create(f)
+			prepareFn: func() string {
+				dir := t.TempDir()
+				_, err := os.Create(filepath.Join(dir, "go.mod"))
 				if err != nil {
-					panic(err)
+					t.Fatal(err)
 				}
-			},
-			args: args{
-				goModRootPath: "/tmp",
+				return dir
 			},
 			want:    "",
 			wantErr: true,
 		},
 		{
 			name: "check failed parsing of go.mod",
-			prepareFn: func() {
-				const f = "/tmp/go.mod"
-
-				if _, err := os.Stat(f); os.IsExist(err) {
-					if err := os.Remove(f); err != nil {
-						panic(err)
-					}
-				}
-
-				file, err := os.Create(f)
+			prepareFn: func() string {
+				dir := t.TempDir()
+				file, err := os.Create(filepath.Join(dir, "go.mod"))
 				if err != nil {
-					panic(err)
+					t.Fatal(err)
 				}
 
 				if _, err := file.WriteString("mod test"); err != nil {
-					panic(err)
+					t.Fatal(err)
 				}
-			},
-			args: args{
-				goModRootPath: "/tmp",
+				return dir
 			},
 			want:    "",
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-			tt.prepareFn()
-
-			got, err := Name(tt.args.goModRootPath)
+			goModRootPath := tt.prepareFn()
+			got, err := Name(goModRootPath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Name() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -147,6 +133,8 @@ func TestName(t *testing.T) {
 }
 
 func TestDetermineProjectName(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		projectName string
 		filePath    string
@@ -164,9 +152,9 @@ func TestDetermineProjectName(t *testing.T) {
 				filePath: func() string {
 					dir, err := os.Getwd()
 					if err != nil {
-						panic(err)
+						t.Fatal(err)
 					}
-					return dir + "/module.go"
+					return filepath.Join(dir, "module.go")
 				}(),
 			},
 			want:    "github.com/incu6us/goimports-reviser/v3",
@@ -184,7 +172,10 @@ func TestDetermineProjectName(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := DetermineProjectName(tt.args.projectName, tt.args.filePath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DetermineProjectName() error = %v, wantErr %v", err, tt.wantErr)

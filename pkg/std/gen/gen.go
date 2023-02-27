@@ -42,13 +42,11 @@ func main() {
 	tpl, err := tpl.Parse(fileTemplate)
 	if err != nil {
 		log.Fatalf("Failed to parse template: %+v\n", err)
-		return
 	}
 
 	packageList, err := packages.Load(nil, "std")
 	if err != nil {
 		log.Fatalf("Failed to load packages: %+v\n", err)
-		return
 	}
 
 	for _, experimentalPackage := range staticPackageList {
@@ -59,13 +57,11 @@ func main() {
 
 	if err := tpl.Execute(w, packageList); err != nil {
 		log.Fatalf("Failed to execute template: %+v\n", err)
-		return
 	}
 
 	data, err := format.Source(w.Bytes())
 	if err != nil {
 		log.Fatalf("Failed to format source: %+v\n", err)
-		return
 	}
 
 	currentDir, err := os.Getwd()

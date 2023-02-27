@@ -11,6 +11,8 @@ import (
 )
 
 func TestUsesImport(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		fileData       string
 		path           string
@@ -146,10 +148,12 @@ func main(){
 		},
 	}
 	for _, tt := range tests {
-
+		tt := tt
 		fileData := tt.args.fileData
 
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			fset := token.NewFileSet()
 			f, err := parser.ParseFile(fset, "", []byte(fileData), parser.ParseComments)
 			require.NoError(t, err)
@@ -162,6 +166,8 @@ func main(){
 }
 
 func TestLoadPackageDeps(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		dir      string
 		filename string
@@ -200,7 +206,10 @@ func TestLoadPackageDeps(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			f, err := parser.ParseFile(
 				token.NewFileSet(),
 				fmt.Sprintf("%s/%s", tt.args.dir, tt.args.filename),

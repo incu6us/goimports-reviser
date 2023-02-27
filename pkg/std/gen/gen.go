@@ -43,13 +43,11 @@ func main() {
 	tpl, err := tpl.Parse(fileTemplate)
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
-		return
 	}
 
 	packageList, err := packages.Load(nil, "std")
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
-		return
 	}
 
 	for _, experimentalPackage := range staticPackageList {
@@ -60,13 +58,11 @@ func main() {
 
 	if err := tpl.Execute(w, packageList); err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
-		return
 	}
 
 	data, err := format.Source(w.Bytes())
 	if err != nil {
 		log.Fatalf("%+v", errors.WithStack(err))
-		return
 	}
 
 	currentDir, err := os.Getwd()

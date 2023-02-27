@@ -1,12 +1,13 @@
 package reviser
 
 import (
+	"errors"
+	"fmt"
 	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
 )
 
@@ -46,7 +47,7 @@ func (d *SourceDir) Fix(options ...SourceFileOption) error {
 
 	err := filepath.WalkDir(d.dir, d.walk(options...))
 	if err != nil {
-		return errors.WithStack(err)
+		return fmt.Errorf("failed to walk dif: %w", err)
 	}
 
 	return nil
@@ -60,11 +61,11 @@ func (d *SourceDir) walk(options ...SourceFileOption) fs.WalkDirFunc {
 		if isGoFile(path) && !dirEntry.IsDir() {
 			content, hasChange, err := NewSourceFile(d.projectName, path).Fix(options...)
 			if err != nil {
-				return errors.WithStack(err)
+				return fmt.Errorf("failed to fix: %w", err)
 			}
 			if hasChange {
 				if err := os.WriteFile(path, content, 0644); err != nil {
-					log.Fatalf("failed to write fixed result to file(%s): %+v", path, errors.WithStack(err))
+					log.Fatalf("failed to write fixed result to file(%s): %+v\n", path, err)
 				}
 			}
 		}

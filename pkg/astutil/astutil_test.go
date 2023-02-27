@@ -186,8 +186,8 @@ func TestLoadPackageDeps(t *testing.T) {
 				filename: "testdata.go",
 			},
 			want: map[string]string{
-				"fmt":                   "fmt",
-				"github.com/pkg/errors": "errors",
+				"fmt":                     "fmt",
+				"golang.org/x/exp/slices": "slices",
 			},
 			wantErr: false,
 		},
@@ -198,8 +198,8 @@ func TestLoadPackageDeps(t *testing.T) {
 				filename: "testdata_with_deprecated_build_tag.go",
 			},
 			want: map[string]string{
-				"fmt":                   "fmt",
-				"github.com/pkg/errors": "errors",
+				"fmt":                     "fmt",
+				"golang.org/x/exp/slices": "slices",
 			},
 			wantErr: false,
 		},

@@ -87,8 +87,11 @@ func TestName(t *testing.T) {
 			name: "read empty go.mod",
 			prepareFn: func() string {
 				dir := t.TempDir()
-				_, err := os.Create(filepath.Join(dir, "go.mod"))
+				f, err := os.Create(filepath.Join(dir, "go.mod"))
 				if err != nil {
+					t.Fatal(err)
+				}
+				if err := f.Close(); err != nil {
 					t.Fatal(err)
 				}
 				return dir
@@ -106,6 +109,9 @@ func TestName(t *testing.T) {
 				}
 
 				if _, err := file.WriteString("mod test"); err != nil {
+					t.Fatal(err)
+				}
+				if err := file.Close(); err != nil {
 					t.Fatal(err)
 				}
 				return dir

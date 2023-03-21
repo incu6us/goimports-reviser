@@ -1,14 +1,15 @@
 <br/>
 <div align="center">
-  <a href="https://www.standwithukraine.dev">
+  <a href="https://vshymanskyy.github.io/StandWithUkraine">
     <img src="images/dove.png" class="this" alt="Stand With Ukraine" style="width: 60%;">
   </a>
-  <h3 align="center">🇺🇦 #StandWithUkraine 🇺🇦</h3>
+  <h3 align="center"><a href="https://vshymanskyy.github.io/StandWithUkraine">🇺🇦 #StandWithUkraine 🇺🇦</a></h3>
 </div>
 
 ---
 
 # goimports-reviser [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Right%20golang%20imports%20sorting%20and%20code%20formatting%20tool%20(goimports%20alternative)&url=https://github.com/incu6us/goimports-reviser&hashtags=golang,code,goimports-reviser,goimports,gofmt,developers)
+[![#StandWithUkraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://vshymanskyy.github.io/StandWithUkraine)
 !['Status Badge'](https://github.com/incu6us/goimports-reviser/workflows/build/badge.svg)
 !['Release Badge'](https://github.com/incu6us/goimports-reviser/workflows/release/badge.svg)
 !['Quality Badge'](https://goreportcard.com/badge/github.com/incu6us/goimports-reviser)

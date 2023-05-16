@@ -1,6 +1,10 @@
 package module
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestPathIsNotSetError_Error(t *testing.T) {
 	t.Parallel()
@@ -18,9 +22,8 @@ func TestPathIsNotSetError_Error(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			e := &PathIsNotSetError{}
-			if got := e.Error(); got != tt.want {
-				t.Errorf("Error() = %v, want %v", got, tt.want)
-			}
+			got := e.Error()
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -40,9 +43,8 @@ func TestUndefinedModuleError_Error(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			e := &UndefinedModuleError{}
-			if got := e.Error(); got != tt.want {
-				t.Errorf("Error() = %v, want %v", got, tt.want)
-			}
+			got := e.Error()
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

@@ -152,9 +152,7 @@ func fixCommentGroup(commentGroup *ast.CommentGroup) *ast.CommentGroup {
 		List: make([]*ast.Comment, len(commentGroup.List)),
 	}
 
-	for i, comment := range commentGroup.List {
-		formattedDoc.List[i] = comment
-	}
+	copy(formattedDoc.List, commentGroup.List)
 
 	return formattedDoc
 }

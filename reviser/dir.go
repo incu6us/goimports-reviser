@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"golang.org/x/exp/slices"
 )
@@ -26,16 +27,35 @@ var (
 
 // SourceDir to validate and fix import
 type SourceDir struct {
-	projectName string
-	dir         string
-	isRecursive bool
+	projectName     string
+	dir             string
+	isRecursive     bool
+	excludePatterns []string // see filepath.Match
+	hasExcludes     bool
 }
 
-func NewSourceDir(projectName string, path string, isRecursive bool) *SourceDir {
+func NewSourceDir(projectName string, path string, isRecursive bool, excludes string) *SourceDir {
 	if path == recursivePath {
 		isRecursive = true
 	}
-	return &SourceDir{projectName: projectName, dir: path, isRecursive: isRecursive}
+	absPath, err := filepath.Abs(path)
+	patterns := strings.Split(excludes, ",")
+	if err == nil {
+		for i := 0; i < len(patterns); i++ {
+			patterns[i] = strings.TrimSpace(patterns[i])
+			if !filepath.IsAbs(patterns[i]) {
+				patterns[i] = filepath.Join(absPath, patterns[i])
+			}
+		}
+	}
+
+	return &SourceDir{
+		projectName:     projectName,
+		dir:             path,
+		isRecursive:     isRecursive,
+		excludePatterns: patterns,
+		hasExcludes:     len(patterns) > 0,
+	}
 }
 
 func (d *SourceDir) Fix(options ...SourceFileOption) error {
@@ -44,7 +64,6 @@ func (d *SourceDir) Fix(options ...SourceFileOption) error {
 	if !ok {
 		return ErrPathIsNotDir
 	}
-
 	err := filepath.WalkDir(d.dir, d.walk(options...))
 	if err != nil {
 		return fmt.Errorf("failed to walk dif: %w", err)
@@ -58,7 +77,10 @@ func (d *SourceDir) walk(options ...SourceFileOption) fs.WalkDirFunc {
 		if !d.isRecursive && dirEntry.IsDir() && filepath.Base(d.dir) != dirEntry.Name() {
 			return filepath.SkipDir
 		}
-		if isGoFile(path) && !dirEntry.IsDir() {
+		if dirEntry.IsDir() && d.isExcluded(path) {
+			return filepath.SkipDir
+		}
+		if isGoFile(path) && !dirEntry.IsDir() && !d.isExcluded(path) {
 			content, hasChange, err := NewSourceFile(d.projectName, path).Fix(options...)
 			if err != nil {
 				return fmt.Errorf("failed to fix: %w", err)
@@ -71,6 +93,18 @@ func (d *SourceDir) walk(options ...SourceFileOption) fs.WalkDirFunc {
 		}
 		return nil
 	}
+}
+
+func (d *SourceDir) isExcluded(path string) bool {
+	if d.hasExcludes {
+		for _, pattern := range d.excludePatterns {
+			matched, err := filepath.Match(pattern, path)
+			if err == nil && matched {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func IsDir(path string) (string, bool) {

@@ -100,12 +100,13 @@ func init() {
 	flag.StringVar(
 		&importsOrder,
 		importsOrderArg,
-		"std,general,company,project",
-		`Your imports groups can be sorted in your way. 
-std - std import group; 
-general - libs for general purpose; 
-company - inter-org or your company libs(if you set '-company-prefixes'-option, then 4th group will be split separately. In other case, it will be the part of general purpose libs); 
-project - your local project dependencies. 
+		"std,general,company,project,named",
+		`Your imports groups can be sorted in your way.
+std - std import group;
+general - libs for general purpose;
+named - named imports (aliased libs);
+company - inter-org or your company libs(if you set '-company-prefixes'-option, then 4th group will be split separately. In other case, it will be the part of general purpose libs);
+project - your local project dependencies.
 Optional parameter.`,
 	)
 

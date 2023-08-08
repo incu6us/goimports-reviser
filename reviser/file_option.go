@@ -37,7 +37,7 @@ func WithCompanyPackagePrefixes(s string) SourceFileOption {
 	}
 }
 
-// WithImportsOrder will sort by needed order. Default order is "std,general,company,project"
+// WithImportsOrder will sort by needed order. Default order is "std,general,company,project,named"
 func WithImportsOrder(orders []ImportsOrder) SourceFileOption {
 	return func(f *SourceFile) error {
 		f.importsOrders = orders

@@ -248,7 +248,7 @@ import (
 				projectName: "github.com/incu6us/goimports-reviser",
 				filePath:    "./testdata/example.go",
 				fileContent: `package testdata
-		
+
 import (
 "log"
 
@@ -367,7 +367,7 @@ import (
 
 import (
 	"github.com/incu6us/goimports-reviser/testdata/innderpkg" // test1
-	
+
 	"fmt" //test2
 	// this should be skipped
 )
@@ -640,11 +640,11 @@ import (
 			wantErr:    false,
 		},
 		{
-			name: "success std,general,company,project",
+			name: "success std,general,company,project,named",
 			args: args{
 				projectName:  "github.com/incu6us/goimports-reviser",
 				filePath:     "./testdata/example.go",
-				importsOrder: "std,general,company,project",
+				importsOrder: "std,general,company,named,project",
 				fileContent: `package testdata
 
 import (

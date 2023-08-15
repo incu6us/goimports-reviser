@@ -38,14 +38,15 @@ func NewSourceDir(projectName string, path string, isRecursive bool, excludes st
 	if path == recursivePath {
 		isRecursive = true
 	}
-	absPath, err := filepath.Abs(path)
-	patterns := strings.Split(excludes, ",")
-	if err == nil {
-		for i := 0; i < len(patterns); i++ {
-			patterns[i] = strings.TrimSpace(patterns[i])
-			if !filepath.IsAbs(patterns[i]) {
-				patterns[i] = filepath.Join(absPath, patterns[i])
+	patterns := make([]string, 0)
+	segs := strings.Split(excludes, ",")
+	for _, seg := range segs {
+		p := strings.TrimSpace(seg)
+		if p != "" {
+			if !filepath.IsAbs(p) {
+				p = filepath.Join(path, p)
 			}
+			patterns = append(patterns, p)
 		}
 	}
 

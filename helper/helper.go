@@ -7,10 +7,16 @@ import (
 	"github.com/incu6us/goimports-reviser/v3/reviser"
 )
 
-func DetermineProjectName(projectName, filePath string) (string, error) {
+type Option func() (string, error)
+
+func OSGetwdOption() (string, error) {
+	return os.Getwd()
+}
+
+func DetermineProjectName(projectName, filePath string, option Option) (string, error) {
 	if filePath == reviser.StandardInput {
 		var err error
-		filePath, err = os.Getwd()
+		filePath, err = option()
 		if err != nil {
 			return "", err
 		}

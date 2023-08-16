@@ -31,7 +31,6 @@ type SourceDir struct {
 	dir             string
 	isRecursive     bool
 	excludePatterns []string // see filepath.Match
-	hasExcludes     bool
 }
 
 func NewSourceDir(projectName string, path string, isRecursive bool, excludes string) *SourceDir {
@@ -39,23 +38,29 @@ func NewSourceDir(projectName string, path string, isRecursive bool, excludes st
 		isRecursive = true
 	}
 	patterns := make([]string, 0)
-	segs := strings.Split(excludes, ",")
-	for _, seg := range segs {
-		p := strings.TrimSpace(seg)
-		if p != "" {
-			if !filepath.IsAbs(p) {
-				p = filepath.Join(path, p)
+	// get the absolute path
+	absPath, err := filepath.Abs(path)
+	if err == nil {
+		segs := strings.Split(excludes, ",")
+		for _, seg := range segs {
+			p := strings.TrimSpace(seg)
+			if p != "" {
+				if !filepath.IsAbs(p) {
+					// resolve the absolute path
+					p = filepath.Join(absPath, p)
+				}
+				// Check pattern is well-formed.
+				if _, err = filepath.Match(p, ""); err == nil {
+					patterns = append(patterns, p)
+				}
 			}
-			patterns = append(patterns, p)
 		}
 	}
-
 	return &SourceDir{
 		projectName:     projectName,
-		dir:             path,
+		dir:             absPath,
 		isRecursive:     isRecursive,
 		excludePatterns: patterns,
-		hasExcludes:     len(patterns) > 0,
 	}
 }
 
@@ -97,12 +102,16 @@ func (d *SourceDir) walk(options ...SourceFileOption) fs.WalkDirFunc {
 }
 
 func (d *SourceDir) isExcluded(path string) bool {
-	if d.hasExcludes {
-		for _, pattern := range d.excludePatterns {
-			matched, err := filepath.Match(pattern, path)
-			if err == nil && matched {
-				return true
-			}
+	var absPath string
+	if filepath.IsAbs(path) {
+		absPath = path
+	} else {
+		absPath = filepath.Join(d.dir, path)
+	}
+	for _, pattern := range d.excludePatterns {
+		matched, err := filepath.Match(pattern, absPath)
+		if err == nil && matched {
+			return true
 		}
 	}
 	return false

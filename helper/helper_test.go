@@ -1,13 +1,14 @@
 package helper
 
 import (
+	"errors"
 	"os"
 	"testing"
 
-	"github.com/incu6us/goimports-reviser/v3/reviser"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/incu6us/goimports-reviser/v3/reviser"
 )
 
 func TestDetermineProjectName(t *testing.T) {
@@ -16,11 +17,13 @@ func TestDetermineProjectName(t *testing.T) {
 	type args struct {
 		projectName string
 		filePath    string
+		option      Option
 	}
 	tests := []struct {
-		name string
-		args args
-		want string
+		name    string
+		args    args
+		want    string
+		wantErr bool
 	}{
 		{
 			name: "success with manual filepath",
@@ -31,6 +34,7 @@ func TestDetermineProjectName(t *testing.T) {
 					require.NoError(t, err)
 					return dir
 				}(),
+				option: OSGetwdOption,
 			},
 			want: "github.com/incu6us/goimports-reviser/v3",
 		},
@@ -39,8 +43,20 @@ func TestDetermineProjectName(t *testing.T) {
 			args: args{
 				projectName: "",
 				filePath:    reviser.StandardInput,
+				option:      OSGetwdOption,
 			},
 			want: "github.com/incu6us/goimports-reviser/v3",
+		},
+		{
+			name: "fail with manual filepath",
+			args: args{
+				projectName: "",
+				filePath:    reviser.StandardInput,
+				option: func() (string, error) {
+					return "", errors.New("some error")
+				},
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -48,7 +64,11 @@ func TestDetermineProjectName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := DetermineProjectName(tt.args.projectName, tt.args.filePath)
+			got, err := DetermineProjectName(tt.args.projectName, tt.args.filePath, tt.args.option)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})

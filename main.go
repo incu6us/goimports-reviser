@@ -257,7 +257,7 @@ func main() {
 		options = append(options, reviser.WithImportsOrder(order))
 	}
 
-	originProjectName, err := helper.DetermineProjectName(projectName, originPath)
+	originProjectName, err := helper.DetermineProjectName(projectName, originPath, helper.OSGetwdOption)
 	if err != nil {
 		fmt.Printf("%s\n\n", err)
 		printUsage()

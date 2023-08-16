@@ -76,10 +76,6 @@ brews:
 snapcrafts:
   - id: goimports-reviser
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    replacements:
-      amd64: 64-bit
-      386: 32-bit
-      darwin: MacOS
     publish: true
     summary: "Right imports sorting & code formatting tool"
     description: |

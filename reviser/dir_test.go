@@ -7,6 +7,8 @@ import (
 	"testing"
 )
 
+const sep = string(os.PathSeparator)
+
 func TestSourceDir_Fix(t *testing.T) {
 	testFile := "testdata/dir/dir1/file1.go"
 
@@ -57,27 +59,27 @@ func main() {
 	}{
 		{
 			name: "exclude-file",
-			args: args{project: "testdata", path: "testdata/dir", excludes: "dir1/file1.go"},
+			args: args{project: "testdata", path: "testdata/dir", excludes: "dir1" + sep + "file1.go"},
 			want: originContent,
 		}, {
 			name: "exclude-dir",
-			args: args{project: "testdata", path: "testdata/dir", excludes: "dir1/"},
+			args: args{project: "testdata", path: "testdata/dir", excludes: "dir1" + sep},
 			want: originContent,
 		}, {
 			name: "exclude-file-*",
-			args: args{project: "testdata", path: "testdata/dir", excludes: "dir1/f*1.go"},
+			args: args{project: "testdata", path: "testdata/dir", excludes: "dir1" + sep + "f*1.go"},
 			want: originContent,
 		}, {
 			name: "exclude-file-?",
-			args: args{project: "testdata", path: "testdata/dir", excludes: "dir1/file?.go"},
+			args: args{project: "testdata", path: "testdata/dir", excludes: "dir1" + sep + "file?.go"},
 			want: originContent,
 		}, {
 			name: "exclude-file-multi",
-			args: args{project: "testdata", path: "testdata/dir", excludes: "dir1/file?.go,aaa,bbb"},
+			args: args{project: "testdata", path: "testdata/dir", excludes: "dir1" + sep + "file?.go,aaa,bbb"},
 			want: originContent,
 		}, {
 			name: "not-exclude",
-			args: args{project: "testdata", path: "testdata/dir", excludes: "dir1/test.go"},
+			args: args{project: "testdata", path: "testdata/dir", excludes: "dir1" + sep + "test.go"},
 			want: sortedContent,
 		},
 	}
@@ -112,32 +114,32 @@ func TestSourceDir_IsExcluded(t *testing.T) {
 	}{
 		{
 			name: "normal",
-			args: args{project: "project", path: "/project", excludes: "test.go", testPath: "/project/test.go"},
+			args: args{project: "project", path: "project", excludes: "test.go", testPath: "test.go"},
 			want: true,
 		},
 		{
 			name: "dir",
-			args: args{project: "project", path: "/project", excludes: "test/", testPath: "/project/test"},
+			args: args{project: "project", path: "project", excludes: "test/", testPath: "test"},
 			want: true,
 		},
 		{
 			name: "wildcard-1",
-			args: args{project: "project", path: "/project", excludes: "tes?.go", testPath: "/project/test.go"},
+			args: args{project: "project", path: "project", excludes: "tes?.go", testPath: "test.go"},
 			want: true,
 		},
 		{
 			name: "wildcard-2",
-			args: args{project: "project", path: "/project", excludes: "t*.go", testPath: "/project/test.go"},
+			args: args{project: "project", path: "project", excludes: "t*.go", testPath: "test.go"},
 			want: true,
 		},
 		{
 			name: "not-excluded",
-			args: args{project: "project", path: "/project", excludes: "t*.go", testPath: "/project/abc.go"},
+			args: args{project: "project", path: "project", excludes: "t*.go", testPath: "abc.go"},
 			want: false,
 		},
 		{
 			name: "multi-excludes",
-			args: args{project: "project", path: "/project", excludes: "t*.go,abc.go", testPath: "/project/abc.go"},
+			args: args{project: "project", path: "project", excludes: "t*.go,abc.go", testPath: "abc.go"},
 			want: true,
 		},
 	}
@@ -149,4 +151,8 @@ func TestSourceDir_IsExcluded(t *testing.T) {
 			assert.Equal(tt, test.want, excluded)
 		})
 	}
+}
+
+func join(elem ...string) string {
+	return filepath.Join(elem...)
 }

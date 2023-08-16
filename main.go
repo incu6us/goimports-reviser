@@ -30,6 +30,7 @@ const (
 	recursiveArg           = "recursive"
 	useCacheArg            = "use-cache"
 	applyToGeneratedFiles  = "apply-to-generated-files"
+	excludesArg            = "excludes"
 
 	// Deprecated options
 	localArg    = "local"
@@ -55,7 +56,7 @@ var (
 )
 
 var (
-	projectName, companyPkgPrefixes, output, importsOrder string
+	projectName, companyPkgPrefixes, output, importsOrder, excludes string
 
 	// Deprecated
 	localPkgPrefixes, filePath string
@@ -67,6 +68,13 @@ func init() {
 		filePathArg,
 		"",
 		"Deprecated. Put file name as an argument(last item) of command line.",
+	)
+
+	flag.StringVar(
+		&excludes,
+		excludesArg,
+		"",
+		"Exclude files or dirs, example: '.git/,proto/*.go'.",
 	)
 
 	flag.StringVar(
@@ -259,7 +267,7 @@ func main() {
 	close(deprecatedMessagesCh)
 
 	if _, ok := reviser.IsDir(originPath); ok {
-		err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive).Fix(options...)
+		err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive, excludes).Fix(options...)
 		if err != nil {
 			log.Fatalf("Failed to fix directory: %+v\n", err)
 		}

@@ -71,7 +71,7 @@ func main() {
 
 	filePath := filepath.Join(filepath.Join(currentDir, "pkg/std"), fileName)
 	log.Printf("file path to be updated: %s", filePath)
-	if err := os.WriteFile(filePath, data, 0644); err != nil {
+	if err := os.WriteFile(filePath, data, 0o644); err != nil {
 		log.Fatalf("Failed to write file: %+v\n", err)
 	}
 }

@@ -1,10 +1,11 @@
 package reviser
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const sep = string(os.PathSeparator)
@@ -151,8 +152,4 @@ func TestSourceDir_IsExcluded(t *testing.T) {
 			assert.Equal(tt, test.want, excluded)
 		})
 	}
-}
-
-func join(elem ...string) string {
-	return filepath.Join(elem...)
 }

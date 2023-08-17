@@ -65,7 +65,7 @@ func StringToImportsOrders(s string) (ImportsOrders, error) {
 
 	groups := unique(strings.Split(s, ","))
 	if len(groups) != 4 {
-		return nil, fmt.Errorf(`use this parameters to sort all groups of your imports: "%s"`, defaultImportsOrder)
+		return nil, fmt.Errorf(`use this parameters to sort all groups of your imports: %q`, defaultImportsOrder)
 	}
 
 	var groupOrder []ImportsOrder
@@ -74,7 +74,7 @@ func StringToImportsOrders(s string) (ImportsOrders, error) {
 		switch group {
 		case StdImportsOrder, CompanyImportsOrder, ProjectImportsOrder, GeneralImportsOrder:
 		default:
-			return nil, fmt.Errorf(`unknown order group type: "%s"`, group)
+			return nil, fmt.Errorf(`unknown order group type: %q`, group)
 		}
 
 		groupOrder = append(groupOrder, group)

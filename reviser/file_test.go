@@ -570,7 +570,7 @@ import "C"
 	}
 	for _, tt := range tests {
 		if tt.args.filePath != StandardInput && !strings.Contains(tt.args.filePath, "does-not-exist") {
-			require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644))
+			require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0o644))
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -716,7 +716,7 @@ import (
 	}
 	for _, tt := range tests {
 		if tt.args.filePath != StandardInput && !strings.Contains(tt.args.filePath, "does-not-exist") {
-			require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644))
+			require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0o644))
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
@@ -1009,7 +1009,7 @@ func main() {
 	}
 
 	for _, tt := range tests {
-		require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644))
+		require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0o644))
 
 		t.Run(tt.name, func(t *testing.T) {
 			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).
@@ -1158,7 +1158,7 @@ func main() {
 	}
 
 	for _, tt := range tests {
-		require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644))
+		require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0o644))
 
 		t.Run(tt.name, func(t *testing.T) {
 			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).
@@ -1373,7 +1373,7 @@ func main() {
 	}
 
 	for _, tt := range tests {
-		require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644))
+		require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0o644))
 
 		t.Run(tt.name, func(t *testing.T) {
 			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).
@@ -1462,7 +1462,7 @@ func test1() {}
 		},
 	}
 	for _, tt := range tests {
-		require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644))
+		require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0o644))
 
 		t.Run(tt.name, func(t *testing.T) {
 			got, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).Fix(WithCodeFormatting)
@@ -1837,7 +1837,7 @@ import (
 	}
 	for _, tt := range tests {
 		if tt.args.filePath != StandardInput && !strings.Contains(tt.args.filePath, "does-not-exist") {
-			require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0644))
+			require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0o644))
 		}
 
 		t.Run(tt.name, func(t *testing.T) {

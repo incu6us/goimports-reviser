@@ -85,7 +85,7 @@ func (f *SourceFile) Fix(options ...SourceFileOption) ([]byte, bool, error) {
 		return nil, false, err
 	}
 
-	stdImports, generalImports, projectLocalPkgs, projectImports := groupImports(
+	stdImports, generalImports, namedImports, projectLocalPkgs, projectImports := groupImports(
 		f.projectName,
 		f.companyPackagePrefixes,
 		importsWithMetadata,
@@ -96,7 +96,7 @@ func (f *SourceFile) Fix(options ...SourceFileOption) ([]byte, bool, error) {
 		pf.Decls = decls
 	}
 
-	f.fixImports(pf, stdImports, generalImports, projectLocalPkgs, projectImports, importsWithMetadata)
+	f.fixImports(pf, stdImports, generalImports, namedImports, projectLocalPkgs, projectImports, importsWithMetadata)
 
 	f.formatDecls(pf)
 
@@ -161,15 +161,22 @@ func groupImports(
 	projectName string,
 	localPkgPrefixes []string,
 	importsWithMetadata map[string]*commentsMetadata,
-) ([]string, []string, []string, []string) {
+) ([]string, []string, []string, []string, []string) {
 	var (
 		stdImports       []string
 		projectImports   []string
 		projectLocalPkgs []string
+		namedImports     []string
 		generalImports   []string
 	)
 
 	for imprt := range importsWithMetadata {
+		values := strings.Split(imprt, " ")
+		if len(values) > 1 {
+			namedImports = append(namedImports, imprt)
+			continue
+		}
+
 		pkgWithoutAlias := skipPackageAlias(imprt)
 
 		if _, ok := std.StdPackages[pkgWithoutAlias]; ok {
@@ -179,7 +186,9 @@ func groupImports(
 
 		var isLocalPackageFound bool
 		for _, localPackagePrefix := range localPkgPrefixes {
-			if strings.HasPrefix(pkgWithoutAlias, localPackagePrefix) && !strings.HasPrefix(pkgWithoutAlias, projectName) {
+			fmt.Printf("pkgWithoutAlias: %s localPackagePrefix: %s\n", pkgWithoutAlias, localPackagePrefix)
+			if strings.HasPrefix(pkgWithoutAlias, localPackagePrefix) { // && !strings.HasPrefix(pkgWithoutAlias, projectName) {
+				fmt.Printf("local package found: %s\n", imprt)
 				projectLocalPkgs = append(projectLocalPkgs, imprt)
 				isLocalPackageFound = true
 				break
@@ -200,10 +209,11 @@ func groupImports(
 
 	sort.Strings(stdImports)
 	sort.Strings(generalImports)
+	sort.Strings(namedImports)
 	sort.Strings(projectLocalPkgs)
 	sort.Strings(projectImports)
 
-	return stdImports, generalImports, projectLocalPkgs, projectImports
+	return stdImports, generalImports, namedImports, projectLocalPkgs, projectImports
 }
 
 func skipPackageAlias(pkg string) string {
@@ -237,7 +247,7 @@ func isSingleCgoImport(dd *ast.GenDecl) bool {
 
 func (f *SourceFile) fixImports(
 	file *ast.File,
-	stdImports, generalImports, projectLocalPkgs, projectImports []string,
+	stdImports, generalImports, namedImports, projectLocalPkgs, projectImports []string,
 	commentsMetadata map[string]*commentsMetadata,
 ) {
 	var importsPositions []*importPosition
@@ -258,8 +268,9 @@ func (f *SourceFile) fixImports(
 			},
 		)
 
-		one, two, three, four := f.importsOrders.sortImportsByOrder(stdImports, generalImports, projectLocalPkgs, projectImports)
-		dd.Specs = rebuildImports(dd.Tok, commentsMetadata, one, two, three, four)
+		fmt.Printf("named: %v\n", namedImports)
+		one, two, three, four, five := f.importsOrders.sortImportsByOrder(stdImports, generalImports, namedImports, projectLocalPkgs, projectImports)
+		dd.Specs = rebuildImports(dd.Tok, commentsMetadata, one, two, three, four, five)
 	}
 
 	clearImportDocs(file, importsPositions)
@@ -275,8 +286,10 @@ func (f *SourceFile) fixImports(
 // to
 // -----
 // import (
-// 	"fmt"
+//
+//	"fmt"
 //	"io"
+//
 // )
 func hasMultipleImportDecls(f *ast.File) ([]ast.Decl, bool) {
 	importSpecs := make([]ast.Spec, 0, len(f.Imports))
@@ -356,6 +369,7 @@ func rebuildImports(
 	secondImportsGroup []string,
 	thirdImportsGroup []string,
 	fourthImportGroup []string,
+	fifthImportGroup []string,
 ) []ast.Spec {
 	var specs []ast.Spec
 
@@ -407,7 +421,23 @@ func rebuildImports(
 		}
 	}
 
+	linesCounter = len(fourthImportGroup)
 	for _, imprt := range fourthImportGroup {
+		spec := &ast.ImportSpec{
+			Path: &ast.BasicLit{Value: importWithComment(imprt, commentsMetadata), Kind: tok},
+		}
+		specs = append(specs, spec)
+
+		linesCounter--
+
+		if linesCounter == 0 && len(fourthImportGroup) > 0 {
+			spec = &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
+
+			specs = append(specs, spec)
+		}
+	}
+
+	for _, imprt := range fifthImportGroup {
 		spec := &ast.ImportSpec{
 			Path: &ast.BasicLit{Value: importWithComment(imprt, commentsMetadata), Kind: tok},
 		}

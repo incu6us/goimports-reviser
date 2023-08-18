@@ -92,7 +92,7 @@ func (d *SourceDir) walk(options ...SourceFileOption) fs.WalkDirFunc {
 				return fmt.Errorf("failed to fix: %w", err)
 			}
 			if hasChange {
-				if err := os.WriteFile(path, content, 0644); err != nil {
+				if err := os.WriteFile(path, content, 0o644); err != nil {
 					log.Fatalf("failed to write fixed result to file(%s): %+v\n", path, err)
 				}
 			}

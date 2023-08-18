@@ -354,14 +354,14 @@ func resultPostProcess(hasChange bool, deprecatedMessagesCh chan string, originF
 			return
 		}
 
-		if err := os.WriteFile(originFilePath, formattedOutput, 0644); err != nil {
+		if err := os.WriteFile(originFilePath, formattedOutput, 0o644); err != nil {
 			log.Fatalf("failed to write fixed result to file(%s): %+v\n", originFilePath, err)
 		}
 		if *listFileName {
 			fmt.Println(originFilePath)
 		}
 	} else {
-		log.Fatalf(`invalid output "%s" specified`, output)
+		log.Fatalf(`invalid output %q specified`, output)
 	}
 
 	if hasChange && *setExitStatus {

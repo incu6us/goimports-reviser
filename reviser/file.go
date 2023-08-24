@@ -10,7 +10,7 @@ import (
 	"go/token"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -460,7 +460,7 @@ func (f *SourceFile) parseImports(file *ast.File) (map[string]*commentsMetadata,
 	var err error
 
 	if shouldRemoveUnusedImports || shouldUseAliasForVersionSuffix {
-		packageImports, err = astutil.LoadPackageDependencies(path.Dir(f.filePath), astutil.ParseBuildTag(file))
+		packageImports, err = astutil.LoadPackageDependencies(filepath.Dir(f.filePath), astutil.ParseBuildTag(file))
 		if err != nil {
 			return nil, err
 		}

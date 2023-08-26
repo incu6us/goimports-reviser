@@ -269,7 +269,7 @@ func main() {
 	if _, ok := reviser.IsDir(originPath); ok {
 		err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive, excludes).Fix(options...)
 		if err != nil {
-			log.Fatalf("Failed to fix directory: %+v\n", err)
+			log.Fatalf("Failed to fix directory %s: %+v\n", originPath, err)
 		}
 		return
 	}

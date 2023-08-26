@@ -64,7 +64,8 @@ func UsesImport(f *ast.File, packageImports PackageImports, importPath string) b
 }
 
 // LoadPackageDependencies will return all package's imports with it names:
-// 		key - package(ex.: github/pkg/errors), value - name(ex.: errors)
+//
+//	key - package(ex.: github/pkg/errors), value - name(ex.: errors)
 func LoadPackageDependencies(dir, buildTag string) (PackageImports, error) {
 	cfg := &packages.Config{
 		Dir:   dir,

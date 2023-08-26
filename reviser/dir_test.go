@@ -10,6 +10,16 @@ import (
 
 const sep = string(os.PathSeparator)
 
+func TestNewSourceDir(t *testing.T) {
+	t.Run("should generate source dir from recursive path", func(tt *testing.T) {
+		dir := NewSourceDir("project", recursivePath, false, "")
+		assert.Equal(tt, "project", dir.projectName)
+		assert.NotContains(tt, dir.dir, "/...")
+		assert.Equal(tt, true, dir.isRecursive)
+		assert.Equal(tt, 0, len(dir.excludePatterns))
+	})
+}
+
 func TestSourceDir_Fix(t *testing.T) {
 	testFile := "testdata/dir/dir1/file1.go"
 

@@ -34,12 +34,17 @@ type SourceDir struct {
 }
 
 func NewSourceDir(projectName string, path string, isRecursive bool, excludes string) *SourceDir {
-	if path == recursivePath {
-		isRecursive = true
-	}
 	patterns := make([]string, 0)
+
 	// get the absolute path
 	absPath, err := filepath.Abs(path)
+
+	// if path is recursive, then we need to remove the "/..." suffix
+	if path == recursivePath {
+		isRecursive = true
+		absPath = strings.TrimSuffix(absPath, "/...")
+	}
+
 	if err == nil {
 		segs := strings.Split(excludes, ",")
 		for _, seg := range segs {

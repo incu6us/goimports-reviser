@@ -11,7 +11,6 @@ import (
 	"io"
 	"os"
 	"path"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -458,48 +457,46 @@ func (f *SourceFile) parseImports(file *ast.File) (map[string]*commentsMetadata,
 	shouldUseAliasForVersionSuffix := f.shouldUseAliasForVersionSuffix
 
 	var packageImports map[string]string
-	var err error
 
 	if shouldRemoveUnusedImports || shouldUseAliasForVersionSuffix {
-		packageImports, err = astutil.LoadPackageDependencies(filepath.Dir(f.filePath), astutil.ParseBuildTag(file))
+		var err error
+		packageImports, err = astutil.LoadPackageDependencies(path.Dir(f.filePath), astutil.ParseBuildTag(file))
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	for _, decl := range file.Decls {
-		switch decl.(type) {
-		case *ast.GenDecl:
-			dd := decl.(*ast.GenDecl)
-			if isSingleCgoImport(dd) {
+		dd, ok := decl.(*ast.GenDecl)
+		if !ok {
+			continue
+		}
+		if isSingleCgoImport(dd) || dd.Tok != token.IMPORT {
+			continue
+		}
+		for _, spec := range dd.Specs {
+			importSpec := spec.(*ast.ImportSpec)
+
+			if shouldRemoveUnusedImports && !astutil.UsesImport(
+				file, packageImports, strings.Trim(importSpec.Path.Value, `"`),
+			) {
 				continue
 			}
-			if dd.Tok == token.IMPORT {
-				for _, spec := range dd.Specs {
-					var importSpecStr string
-					importSpec := spec.(*ast.ImportSpec)
 
-					if shouldRemoveUnusedImports && !astutil.UsesImport(
-						file, packageImports, strings.Trim(importSpec.Path.Value, `"`),
-					) {
-						continue
-					}
-
-					if importSpec.Name != nil {
-						importSpecStr = strings.Join([]string{importSpec.Name.String(), importSpec.Path.Value}, " ")
-					} else {
-						if shouldUseAliasForVersionSuffix {
-							importSpecStr = setAliasForVersionedImportSpec(importSpec, packageImports)
-						} else {
-							importSpecStr = importSpec.Path.Value
-						}
-					}
-
-					importsWithMetadata[importSpecStr] = &commentsMetadata{
-						Doc:     importSpec.Doc,
-						Comment: importSpec.Comment,
-					}
+			var importSpecStr string
+			if importSpec.Name != nil {
+				importSpecStr = strings.Join([]string{importSpec.Name.String(), importSpec.Path.Value}, " ")
+			} else {
+				if shouldUseAliasForVersionSuffix {
+					importSpecStr = setAliasForVersionedImportSpec(importSpec, packageImports)
+				} else {
+					importSpecStr = importSpec.Path.Value
 				}
+			}
+
+			importsWithMetadata[importSpecStr] = &commentsMetadata{
+				Doc:     importSpec.Doc,
+				Comment: importSpec.Comment,
 			}
 		}
 	}

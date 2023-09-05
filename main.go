@@ -344,11 +344,12 @@ func resultPostProcess(hasChange bool, deprecatedMessagesCh chan string, originF
 		printDeprecations(deprecatedMessagesCh)
 		return
 	}
-	if hasChange && *listFileName && output != "write" {
+	switch {
+	case hasChange && *listFileName && output != "write":
 		fmt.Println(originFilePath)
-	} else if output == "stdout" || originFilePath == reviser.StandardInput {
+	case output == "stdout" || originFilePath == reviser.StandardInput:
 		fmt.Print(string(formattedOutput))
-	} else if output == "file" || output == "write" {
+	case output == "file" || output == "write":
 		if !hasChange {
 			printDeprecations(deprecatedMessagesCh)
 			return
@@ -360,7 +361,7 @@ func resultPostProcess(hasChange bool, deprecatedMessagesCh chan string, originF
 		if *listFileName {
 			fmt.Println(originFilePath)
 		}
-	} else {
+	default:
 		log.Fatalf(`invalid output %q specified`, output)
 	}
 

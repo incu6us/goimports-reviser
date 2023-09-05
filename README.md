@@ -82,6 +82,8 @@ Usage of goimports-reviser:
         set the exit status to 1 if a change is needed/made. Optional parameter.
   -use-cache
         Use cache to improve performance. Optional parameter.
+  -excludes
+        Excludes files or directories. Supports regex. Values should be comma-separated. Optional parameter.
 ```
 
 ## Install

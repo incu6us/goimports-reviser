@@ -54,34 +54,42 @@ goimports-reviser -rm-unused -set-alias -format ./...
 ```text
 Usage of goimports-reviser:
   -apply-to-generated-files
-        Apply imports sorting and formatting(if the option is set) to generated files. Generated file is a file with comment which starts with comment '^// Code generated .* DO NOT EDIT\.$'. Generated comment must before package fragment. Optional parameter.
+    	Apply imports sorting and formatting(if the option is set) to generated files. Generated file is a file with first comment which starts with comment '// Code generated'. Optional parameter.
   -company-prefixes string
-        Company package prefixes which will be placed after 3rd-party group by default(if defined). Values should be comma-separated. Optional parameters.
+    	Company package prefixes which will be placed after 3rd-party group by default(if defined). Values should be comma-separated. Optional parameters.
+  -excludes string
+    	Exclude files or dirs, example: '.git/,proto/*.go'.
+  -file-path string
+    	Deprecated. Put file name as an argument(last item) of command line.
   -format
-        Option will perform additional formatting. Optional parameter.
+    	Option will perform additional formatting. Optional parameter.
   -imports-order string
-        Your imports groups can be sorted in your way. 
-        std - std import group; 
-        general - libs for general purpose; 
-        company - inter-org or your company libs(if you set '-company-prefixes'-option, then 4th group will be split separately. In other case, it will be the part of general purpose libs); 
-        project - your local project dependencies. 
-        Optional parameter. (default "std,general,company,project")
+    	Your imports groups can be sorted in your way.
+    	std - std import group;
+    	general - libs for general purpose;
+    	company - inter-org or your company libs(if you set '-company-prefixes'-option, then 4th group will be split separately. In other case, it will be the part of general purpose libs);
+    	project - your local project dependencies.
+    	Optional parameter. (default "std,general,company,project")
   -list-diff
-        Option will list files whose formatting differs from goimports-reviser. Optional parameter.
+    	Option will list files whose formatting differs from goimports-reviser. Optional parameter.
+  -local string
+    	Deprecated
   -output string
-        Can be "file", "write" or "stdout". Whether to write the formatted content back to the file or to stdout. When "write" together with "-list-diff" will list the file name and write back to the file. Optional parameter. (default "file")
+    	Can be "file", "write" or "stdout". Whether to write the formatted content back to the file or to stdout. When "write" together with "-list-diff" will list the file name and write back to the file. Optional parameter. (default "file")
   -project-name string
-        Your project name(ex.: github.com/incu6us/goimports-reviser). Optional parameter.
+    	Your project name(ex.: github.com/incu6us/goimports-reviser). Optional parameter.
   -recursive
-        Apply rules recursively if target is a directory. In case of ./... execution will be recursively applied by default. Optional parameter.
+    	Apply rules recursively if target is a directory. In case of ./... execution will be recursively applied by default. Optional parameter.
   -rm-unused
-        Remove unused imports. Optional parameter.
+    	Remove unused imports. Optional parameter.
   -set-alias
-        Set alias for versioned package names, like 'github.com/go-pg/pg/v9'. In this case import will be set as 'pg "github.com/go-pg/pg/v9"'. Optional parameter.
+    	Set alias for versioned package names, like 'github.com/go-pg/pg/v9'. In this case import will be set as 'pg "github.com/go-pg/pg/v9"'. Optional parameter.
   -set-exit-status
-        set the exit status to 1 if a change is needed/made. Optional parameter.
+    	set the exit status to 1 if a change is needed/made. Optional parameter.
   -use-cache
-        Use cache to improve performance. Optional parameter.
+    	Use cache to improve performance. Optional parameter.
+  -version
+    	Show version.
 ```
 
 ## Install

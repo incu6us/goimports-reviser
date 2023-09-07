@@ -1,6 +1,6 @@
 module github.com/incu6us/goimports-reviser/v3
 
-go 1.21.1
+go 1.21
 
 require (
 	github.com/stretchr/testify v1.6.1

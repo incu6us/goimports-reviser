@@ -5,8 +5,8 @@ go 1.21
 require (
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
-	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
-	golang.org/x/tools v0.1.10
+	golang.org/x/mod v0.12.0
+	golang.org/x/tools v0.1.12
 )
 
 require (

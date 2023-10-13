@@ -19,9 +19,9 @@ func TestStringToImportsOrder(t *testing.T) {
 		wantErr string
 	}{
 		{
-			name:    "invalid groups count",
+			name:    "invalid groupsImports count",
 			args:    args{importsOrder: "std,general"},
-			wantErr: `use this parameters to sort all groups of your imports: "std,general,company,project"`,
+			wantErr: `use default at least 4 parameters to sort groups of your imports: "std,general,company,project"`,
 		},
 		{
 			name:    "unknown group",

@@ -17,6 +17,10 @@ const (
 	ProjectImportsOrder ImportsOrder = "project"
 	// GeneralImportsOrder is packages that are outside. In other words it is general purpose libraries
 	GeneralImportsOrder ImportsOrder = "general"
+	// BlankedImportsOrder is separate group for "_" imports
+	BlankedImportsOrder ImportsOrder = "blanked"
+	// DottedImportsOrder is separate group for "." imports
+	DottedImportsOrder ImportsOrder = "dotted"
 )
 
 const (
@@ -26,14 +30,9 @@ const (
 // ImportsOrders alias to []ImportsOrder
 type ImportsOrders []ImportsOrder
 
-func (o ImportsOrders) sortImportsByOrder(
-	std []string,
-	general []string,
-	company []string,
-	project []string,
-) ([]string, []string, []string, []string) {
+func (o ImportsOrders) sortImportsByOrder(importGroups *groupsImports) [][]string {
 	if len(o) == 0 {
-		return std, general, company, project
+		return importGroups.defaultSorting()
 	}
 
 	var result [][]string
@@ -41,43 +40,89 @@ func (o ImportsOrders) sortImportsByOrder(
 		var imports []string
 		switch group {
 		case StdImportsOrder:
-			imports = std
+			imports = importGroups.std
 		case GeneralImportsOrder:
-			imports = general
+			imports = importGroups.general
 		case CompanyImportsOrder:
-			imports = company
+			imports = importGroups.company
 		case ProjectImportsOrder:
-			imports = project
+			imports = importGroups.project
+		case BlankedImportsOrder:
+			imports = importGroups.blanked
+		case DottedImportsOrder:
+			imports = importGroups.dotted
 		}
 
 		result = append(result, imports)
 	}
 
-	return result[0], result[1], result[2], result[3]
+	return result
+}
+
+func (o ImportsOrders) hasBlankedImportOrder() bool {
+	for _, order := range o {
+		if order == BlankedImportsOrder {
+			return true
+		}
+	}
+	return false
+}
+
+func (o ImportsOrders) hasDottedImportOrder() bool {
+	for _, order := range o {
+		if order == DottedImportsOrder {
+			return true
+		}
+	}
+	return false
+}
+
+func (o ImportsOrders) hasRequiredGroups() bool {
+	var (
+		hasStd     bool
+		hasCompany bool
+		hasGeneral bool
+		hasProject bool
+	)
+	for _, order := range o {
+		switch order {
+		case StdImportsOrder:
+			hasStd = true
+		case CompanyImportsOrder:
+			hasCompany = true
+		case GeneralImportsOrder:
+			hasGeneral = true
+		case ProjectImportsOrder:
+			hasProject = true
+		}
+	}
+	return hasStd && hasCompany && hasGeneral && hasProject
 }
 
 // StringToImportsOrders will convert string, like "std,general,company,project" to ImportsOrder array type.
 // Default value for empty string is "std,general,company,project"
 func StringToImportsOrders(s string) (ImportsOrders, error) {
-	if len(strings.TrimSpace(s)) == 0 {
+	if strings.TrimSpace(s) == "" {
 		s = defaultImportsOrder
 	}
 
 	groups := unique(strings.Split(s, ","))
-	if len(groups) != 4 {
-		return nil, fmt.Errorf(`use this parameters to sort all groups of your imports: %q`, defaultImportsOrder)
-	}
 
 	var groupOrder []ImportsOrder
 	for _, g := range groups {
 		group := ImportsOrder(strings.TrimSpace(g))
 		switch group {
-		case StdImportsOrder, CompanyImportsOrder, ProjectImportsOrder, GeneralImportsOrder:
+		case StdImportsOrder, CompanyImportsOrder, ProjectImportsOrder,
+			GeneralImportsOrder, BlankedImportsOrder, DottedImportsOrder:
 		default:
 			return nil, fmt.Errorf(`unknown order group type: %q`, group)
 		}
 
 		groupOrder = append(groupOrder, group)
+	}
+
+	if !ImportsOrders(groupOrder).hasRequiredGroups() {
+		return nil, fmt.Errorf(`use default at least 4 parameters to sort groups of your imports: %q`, defaultImportsOrder)
 	}
 
 	return groupOrder, nil

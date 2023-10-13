@@ -713,6 +713,51 @@ import (
 			wantChange: true,
 			wantErr:    false,
 		},
+		{
+			name: "success project,company,general,std,blanked,dotted",
+			args: args{
+				projectName:  "github.com/incu6us/goimports-reviser",
+				filePath:     "./testdata/example.go",
+				importsOrder: "project,company,general,std,blanked,dotted",
+				fileContent: `package testdata
+
+import (
+	"log"
+
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+
+	"bytes"
+
+	. "io"
+
+	"golang.org/x/exp/slices"
+
+	_ "fmt"
+)
+
+// nolint:gomnd
+`,
+			},
+			want: `package testdata
+
+import (
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+
+	"golang.org/x/exp/slices"
+
+	"bytes"
+	"log"
+
+	_ "fmt"
+
+	. "io"
+)
+
+// nolint:gomnd
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
 	}
 	for _, tt := range tests {
 		if tt.args.filePath != StandardInput && !strings.Contains(tt.args.filePath, "does-not-exist") {
@@ -961,6 +1006,39 @@ func main() {
 			wantErr:    false,
 		},
 		{
+			name: "skip blanked and dotted import names",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `// Some comments are here
+package testdata
+
+import (
+	_ "fmt"
+	. "io"
+)
+
+// nolint:gomnd
+func main() {
+}
+`,
+			},
+			want: `// Some comments are here
+package testdata
+
+import (
+	_ "fmt"
+	. "io"
+)
+
+// nolint:gomnd
+func main() {
+}
+`,
+			wantChange: false,
+			wantErr:    false,
+		},
+		{
 			name: `success with "C"`,
 			args: args{
 				projectName: "github.com/incu6us/goimports-reviser",
@@ -1020,8 +1098,8 @@ func main() {
 			}
 
 			assert.NoError(t, err)
-			assert.Equal(t, tt.wantChange, hasChange)
 			assert.Equal(t, tt.want, string(got))
+			assert.Equal(t, tt.wantChange, hasChange)
 		})
 	}
 }

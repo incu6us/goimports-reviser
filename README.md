@@ -70,7 +70,7 @@ Usage of goimports-reviser:
     	company - inter-org or your company libs(if you set '-company-prefixes'-option, then 4th group will be split separately. In other case, it will be the part of general purpose libs);
     	project - your local project dependencies;
     	blanked - imports with "_" alias;
-    	dotted - imports with "." alias;
+    	dotted - imports with "." alias.
     	Optional parameter. (default "std,general,company,project")
   -list-diff
     	Option will list files whose formatting differs from goimports-reviser. Optional parameter.

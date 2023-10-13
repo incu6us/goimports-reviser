@@ -68,7 +68,9 @@ Usage of goimports-reviser:
     	std - std import group;
     	general - libs for general purpose;
     	company - inter-org or your company libs(if you set '-company-prefixes'-option, then 4th group will be split separately. In other case, it will be the part of general purpose libs);
-    	project - your local project dependencies.
+    	project - your local project dependencies;
+    	blanked - imports with "_" alias;
+    	dotted - imports with "." alias;
     	Optional parameter. (default "std,general,company,project")
   -list-diff
     	Option will list files whose formatting differs from goimports-reviser. Optional parameter.
@@ -175,6 +177,42 @@ import (
 	"github.com/incu6us/goimports-reviser/pkg" // this is a company package which is not a part of the project, but is a part of your organization
 
 	"goimports-reviser/pkg"
+)
+```
+
+### Example with `-imports-order std,general,company,project,blanked,dotted`-option
+
+Before usage:
+
+```go
+package testdata // goimports-reviser/testdata
+
+import (
+	_ "github.com/pkg1"
+	. "github.com/pkg2"
+	"fmt" //fmt package
+	"golang.org/x/exp/slices" //custom package
+	"github.com/incu6us/goimports-reviser/pkg" // this is a company package which is not a part of the project, but is a part of your organization
+	"goimports-reviser/pkg"
+)
+```
+
+After usage:
+```go
+package testdata // goimports-reviser/testdata
+
+import (
+	"fmt" // fmt package
+
+	"golang.org/x/exp/slices" // custom package
+
+	"github.com/incu6us/goimports-reviser/pkg" // this is a company package which is not a part of the project, but is a part of your organization
+
+	"goimports-reviser/pkg"
+
+	_ "github.com/pkg1"
+
+	. "github.com/pkg2"
 )
 ```
 

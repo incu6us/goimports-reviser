@@ -12,10 +12,11 @@ const sep = string(os.PathSeparator)
 
 func TestNewSourceDir(t *testing.T) {
 	t.Run("should generate source dir from recursive path", func(tt *testing.T) {
-		dir := NewSourceDir("project", recursivePath, false, "")
+		dir := NewSourceDir("project", recursivePath, false, false, "")
 		assert.Equal(tt, "project", dir.projectName)
 		assert.NotContains(tt, dir.dir, "/...")
 		assert.Equal(tt, true, dir.isRecursive)
+		assert.Equal(tt, false, dir.shouldListFileName)
 		assert.Equal(tt, 0, len(dir.excludePatterns))
 	})
 }
@@ -99,7 +100,7 @@ func main() {
 
 			exec(tt, func(ttt *testing.T) error {
 				// executing SourceDir.Fix
-				err := NewSourceDir(test.args.project, test.args.path, true, test.args.excludes).Fix()
+				err := NewSourceDir(test.args.project, test.args.path, true, true, test.args.excludes).Fix()
 				assert.NoError(tt, err)
 				// read new content
 				content, err := os.ReadFile(testFile)
@@ -158,7 +159,7 @@ func TestSourceDir_IsExcluded(t *testing.T) {
 	for _, test := range tests {
 		args := test.args
 		t.Run(test.name, func(tt *testing.T) {
-			excluded := NewSourceDir(args.project, args.path, true, args.excludes).isExcluded(args.testPath)
+			excluded := NewSourceDir(args.project, args.path, true, true, args.excludes).isExcluded(args.testPath)
 			assert.Equal(tt, test.want, excluded)
 		})
 	}

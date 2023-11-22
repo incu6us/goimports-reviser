@@ -269,7 +269,7 @@ func main() {
 	close(deprecatedMessagesCh)
 
 	if _, ok := reviser.IsDir(originPath); ok {
-		err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive, excludes).Fix(options...)
+		err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive, *listFileName, excludes).Fix(options...)
 		if err != nil {
 			log.Fatalf("Failed to fix directory %s: %+v\n", originPath, err)
 		}

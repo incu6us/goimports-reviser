@@ -27,13 +27,14 @@ var (
 
 // SourceDir to validate and fix import
 type SourceDir struct {
-	projectName     string
-	dir             string
-	isRecursive     bool
-	excludePatterns []string // see filepath.Match
+	projectName        string
+	dir                string
+	isRecursive        bool
+	shouldListFileName bool
+	excludePatterns    []string // see filepath.Match
 }
 
-func NewSourceDir(projectName string, path string, isRecursive bool, excludes string) *SourceDir {
+func NewSourceDir(projectName string, path string, isRecursive, shouldListFileName bool, excludes string) *SourceDir {
 	patterns := make([]string, 0)
 
 	// get the absolute path
@@ -62,10 +63,11 @@ func NewSourceDir(projectName string, path string, isRecursive bool, excludes st
 		}
 	}
 	return &SourceDir{
-		projectName:     projectName,
-		dir:             absPath,
-		isRecursive:     isRecursive,
-		excludePatterns: patterns,
+		projectName:        projectName,
+		dir:                absPath,
+		isRecursive:        isRecursive,
+		shouldListFileName: shouldListFileName,
+		excludePatterns:    patterns,
 	}
 }
 
@@ -97,6 +99,9 @@ func (d *SourceDir) walk(options ...SourceFileOption) fs.WalkDirFunc {
 				return fmt.Errorf("failed to fix: %w", err)
 			}
 			if hasChange {
+				if d.shouldListFileName {
+					fmt.Println(path)
+				}
 				if err := os.WriteFile(path, content, 0o644); err != nil {
 					log.Fatalf("failed to write fixed result to file(%s): %+v\n", path, err)
 				}

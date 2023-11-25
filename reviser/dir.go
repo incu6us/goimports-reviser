@@ -12,6 +12,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+type walkCallbackFunc = func(hasChanged bool, path string, content []byte) error
+
 const (
 	goExtension   = ".go"
 	recursivePath = "./..."
@@ -75,7 +77,19 @@ func (d *SourceDir) Fix(options ...SourceFileOption) error {
 	if !ok {
 		return ErrPathIsNotDir
 	}
-	err := filepath.WalkDir(d.dir, d.walk(options...))
+	err := filepath.WalkDir(d.dir, d.walk(
+		func(hasChanged bool, path string, content []byte) error {
+			if !hasChanged {
+				return nil
+			}
+			if err := os.WriteFile(path, content, 0o644); err != nil {
+				log.Fatalf("failed to write fixed result to file(%s): %+v\n", path, err)
+				return err
+			}
+			return nil
+		},
+		options...,
+	))
 	if err != nil {
 		return fmt.Errorf("failed to walk dif: %w", err)
 	}
@@ -83,7 +97,34 @@ func (d *SourceDir) Fix(options ...SourceFileOption) error {
 	return nil
 }
 
-func (d *SourceDir) walk(options ...SourceFileOption) fs.WalkDirFunc {
+// Find collection of bad formatted paths
+func (d *SourceDir) Find(options ...SourceFileOption) ([]string, error) {
+	var (
+		ok                     bool
+		badFormattedCollection []string
+	)
+	d.dir, ok = IsDir(d.dir)
+	if !ok {
+		return nil, ErrPathIsNotDir
+	}
+	err := filepath.WalkDir(d.dir, d.walk(
+		func(hasChanged bool, path string, content []byte) error {
+			if !hasChanged {
+				return nil
+			}
+			badFormattedCollection = append(badFormattedCollection, path)
+			return nil
+		},
+		options...,
+	))
+	if err != nil {
+		return nil, fmt.Errorf("failed to walk dif: %w", err)
+	}
+
+	return badFormattedCollection, nil
+}
+
+func (d *SourceDir) walk(callback walkCallbackFunc, options ...SourceFileOption) fs.WalkDirFunc {
 	return func(path string, dirEntry fs.DirEntry, err error) error {
 		if !d.isRecursive && dirEntry.IsDir() && filepath.Base(d.dir) != dirEntry.Name() {
 			return filepath.SkipDir
@@ -96,11 +137,7 @@ func (d *SourceDir) walk(options ...SourceFileOption) fs.WalkDirFunc {
 			if err != nil {
 				return fmt.Errorf("failed to fix: %w", err)
 			}
-			if hasChange {
-				if err := os.WriteFile(path, content, 0o644); err != nil {
-					log.Fatalf("failed to write fixed result to file(%s): %+v\n", path, err)
-				}
-			}
+			return callback(hasChange, path, content)
 		}
 		return nil
 	}

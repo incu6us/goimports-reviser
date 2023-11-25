@@ -1,6 +1,8 @@
 package reviser
 
-import "strings"
+import (
+	"strings"
+)
 
 // SourceFileOption is an int alias for options
 type SourceFileOption func(f *SourceFile) error

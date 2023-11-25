@@ -98,7 +98,7 @@ func (d *SourceDir) Fix(options ...SourceFileOption) error {
 }
 
 // Find collection of bad formatted paths
-func (d *SourceDir) Find(options ...SourceFileOption) ([]string, error) {
+func (d *SourceDir) Find(options ...SourceFileOption) (*UnformattedCollection, error) {
 	var (
 		ok                     bool
 		badFormattedCollection []string
@@ -121,7 +121,7 @@ func (d *SourceDir) Find(options ...SourceFileOption) ([]string, error) {
 		return nil, fmt.Errorf("failed to walk dif: %w", err)
 	}
 
-	return badFormattedCollection, nil
+	return newUnformattedCollection(badFormattedCollection), nil
 }
 
 func (d *SourceDir) walk(callback walkCallbackFunc, options ...SourceFileOption) fs.WalkDirFunc {
@@ -157,6 +157,33 @@ func (d *SourceDir) isExcluded(path string) bool {
 		}
 	}
 	return false
+}
+
+type UnformattedCollection struct {
+	list []string
+}
+
+func newUnformattedCollection(list []string) *UnformattedCollection {
+	return &UnformattedCollection{
+		list: list,
+	}
+}
+
+func (c *UnformattedCollection) List() []string {
+	list := make([]string, len(c.list))
+	copy(list, c.list)
+	return list
+}
+
+func (c *UnformattedCollection) String() string {
+	var builder strings.Builder
+	for i, file := range c.list {
+		builder.WriteString(file)
+		if len(c.list)-1 > i {
+			builder.WriteString("\n")
+		}
+	}
+	return builder.String()
 }
 
 func IsDir(path string) (string, bool) {

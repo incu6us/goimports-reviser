@@ -3,6 +3,7 @@ package reviser
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -226,11 +227,78 @@ func main() {
 				assert.NoError(tt, err)
 				var want []string
 				for _, w := range test.want {
-					want = append(want, rootPath+"/"+w)
+					want = append(want, filepath.Join(rootPath, w))
 				}
-				assert.Equal(tt, want, files)
+				assert.Equal(tt, want, files.List())
 				return nil
 			})
+		})
+	}
+}
+
+func TestUnformattedCollection_List(t *testing.T) {
+	tests := []struct {
+		name    string
+		init    func(t *testing.T) *UnformattedCollection
+		inspect func(r *UnformattedCollection, t *testing.T) //inspects receiver after test run
+
+		want1 []string
+	}{
+		{
+			name: "sucess",
+			init: func(t *testing.T) *UnformattedCollection {
+				return newUnformattedCollection([]string{"1", "2"})
+			},
+			inspect: func(r *UnformattedCollection, t *testing.T) {
+
+			},
+			want1: []string{"1", "2"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			receiver := tt.init(t)
+			got1 := receiver.List()
+
+			if tt.inspect != nil {
+				tt.inspect(receiver, t)
+			}
+
+			if !reflect.DeepEqual(got1, tt.want1) {
+				t.Errorf("UnformattedCollection.List got1 = %v, want1: %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
+func TestUnformattedCollection_String(t *testing.T) {
+	tests := []struct {
+		name    string
+		init    func(t *testing.T) *UnformattedCollection
+		inspect func(r *UnformattedCollection, t *testing.T) //inspects receiver after test run
+		want    string
+	}{
+		{
+			name: "success",
+			init: func(t *testing.T) *UnformattedCollection {
+				return newUnformattedCollection([]string{"1", "2"})
+			},
+			inspect: func(r *UnformattedCollection, t *testing.T) {
+
+			},
+			want: `1
+2`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			receiver := tt.init(t)
+			if tt.inspect != nil {
+				tt.inspect(receiver, t)
+			}
+			assert.Equal(t, tt.want, receiver.String())
 		})
 	}
 }

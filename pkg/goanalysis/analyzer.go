@@ -1,7 +1,4 @@
-//go:build linter
-// +build linter
-
-package main
+package goanalysis
 
 import (
 	"flag"
@@ -9,23 +6,24 @@ import (
 	"go/parser"
 	"go/token"
 
-	"github.com/incu6us/goimports-reviser/v2/pkg/module"
-	"github.com/incu6us/goimports-reviser/v2/reviser"
 	"golang.org/x/tools/go/analysis"
+
+	"github.com/incu6us/goimports-reviser/v3/pkg/module"
+	"github.com/incu6us/goimports-reviser/v3/reviser"
 )
 
 const errMessage = "imports must be formatted"
 
-func NewAnalyzer(flagSet *flag.FlagSet, localPkgPrefixes string, options ...reviser.Option) *analysis.Analyzer {
+func NewAnalyzer(flagSet *flag.FlagSet, localPkgPrefixes string, options ...reviser.SourceFileOption) *analysis.Analyzer {
 	return &analysis.Analyzer{
-		Name:  "goimportsreviserlint",
-		Doc:   "Linter for imports sorting",
+		Name:  "goimportsreviser",
+		Doc:   "goimports-reviser linter",
 		Run:   run(localPkgPrefixes, options...),
 		Flags: *flagSet,
 	}
 }
 
-func run(localPkgPrefixes string, options ...reviser.Option) func(pass *analysis.Pass) (interface{}, error) {
+func run(localPkgPrefixes string, options ...reviser.SourceFileOption) func(pass *analysis.Pass) (interface{}, error) {
 	return func(pass *analysis.Pass) (interface{}, error) {
 		inspect := func(formattedFile *ast.File, hasChanged bool) func(node ast.Node) bool {
 			return func(node ast.Node) bool {
@@ -79,7 +77,7 @@ func run(localPkgPrefixes string, options ...reviser.Option) func(pass *analysis
 				}
 			}
 
-			formattedFileContent, hasChanged, err := reviser.Execute(projectName, filePath, localPkgPrefixes, options...)
+			formattedFileContent, hasChanged, err := reviser.NewSourceFile(projectName, filePath).Fix(options...)
 			if err != nil {
 				return nil, err
 			}

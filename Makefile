@@ -21,31 +21,31 @@ build-all-lint: build-lint-windows-386 build-lint-windows-amd64 build-lint-macos
 
 .PHONY: build-lint-windows-386
 build-lint-windows-386:
-	GOOS=windows GOARCH=386 go build -tags linter,osusergo -o bin/windows-386/goimportsreviserlint.exe ./linter
+	GOOS=windows GOARCH=386 go build -o bin/windows-386/goimportsreviserlint.exe ./pkg/goanalysis/analyzer.go
 
 .PHONY: build-lint-windows-amd64
 build-lint-windows-amd64:
-	GOOS=windows GOARCH=amd64 go build -tags linter,osusergo -o bin/windows-amd64/goimportsreviserlint.exe ./linter
+	GOOS=windows GOARCH=amd64 go build -o bin/windows-amd64/goimportsreviserlint.exe ./pkg/goanalysis/analyzer.go
 
 .PHONY: build-lint-macos-amd64
 build-lint-macos-amd64:
-	GOOS=darwin GOARCH=amd64 go build -tags linter,osusergo -o bin/macos-amd64/goimportsreviserlint ./linter
+	GOOS=darwin GOARCH=amd64 go build -o bin/macos-amd64/goimportsreviserlint ./pkg/goanalysis/analyzer.go
 
 .PHONY: build-lint-macos-arm64
 build-lint-macos-arm64:
-	GOOS=darwin GOARCH=arm64 go build -tags linter,osusergo -o bin/macos-arm64/goimportsreviserlint ./linter
+	GOOS=darwin GOARCH=arm64 go build -o bin/macos-arm64/goimportsreviserlint ./pkg/goanalysis/analyzer.go
 
 .PHONY: build-lint-linux-386
 build-lint-linux-386:
-	GOOS=linux GOARCH=386 go build -tags linter,osusergo -o bin/linux-386/goimportsreviserlint ./linter
+	GOOS=linux GOARCH=386 go build -o bin/linux-386/goimportsreviserlint ./pkg/goanalysis/analyzer.go
 
 .PHONY: build-lint-linux-amd64
 build-lint-linux-amd64:
-	GOOS=linux GOARCH=amd64 go build -tags linter,osusergo -o bin/linux-amd64/goimportsreviserlint ./linter
+	GOOS=linux GOARCH=amd64 go build -o bin/linux-amd64/goimportsreviserlint ./pkg/goanalysis/analyzer.go
 
 .PHONY: build-lint-linux-arm64
 build-lint-linux-arm64:
-	GOOS=linux GOARCH=arm64 go build -tags linter,osusergo -o bin/linux-arm64/goimportsreviserlint ./linter
+	GOOS=linux GOARCH=arm64 go build -o bin/linux-arm64/goimportsreviserlint ./pkg/goanalysis/analyzer.go
 
 .PHONY: build-macos-amd64
 build-macos-amd64:

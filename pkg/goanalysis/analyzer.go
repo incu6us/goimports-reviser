@@ -77,7 +77,7 @@ func run(localPkgPrefixes string, options ...reviser.SourceFileOption) func(pass
 				}
 			}
 
-			formattedFileContent, hasChanged, err := reviser.NewSourceFile(projectName, filePath).Fix(options...)
+			formattedFileContent, _, hasChanged, err := reviser.NewSourceFile(projectName, filePath).Fix(options...)
 			if err != nil {
 				return nil, err
 			}

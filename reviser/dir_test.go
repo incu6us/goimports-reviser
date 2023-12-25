@@ -51,7 +51,7 @@ func main() {
 	var sortedContent string
 	exec(t, func(tt *testing.T) error {
 		// get sorted content via SourceFile.Fix
-		sortedData, changed, err := NewSourceFile("testdata", testFile).Fix()
+		sortedData, _, changed, err := NewSourceFile("testdata", testFile).Fix()
 		assert.NoError(tt, err)
 		sortedContent = string(sortedData)
 		assert.Equal(tt, true, changed)
@@ -194,7 +194,7 @@ func main() {
 	}
 	var sortedContent string
 	exec(t, func(tt *testing.T) error {
-		sortedData, changed, err := NewSourceFile("testdata", testFile).Fix()
+		sortedData, _, changed, err := NewSourceFile("testdata", testFile).Fix()
 		assert.NoError(tt, err)
 		sortedContent = string(sortedData)
 		assert.Equal(tt, true, changed)

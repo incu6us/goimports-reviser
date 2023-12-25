@@ -319,7 +319,7 @@ func main() {
 				return
 			}
 		}
-		formattedOutput, hasChange, err = reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
+		formattedOutput, _, hasChange, err = reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
 		if err != nil {
 			log.Fatalf("Failed to fix file: %+v\n", err)
 		}
@@ -344,7 +344,7 @@ func main() {
 			log.Fatalf("Failed to write file hash: %+v\n", err)
 		}
 	} else {
-		formattedOutput, hasChange, err = reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
+		formattedOutput, _, hasChange, err = reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
 		if err != nil {
 			log.Fatalf("Failed to fix file: %+v\n", err)
 		}

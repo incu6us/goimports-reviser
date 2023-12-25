@@ -133,7 +133,7 @@ func (d *SourceDir) walk(callback walkCallbackFunc, options ...SourceFileOption)
 			return filepath.SkipDir
 		}
 		if isGoFile(path) && !dirEntry.IsDir() && !d.isExcluded(path) {
-			content, hasChange, err := NewSourceFile(d.projectName, path).Fix(options...)
+			content, _, hasChange, err := NewSourceFile(d.projectName, path).Fix(options...)
 			if err != nil {
 				return fmt.Errorf("failed to fix: %w", err)
 			}

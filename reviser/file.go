@@ -378,17 +378,16 @@ func removeEmptyImportNode(f *ast.File) {
 func rebuildImports(tok token.Token, commentsMetadata map[string]*commentsMetadata, imports [][]string) []ast.Spec {
 	var specs []ast.Spec
 
-	amountOfGroups := len(imports)
 	for i, group := range imports {
+		if i != 0 && len(group) != 0 && len(specs) != 0 {
+			spec := &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
+
+			specs = append(specs, spec)
+		}
 		for _, imprt := range group {
 			spec := &ast.ImportSpec{
 				Path: &ast.BasicLit{Value: importWithComment(imprt, commentsMetadata), Kind: tok},
 			}
-			specs = append(specs, spec)
-		}
-		if len(group) != 0 && i != amountOfGroups-1 {
-			spec := &ast.ImportSpec{Path: &ast.BasicLit{Value: "", Kind: token.STRING}}
-
 			specs = append(specs, spec)
 		}
 	}

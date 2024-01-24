@@ -270,7 +270,27 @@ import (
 			wantChange: true,
 			wantErr:    false,
 		},
+		{
+			name: "success with single std deps only",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
 
+import "log"
+
+// nolint:gomnd
+`,
+			},
+			want: `package testdata
+
+import "log"
+
+// nolint:gomnd
+`,
+			wantChange: false,
+			wantErr:    false,
+		},
 		{
 			name: "success with third-party deps only",
 			args: args{
@@ -295,6 +315,27 @@ import (
 // nolint:gomnd
 `,
 			wantChange: true,
+			wantErr:    false,
+		},
+		{
+			name: "success with single third-party deps",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+
+import "golang.org/x/exp/slices"
+
+// nolint:gomnd
+`,
+			},
+			want: `package testdata
+
+import "golang.org/x/exp/slices"
+
+// nolint:gomnd
+`,
+			wantChange: false,
 			wantErr:    false,
 		},
 
@@ -510,6 +551,33 @@ import (
 	"errors"
 	"fmt"
 )
+`,
+			wantChange: false,
+			wantErr:    false,
+		},
+		{
+			name: "preserves cgo import with single std deps",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/cgo_example.go",
+				fileContent: `package testdata
+
+/*
+#include <stdlib.h>
+*/
+import "C"
+
+import "errors"
+`,
+			},
+			want: `package testdata
+
+/*
+#include <stdlib.h>
+*/
+import "C"
+
+import "errors"
 `,
 			wantChange: false,
 			wantErr:    false,

@@ -274,7 +274,14 @@ func main() {
 			if err != nil {
 				log.Fatalf("Failed to find unformatted files %s: %+v\n", originPath, err)
 			}
-			fmt.Printf("%s\n", unformattedFiles.String())
+
+			if unformattedFiles != nil {
+				fmt.Printf("%s\n", unformattedFiles.String())
+				if *setExitStatus {
+					os.Exit(1)
+				}
+			}
+
 			return
 		}
 		err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive, excludes).Fix(options...)

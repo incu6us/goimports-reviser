@@ -583,6 +583,29 @@ import "errors"
 			wantErr:    false,
 		},
 		{
+			name: "preserves cgo import with single import",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/cgo_example.go",
+				fileContent: `package testdata
+
+/*
+#include <stdlib.h>
+*/
+import "C"
+`,
+			},
+			want: `package testdata
+
+/*
+#include <stdlib.h>
+*/
+import "C"
+`,
+			wantChange: false,
+			wantErr:    false,
+		},
+		{
 			name: "preserves cgo import even when reordering",
 			args: args{
 				projectName: "github.com/incu6us/goimports-reviser",

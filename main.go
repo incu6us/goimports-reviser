@@ -36,7 +36,8 @@ const (
 	applyToGeneratedFiles  = "apply-to-generated-files"
 	excludesArg            = "excludes"
 	// using a regex here so that this will work with forked repos (at least on github.com)
-	modulePathRegex = `^github.com/[\w-]+/goimports-reviser(/v\d+)?@?`
+	modulePathRegex  = `^github.com/[\w-]+/goimports-reviser(/v\d+)?@?`
+	separateNamedArg = "separate-named"
 
 	// Deprecated options
 	localArg    = "local"
@@ -56,6 +57,7 @@ var (
 	shouldSetAlias              *bool
 	shouldFormat                *bool
 	shouldApplyToGeneratedFiles *bool
+	shouldSeparateNamedImports  *bool
 	listFileName                *bool
 	setExitStatus               *bool
 	isRecursive                 *bool
@@ -156,6 +158,12 @@ Optional parameter.`,
 		formatArg,
 		false,
 		"Option will perform additional formatting. Optional parameter.",
+	)
+
+	shouldSeparateNamedImports = flag.Bool(
+		separateNamedArg,
+		false,
+		"Option will separate named imports from the rest of the imports, per group. Optional parameter.",
 	)
 
 	isRecursive = flag.Bool(
@@ -309,6 +317,10 @@ func main() {
 
 	if shouldApplyToGeneratedFiles == nil || !*shouldApplyToGeneratedFiles {
 		options = append(options, reviser.WithSkipGeneratedFile)
+	}
+
+	if shouldSeparateNamedImports != nil && *shouldSeparateNamedImports {
+		options = append(options, reviser.WithSeparatedNamedImports)
 	}
 
 	if localPkgPrefixes != "" {

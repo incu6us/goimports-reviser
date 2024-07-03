@@ -10,13 +10,17 @@ type ImportsOrder string
 
 const (
 	// StdImportsOrder is std libs, e.g. fmt, errors, strings...
-	StdImportsOrder ImportsOrder = "std"
+	StdImportsOrder      ImportsOrder = "std"
+	NamedStdImportsOrder ImportsOrder = "namedStd"
 	// CompanyImportsOrder is packages that belong to the same organization
-	CompanyImportsOrder ImportsOrder = "company"
+	CompanyImportsOrder      ImportsOrder = "company"
+	NamedCompanyImportsOrder ImportsOrder = "namedCompany"
 	// ProjectImportsOrder is packages that are inside the current project
-	ProjectImportsOrder ImportsOrder = "project"
+	ProjectImportsOrder      ImportsOrder = "project"
+	NamedProjectImportsOrder ImportsOrder = "namedProject"
 	// GeneralImportsOrder is packages that are outside. In other words it is general purpose libraries
-	GeneralImportsOrder ImportsOrder = "general"
+	GeneralImportsOrder      ImportsOrder = "general"
+	NamedGeneralImportsOrder ImportsOrder = "namedGeneral"
 	// BlankedImportsOrder is separate group for "_" imports
 	BlankedImportsOrder ImportsOrder = "blanked"
 	// DottedImportsOrder is separate group for "." imports
@@ -40,13 +44,13 @@ func (o ImportsOrders) sortImportsByOrder(importGroups *groupsImports) [][]strin
 		var imports []string
 		switch group {
 		case StdImportsOrder:
-			imports = importGroups.std
+			imports = appendGroups(importGroups.std, importGroups.namedStd)
 		case GeneralImportsOrder:
-			imports = importGroups.general
+			imports = appendGroups(importGroups.general, importGroups.namedGeneral)
 		case CompanyImportsOrder:
-			imports = importGroups.company
+			imports = appendGroups(importGroups.company, importGroups.namedCompany)
 		case ProjectImportsOrder:
-			imports = importGroups.project
+			imports = appendGroups(importGroups.project, importGroups.namedProject)
 		case BlankedImportsOrder:
 			imports = importGroups.blanked
 		case DottedImportsOrder:
@@ -137,4 +141,30 @@ func unique(s []string) []string {
 		}
 	}
 	return list
+}
+
+func appendGroups(input ...[]string) []string {
+	switch len(input) {
+	case 0:
+		return []string{}
+	case 1:
+		return input[0]
+	default:
+		break
+	}
+	separator := []string{"\n", "\n"}
+
+	var output []string
+
+	for idx, block := range input {
+		if idx == 0 {
+			output = append(output, block...)
+			continue
+		}
+		if len(block) > 0 {
+			output = append(output, append(separator, block...)...)
+		}
+	}
+
+	return output
 }

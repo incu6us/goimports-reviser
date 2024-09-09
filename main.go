@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -10,6 +11,8 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"regexp"
+	"runtime/debug"
 	"strings"
 
 	"github.com/incu6us/goimports-reviser/v3/helper"
@@ -19,6 +22,7 @@ import (
 const (
 	projectNameArg         = "project-name"
 	versionArg             = "version"
+	versionOnlyArg         = "version-only"
 	removeUnusedImportsArg = "rm-unused"
 	setAliasArg            = "set-alias"
 	companyPkgPrefixesArg  = "company-prefixes"
@@ -31,6 +35,8 @@ const (
 	useCacheArg            = "use-cache"
 	applyToGeneratedFiles  = "apply-to-generated-files"
 	excludesArg            = "excludes"
+	// using a regex here so that this will work with forked repos (at least on github.com)
+	modulePathRegex = `^github.com/[\w-]+/goimports-reviser(/v\d+)?@?`
 
 	// Deprecated options
 	localArg    = "local"
@@ -45,6 +51,7 @@ var (
 	GoVersion string
 
 	shouldShowVersion           *bool
+	shouldShowVersionOnly       *bool
 	shouldRemoveUnusedImports   *bool
 	shouldSetAlias              *bool
 	shouldFormat                *bool
@@ -53,6 +60,7 @@ var (
 	setExitStatus               *bool
 	isRecursive                 *bool
 	isUseCache                  *bool
+	modulePathMatcher           = regexp.MustCompile(modulePathRegex)
 )
 
 var (
@@ -168,13 +176,18 @@ Optional parameter.`,
 		"Apply imports sorting and formatting(if the option is set) to generated files. Generated file is a file with first comment which starts with comment '// Code generated'. Optional parameter.",
 	)
 
-	if Tag != "" {
-		shouldShowVersion = flag.Bool(
-			versionArg,
-			false,
-			"Show version.",
-		)
-	}
+	shouldShowVersion = flag.Bool(
+		versionArg,
+		false,
+		"Show version information",
+	)
+
+	shouldShowVersionOnly = flag.Bool(
+		versionOnlyArg,
+		false,
+		"Show only the version string",
+	)
+
 }
 
 func printUsage() {
@@ -185,20 +198,79 @@ func printUsage() {
 	flag.PrintDefaults()
 }
 
+func getBuildInfo() *debug.BuildInfo {
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		return nil
+	}
+	return bi
+}
+
+func getMyModuleInfo(bi *debug.BuildInfo) (*debug.Module, error) {
+	if bi == nil {
+		return nil, errors.New("no build info available")
+	}
+	// depending on the context in which we are called, the main module may not be set
+	if bi.Main.Path != "" {
+		return &bi.Main, nil
+	}
+	// if the main module is not set, we need to find the dep that contains our module
+	for _, m := range bi.Deps {
+		if modulePathMatcher.MatchString(m.Path) {
+			return m, nil
+		}
+	}
+	return nil, errors.New("no matching module found in build info")
+}
+
 func printVersion() {
+	if Tag != "" {
+		fmt.Printf(
+			"version: %s\nbuilt with: %s\ntag: %s\ncommit: %s\nsource: %s\n",
+			strings.TrimPrefix(Tag, "v"),
+			GoVersion,
+			Tag,
+			Commit,
+			SourceURL,
+		)
+		return
+	}
+	bi := getBuildInfo()
+	myModule, err := getMyModuleInfo(bi)
+	if err != nil {
+		log.Fatalf("failed to get my module info: %s", err)
+	}
 	fmt.Printf(
-		"version: %s\nbuild with: %s\ntag: %s\ncommit: %s\nsource: %s\n",
-		strings.TrimPrefix(Tag, "v"),
-		GoVersion,
-		Tag,
-		Commit,
-		SourceURL,
+		"version: %s\nbuilt with: %s\ntag: %s\ncommit: %s\nsource: %s\n",
+		strings.TrimPrefix(myModule.Version, "v"),
+		bi.GoVersion,
+		myModule.Version,
+		"n/a",
+		myModule.Path,
 	)
+}
+
+func printVersionOnly() {
+	if Tag != "" {
+		fmt.Println(strings.TrimPrefix(Tag, "v"))
+		return
+	}
+	bi := getBuildInfo()
+	myModule, err := getMyModuleInfo(bi)
+	if err != nil {
+		log.Fatalf("failed to get my module info: %s", err)
+	}
+	fmt.Println(strings.TrimPrefix(myModule.Version, "v"))
 }
 
 func main() {
 	deprecatedMessagesCh := make(chan string, 10)
 	flag.Parse()
+
+	if shouldShowVersionOnly != nil && *shouldShowVersionOnly {
+		printVersionOnly()
+		return
+	}
 
 	if shouldShowVersion != nil && *shouldShowVersion {
 		printVersion()
@@ -206,6 +278,7 @@ func main() {
 	}
 
 	originPath := flag.Arg(0)
+
 	if filePath != "" {
 		deprecatedMessagesCh <- fmt.Sprintf("-%s is deprecated. Put file name as last argument to the command(Example: goimports-reviser -rm-unused -set-alias -format goimports-reviser/main.go)", filePathArg)
 		originPath = filePath
@@ -391,7 +464,7 @@ func validateRequiredParam(filePath string) error {
 		stat, _ := os.Stdin.Stat()
 		if stat.Mode()&os.ModeNamedPipe == 0 {
 			// no data on stdin
-			return fmt.Errorf("no data on stdin")
+			return errors.New("no data on stdin")
 		}
 	}
 	return nil

@@ -84,6 +84,8 @@ Usage of goimports-reviser:
     	Apply rules recursively if target is a directory. In case of ./... execution will be recursively applied by default. Optional parameter.
   -rm-unused
     	Remove unused imports. Optional parameter.
+  -separate-named
+        Separate named imports from their group with a new line. Optional parameter.
   -set-alias
     	Set alias for versioned package names, like 'github.com/go-pg/pg/v9'. In this case import will be set as 'pg "github.com/go-pg/pg/v9"'. Optional parameter.
   -set-exit-status
@@ -238,6 +240,36 @@ func additionalTest(){
 }
 ```
 
+### Example with `-separate-named`-option
+
+Before usage:
+
+```go
+package testdata // goimports-reviser/testdata
+
+import (
+	"fmt"
+	"github.com/incu6us/goimports-reviser/pkg"
+	extpkg "google.com/golang/pkg"
+	"golang.org/x/exp/slices"
+	extslice "github.com/PeterRK/slices"
+)
+```
+
+After usage:
+```go
+package testdata // goimports-reviser/testdata
+
+import (
+	"fmt"
+
+	"github.com/incu6us/goimports-reviser/pkg"
+	"golang.org/x/exp/slices"
+
+	extpkg "google.com/golang/pkg"
+	extslice "github.com/PeterRK/slices"
+)
+```
 ---
 
 ## Give a Star! ⭐

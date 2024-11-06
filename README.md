@@ -241,7 +241,7 @@ func additionalTest(){
 ---
 ## Contributors
 
-Thanks for you contributions!
+A big thank you to all the amazing people who contributed!
 
 <a href="https://github.com/incu6us/goimports-reviser/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=incu6us/goimports-reviser" />

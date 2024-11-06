@@ -239,6 +239,13 @@ func additionalTest(){
 ```
 
 ---
+## Contributors
+
+Thanks for you contributions!
+
+<a href="https://github.com/incu6us/goimports-reviser/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=incu6us/goimports-reviser" />
+</a>
 
 ## Give a Star! ⭐
 If you like or are using this project, please give it a **star**.

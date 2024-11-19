@@ -4,6 +4,8 @@ env:
   - PROJECT_NAME=goimports-reviser
   - PROJECT_USER=incu6us
 
+version: 2
+
 before:
   hooks:
     - go mod download

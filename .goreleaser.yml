@@ -67,7 +67,6 @@ brews:
     commit_author:
       name: incu6us
       email: vyacheslavpryimak@gmail.com
-    folder: Formula
     homepage: "https://github.com/incu6us/goimports-reviser"
     description: "Right imports sorting & code formatting tool"
     test: |

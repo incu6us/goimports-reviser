@@ -206,6 +206,14 @@ func printUsage() {
 	flag.PrintDefaults()
 }
 
+func printUsageAndExit(err error) {
+	printUsage()
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
+	os.Exit(0)
+}
+
 func getBuildInfo() *debug.BuildInfo {
 	bi, ok := debug.ReadBuildInfo()
 	if !ok {
@@ -295,9 +303,7 @@ func main() {
 	if len(originPaths) == 0 || (len(originPaths) == 1 && originPaths[0] == "-") {
 		originPaths[0] = reviser.StandardInput
 		if err := validateRequiredParam(originPaths[0]); err != nil {
-			log.Printf("%s\n\n", err)
-			printUsage()
-			os.Exit(1)
+			printUsageAndExit(err)
 		}
 	}
 
@@ -336,9 +342,7 @@ func main() {
 	if importsOrder != "" {
 		order, err := reviser.StringToImportsOrders(importsOrder)
 		if err != nil {
-			fmt.Printf("%s\n\n", err)
-			printUsage()
-			os.Exit(1)
+			printUsageAndExit(err)
 		}
 		options = append(options, reviser.WithImportsOrder(order))
 	}
@@ -350,9 +354,7 @@ func main() {
 		log.Printf("Processing %s\n", originPath)
 		originProjectName, err := helper.DetermineProjectName(projectName, originPath, helper.OSGetwdOption)
 		if err != nil {
-			log.Printf("Could not determine project name for path %s: %s\n\n", originPath, err)
-			printUsage()
-			os.Exit(1)
+			printUsageAndExit(fmt.Errorf("Could not determine project name for path %s: %s", originPath, err))
 		}
 		if _, ok := reviser.IsDir(originPath); ok {
 			if *listFileName {

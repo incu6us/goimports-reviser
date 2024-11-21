@@ -292,14 +292,10 @@ func main() {
 		originPaths = append(originPaths, filePath)
 	}
 
-	var originPath string
 	if len(originPaths) == 0 || (len(originPaths) == 1 && originPaths[0] == "-") {
 		originPaths[0] = reviser.StandardInput
-	}
-
-	for _, originPath = range originPaths {
-		if err := validateRequiredParam(originPath); err != nil {
-			fmt.Printf("%s\n\n", err)
+		if err := validateRequiredParam(originPaths[0]); err != nil {
+			log.Printf("%s\n\n", err)
 			printUsage()
 			os.Exit(1)
 		}
@@ -347,18 +343,17 @@ func main() {
 		options = append(options, reviser.WithImportsOrder(order))
 	}
 
-	originProjectName, err := helper.DetermineProjectName(projectName, originPath, helper.OSGetwdOption)
-	if err != nil {
-		fmt.Printf("%s\n\n", err)
-		printUsage()
-		os.Exit(1)
-	}
-
 	close(deprecatedMessagesCh)
 	var hasChange bool
 	log.Printf("Paths: %v\n", originPaths)
-	for _, originPath = range originPaths {
+	for _, originPath := range originPaths {
 		log.Printf("Processing %s\n", originPath)
+		originProjectName, err := helper.DetermineProjectName(projectName, originPath, helper.OSGetwdOption)
+		if err != nil {
+			log.Printf("Could not determine project name for path %s: %s\n\n", originPath, err)
+			printUsage()
+			os.Exit(1)
+		}
 		if _, ok := reviser.IsDir(originPath); ok {
 			if *listFileName {
 				unformattedFiles, err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive, excludes).Find(options...)

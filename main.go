@@ -206,6 +206,8 @@ func printUsage() {
 	flag.PrintDefaults()
 }
 
+// printUsageAndExit prints usage and exits with status 0
+// if err is nil, otherwise it prints the error and exits with status 1
 func printUsageAndExit(err error) {
 	printUsage()
 	if err != nil {

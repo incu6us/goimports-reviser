@@ -46,6 +46,11 @@ goimports-reviser -rm-unused -set-alias -format -recursive reviser
 goimports-reviser -rm-unused -set-alias -format ./...
 ```
 
+You can also apply rules to multiple targets:
+```bash
+goimports-reviser -rm-unused -set-alias -format ./reviser/reviser.go ./pkg/...
+```
+
 ### Example, to configure it with JetBrains IDEs (via file watcher plugin):
 ![example](./images/image.png)
 

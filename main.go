@@ -206,6 +206,16 @@ func printUsage() {
 	flag.PrintDefaults()
 }
 
+// printUsageAndExit prints usage and exits with status 0
+// if err is nil, otherwise it prints the error and exits with status 1
+func printUsageAndExit(err error) {
+	printUsage()
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
+	os.Exit(0)
+}
+
 func getBuildInfo() *debug.BuildInfo {
 	bi, ok := debug.ReadBuildInfo()
 	if !ok {
@@ -285,21 +295,18 @@ func main() {
 		return
 	}
 
-	originPath := flag.Arg(0)
+	originPaths := flag.Args()
 
 	if filePath != "" {
-		deprecatedMessagesCh <- fmt.Sprintf("-%s is deprecated. Put file name as last argument to the command(Example: goimports-reviser -rm-unused -set-alias -format goimports-reviser/main.go)", filePathArg)
-		originPath = filePath
+		deprecatedMessagesCh <- fmt.Sprintf("-%s is deprecated. Put file name(s) as last argument to the command(Example: goimports-reviser -rm-unused -set-alias -format goimports-reviser/main.go)", filePathArg)
+		originPaths = append(originPaths, filePath)
 	}
 
-	if originPath == "" {
-		originPath = reviser.StandardInput
-	}
-
-	if err := validateRequiredParam(originPath); err != nil {
-		fmt.Printf("%s\n\n", err)
-		printUsage()
-		os.Exit(1)
+	if len(originPaths) == 0 || (len(originPaths) == 1 && originPaths[0] == "-") {
+		originPaths[0] = reviser.StandardInput
+		if err := validateRequiredParam(originPaths[0]); err != nil {
+			printUsageAndExit(err)
+		}
 	}
 
 	var options reviser.SourceFileOptions
@@ -337,123 +344,120 @@ func main() {
 	if importsOrder != "" {
 		order, err := reviser.StringToImportsOrders(importsOrder)
 		if err != nil {
-			fmt.Printf("%s\n\n", err)
-			printUsage()
-			os.Exit(1)
+			printUsageAndExit(err)
 		}
 		options = append(options, reviser.WithImportsOrder(order))
 	}
 
-	originProjectName, err := helper.DetermineProjectName(projectName, originPath, helper.OSGetwdOption)
-	if err != nil {
-		fmt.Printf("%s\n\n", err)
-		printUsage()
+	close(deprecatedMessagesCh)
+	var hasChange bool
+	log.Printf("Paths: %v\n", originPaths)
+	for _, originPath := range originPaths {
+		log.Printf("Processing %s\n", originPath)
+		originProjectName, err := helper.DetermineProjectName(projectName, originPath, helper.OSGetwdOption)
+		if err != nil {
+			printUsageAndExit(fmt.Errorf("Could not determine project name for path %s: %s", originPath, err))
+		}
+		if _, ok := reviser.IsDir(originPath); ok {
+			if *listFileName {
+				unformattedFiles, err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive, excludes).Find(options...)
+				if err != nil {
+					log.Fatalf("Failed to find unformatted files %s: %+v\n", originPath, err)
+				}
+				fmt.Printf("%s\n", unformattedFiles.String())
+				continue
+			}
+			err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive, excludes).Fix(options...)
+			if err != nil {
+				log.Fatalf("Failed to fix directory %s: %+v\n", originPath, err)
+			}
+			continue
+		}
+
+		if originPath != reviser.StandardInput {
+			originPath, err = filepath.Abs(originPath)
+			if err != nil {
+				log.Fatalf("Failed to get abs path: %+v\n", err)
+			}
+		}
+
+		var formattedOutput []byte
+		var pathHasChange bool
+		if *isUseCache {
+			hash := md5.Sum([]byte(originPath))
+
+			u, err := user.Current()
+			if err != nil {
+				log.Fatalf("Failed to get current user: %+v\n", err)
+			}
+			cacheDir := path.Join(u.HomeDir, ".cache", "goimports-reviser")
+			if err = os.MkdirAll(cacheDir, os.ModePerm); err != nil {
+				log.Fatalf("Failed to create cache directory: %+v\n", err)
+			}
+			cacheFile := path.Join(cacheDir, hex.EncodeToString(hash[:]))
+
+			var cacheContent, fileContent []byte
+			if cacheContent, err = os.ReadFile(cacheFile); err == nil {
+				// compare file content hash
+				var fileHashHex string
+				if fileContent, err = os.ReadFile(originPath); err == nil {
+					fileHash := md5.Sum(fileContent)
+					fileHashHex = hex.EncodeToString(fileHash[:])
+				}
+				if string(cacheContent) == fileHashHex {
+					// point to cache
+					continue
+				}
+			}
+			formattedOutput, _, pathHasChange, err = reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
+			if err != nil {
+				log.Fatalf("Failed to fix file: %+v\n", err)
+			}
+			fileHash := md5.Sum(formattedOutput)
+			fileHashHex := hex.EncodeToString(fileHash[:])
+			if fileInfo, err := os.Stat(cacheFile); err != nil || fileInfo.IsDir() {
+				if _, err = os.Create(cacheFile); err != nil {
+					log.Fatalf("Failed to create cache file: %+v\n", err)
+				}
+			}
+			file, _ := os.OpenFile(cacheFile, os.O_RDWR, os.ModePerm)
+			defer func() {
+				_ = file.Close()
+			}()
+			if err = file.Truncate(0); err != nil {
+				log.Fatalf("Failed file truncate: %+v\n", err)
+			}
+			if _, err = file.Seek(0, 0); err != nil {
+				log.Fatalf("Failed file seek: %+v\n", err)
+			}
+			if _, err = file.WriteString(fileHashHex); err != nil {
+				log.Fatalf("Failed to write file hash: %+v\n", err)
+			}
+		} else {
+			formattedOutput, _, pathHasChange, err = reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
+			if err != nil {
+				log.Fatalf("Failed to fix file: %+v\n", err)
+			}
+		}
+		if !hasChange && pathHasChange {
+			hasChange = pathHasChange
+		}
+
+		resultPostProcess(hasChange, originPath, formattedOutput)
+	}
+	printDeprecations(deprecatedMessagesCh)
+	if hasChange && *setExitStatus {
 		os.Exit(1)
 	}
-
-	close(deprecatedMessagesCh)
-
-	if _, ok := reviser.IsDir(originPath); ok {
-		if *listFileName {
-			unformattedFiles, err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive, excludes).Find(options...)
-			if err != nil {
-				log.Fatalf("Failed to find unformatted files %s: %+v\n", originPath, err)
-			}
-			fmt.Printf("%s\n", unformattedFiles.String())
-			return
-		}
-		err := reviser.NewSourceDir(originProjectName, originPath, *isRecursive, excludes).Fix(options...)
-		if err != nil {
-			log.Fatalf("Failed to fix directory %s: %+v\n", originPath, err)
-		}
-		return
-	}
-
-	if originPath != reviser.StandardInput {
-		originPath, err = filepath.Abs(originPath)
-		if err != nil {
-			log.Fatalf("Failed to get abs path: %+v\n", err)
-		}
-	}
-
-	var formattedOutput []byte
-	var hasChange bool
-	if *isUseCache {
-		hash := md5.Sum([]byte(originPath))
-
-		u, err := user.Current()
-		if err != nil {
-			log.Fatalf("Failed to get current user: %+v\n", err)
-		}
-		cacheDir := path.Join(u.HomeDir, ".cache", "goimports-reviser")
-		if err = os.MkdirAll(cacheDir, os.ModePerm); err != nil {
-			log.Fatalf("Failed to create cache directory: %+v\n", err)
-		}
-		cacheFile := path.Join(cacheDir, hex.EncodeToString(hash[:]))
-
-		var cacheContent, fileContent []byte
-		if cacheContent, err = os.ReadFile(cacheFile); err == nil {
-			// compare file content hash
-			var fileHashHex string
-			if fileContent, err = os.ReadFile(originPath); err == nil {
-				fileHash := md5.Sum(fileContent)
-				fileHashHex = hex.EncodeToString(fileHash[:])
-			}
-			if string(cacheContent) == fileHashHex {
-				// point to cache
-				return
-			}
-		}
-		formattedOutput, _, hasChange, err = reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
-		if err != nil {
-			log.Fatalf("Failed to fix file: %+v\n", err)
-		}
-		fileHash := md5.Sum(formattedOutput)
-		fileHashHex := hex.EncodeToString(fileHash[:])
-		if fileInfo, err := os.Stat(cacheFile); err != nil || fileInfo.IsDir() {
-			if _, err = os.Create(cacheFile); err != nil {
-				log.Fatalf("Failed to create cache file: %+v\n", err)
-			}
-		}
-		file, _ := os.OpenFile(cacheFile, os.O_RDWR, os.ModePerm)
-		defer func() {
-			_ = file.Close()
-		}()
-		if err = file.Truncate(0); err != nil {
-			log.Fatalf("Failed file truncate: %+v\n", err)
-		}
-		if _, err = file.Seek(0, 0); err != nil {
-			log.Fatalf("Failed file seek: %+v\n", err)
-		}
-		if _, err = file.WriteString(fileHashHex); err != nil {
-			log.Fatalf("Failed to write file hash: %+v\n", err)
-		}
-	} else {
-		formattedOutput, _, hasChange, err = reviser.NewSourceFile(originProjectName, originPath).Fix(options...)
-		if err != nil {
-			log.Fatalf("Failed to fix file: %+v\n", err)
-		}
-	}
-
-	resultPostProcess(hasChange, deprecatedMessagesCh, originPath, formattedOutput)
 }
 
-func resultPostProcess(hasChange bool, deprecatedMessagesCh chan string, originFilePath string, formattedOutput []byte) {
-	if !hasChange && *listFileName {
-		printDeprecations(deprecatedMessagesCh)
-		return
-	}
+func resultPostProcess(hasChange bool, originFilePath string, formattedOutput []byte) {
 	switch {
 	case hasChange && *listFileName && output != "write":
 		fmt.Println(originFilePath)
 	case output == "stdout" || originFilePath == reviser.StandardInput:
 		fmt.Print(string(formattedOutput))
 	case output == "file" || output == "write":
-		if !hasChange {
-			printDeprecations(deprecatedMessagesCh)
-			return
-		}
-
 		if err := os.WriteFile(originFilePath, formattedOutput, 0o644); err != nil {
 			log.Fatalf("failed to write fixed result to file(%s): %+v\n", originFilePath, err)
 		}
@@ -463,12 +467,6 @@ func resultPostProcess(hasChange bool, deprecatedMessagesCh chan string, originF
 	default:
 		log.Fatalf(`invalid output %q specified`, output)
 	}
-
-	if hasChange && *setExitStatus {
-		os.Exit(1)
-	}
-
-	printDeprecations(deprecatedMessagesCh)
 }
 
 func validateRequiredParam(filePath string) error {
@@ -486,10 +484,10 @@ func printDeprecations(deprecatedMessagesCh chan string) {
 	var hasDeprecations bool
 	for deprecatedMessage := range deprecatedMessagesCh {
 		hasDeprecations = true
-		fmt.Printf("%s\n", deprecatedMessage)
+		log.Printf("%s\n", deprecatedMessage)
 	}
 	if hasDeprecations {
-		fmt.Printf("All changes to file are applied, but command-line syntax should be fixed\n")
+		log.Printf("All changes to file are applied, but command-line syntax should be fixed\n")
 		os.Exit(1)
 	}
 }

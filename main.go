@@ -303,7 +303,7 @@ func main() {
 	}
 
 	if len(originPaths) == 0 {
-		printUsageAndExit(errors.New("no file or directory specified"))
+		printUsageAndExit(errors.New("no file(s) or directory(ies) specified on input"))
 	}
 
 	if len(originPaths) == 1 && originPaths[0] == "-" {

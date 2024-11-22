@@ -302,7 +302,11 @@ func main() {
 		originPaths = append(originPaths, filePath)
 	}
 
-	if len(originPaths) == 0 || (len(originPaths) == 1 && originPaths[0] == "-") {
+	if len(originPaths) == 0 {
+		printUsageAndExit(errors.New("no file(s) or directory(ies) specified on input"))
+	}
+
+	if len(originPaths) == 1 && originPaths[0] == "-" {
 		originPaths[0] = reviser.StandardInput
 		if err := validateRequiredParam(originPaths[0]); err != nil {
 			printUsageAndExit(err)

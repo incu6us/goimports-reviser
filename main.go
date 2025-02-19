@@ -384,7 +384,7 @@ func main() {
 				log.Fatalf("Failed to fix directory %s: %+v\n", originPath, err)
 			}
 
-			return
+			continue
 		}
 
 		if originPath != reviser.StandardInput {

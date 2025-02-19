@@ -1999,3 +1999,139 @@ import (
 		})
 	}
 }
+
+func TestSourceFile_Fix_WithSeparatedNamedImports(t *testing.T) {
+	type args struct {
+		projectName string
+		filePath    string
+		fileContent string
+	}
+	tests := []struct {
+		name       string
+		args       args
+		want       string
+		wantChange bool
+		wantErr    bool
+	}{
+		{
+			name: "simple",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+import (
+	"fmt"
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+	"bytes"
+	"golang.org/x/exp/slices"
+)
+`,
+			},
+			want: `package testdata
+
+import (
+	"bytes"
+	"fmt"
+
+	"golang.org/x/exp/slices"
+
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+)
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+		{
+			name: "named",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+import (
+	"fmt"
+	second "github.com/incu6us/goimports-reviser/testdata/secondpkg"
+	by "bytes"
+	js "encoding/json"
+	"golang.org/x/exp/slices"
+	er "golang.org/x/errors"
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+)
+`,
+			},
+			want: `package testdata
+
+import (
+	"fmt"
+
+	by "bytes"
+	js "encoding/json"
+
+	"golang.org/x/exp/slices"
+
+	er "golang.org/x/errors"
+
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+
+	second "github.com/incu6us/goimports-reviser/testdata/secondpkg"
+)
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+		{
+			name: "named with comments",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+import (
+	"fmt" //fmt package
+	second "github.com/incu6us/goimports-reviser/testdata/secondpkg" //secondpkg package
+	by "bytes"
+	js "encoding/json"
+	"golang.org/x/exp/slices" //slices package
+	er "golang.org/x/errors"
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+)
+`,
+			},
+			want: `package testdata
+
+import (
+	"fmt" //fmt package
+
+	by "bytes"
+	js "encoding/json"
+
+	"golang.org/x/exp/slices" //slices package
+
+	er "golang.org/x/errors"
+
+	"github.com/incu6us/goimports-reviser/testdata/innderpkg"
+
+	second "github.com/incu6us/goimports-reviser/testdata/secondpkg" //secondpkg package
+)
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		if tt.args.filePath != StandardInput && !strings.Contains(tt.args.filePath, "does-not-exist") {
+			require.NoError(t, os.WriteFile(tt.args.filePath, []byte(tt.args.fileContent), 0o644))
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			got, _, hasChange, err := NewSourceFile(tt.args.projectName, tt.args.filePath).Fix(WithSeparatedNamedImports)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.wantChange, hasChange)
+			assert.Equal(t, tt.want, string(got))
+		})
+	}
+}

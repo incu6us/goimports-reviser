@@ -42,3 +42,40 @@ func TestStringToImportsOrder(t *testing.T) {
 		})
 	}
 }
+
+func Test_appendGroups(t *testing.T) {
+	type args struct {
+		input [][]string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "empty",
+			args: args{input: [][]string{}},
+			want: []string{},
+		},
+		{
+			name: "single",
+			args: args{input: [][]string{{"a", "b", "c"}}},
+			want: []string{"a", "b", "c"},
+		},
+		{
+			name: "multiple",
+			args: args{input: [][]string{{"a", "b", "c"}, {"d", "e", "f"}}},
+			want: []string{"a", "b", "c", "\n", "\n", "d", "e", "f"},
+		},
+		{
+			name: "skip-empty",
+			args: args{input: [][]string{{"a", "b", "c"}, {}, {"d", "e", "f"}}},
+			want: []string{"a", "b", "c", "\n", "\n", "d", "e", "f"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, appendGroups(tt.args.input...), "appendGroups(%v)", tt.args)
+		})
+	}
+}

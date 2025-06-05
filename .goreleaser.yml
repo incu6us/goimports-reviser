@@ -4,6 +4,8 @@ env:
   - PROJECT_NAME=goimports-reviser
   - PROJECT_USER=incu6us
 
+version: 2
+
 before:
   hooks:
     - go mod download
@@ -15,6 +17,7 @@ builds:
       - linux
     goarch:
       - amd64
+      - arm64
     ldflags:
       - -s -w -X "main.Tag={{ .Tag }}" -X "main.Commit={{ .FullCommit }}" -X "main.SourceURL={{ .GitURL }}" -X "main.GoVersion={{ .Env.GO_VERSION }}"
 
@@ -41,7 +44,7 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: "{{ .Tag }}-next"
 
 changelog:
   sort: asc
@@ -65,7 +68,7 @@ brews:
     commit_author:
       name: incu6us
       email: vyacheslavpryimak@gmail.com
-    folder: Formula
+    directory: Formula
     homepage: "https://github.com/incu6us/goimports-reviser"
     description: "Right imports sorting & code formatting tool"
     test: |

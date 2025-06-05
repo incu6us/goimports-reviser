@@ -46,6 +46,11 @@ goimports-reviser -rm-unused -set-alias -format -recursive reviser
 goimports-reviser -rm-unused -set-alias -format ./...
 ```
 
+You can also apply rules to multiple targets:
+```bash
+goimports-reviser -rm-unused -set-alias -format ./reviser/reviser.go ./pkg/...
+```
+
 ### Example, to configure it with JetBrains IDEs (via file watcher plugin):
 ![example](./images/image.png)
 
@@ -84,6 +89,8 @@ Usage of goimports-reviser:
     	Apply rules recursively if target is a directory. In case of ./... execution will be recursively applied by default. Optional parameter.
   -rm-unused
     	Remove unused imports. Optional parameter.
+  -separate-named
+        Separate named imports from their group with a new line. Optional parameter.
   -set-alias
     	Set alias for versioned package names, like 'github.com/go-pg/pg/v9'. In this case import will be set as 'pg "github.com/go-pg/pg/v9"'. Optional parameter.
   -set-exit-status
@@ -238,7 +245,44 @@ func additionalTest(){
 }
 ```
 
+### Example with `-separate-named`-option
+
+Before usage:
+
+```go
+package testdata // goimports-reviser/testdata
+
+import (
+	"fmt"
+	"github.com/incu6us/goimports-reviser/pkg"
+	extpkg "google.com/golang/pkg"
+	"golang.org/x/exp/slices"
+	extslice "github.com/PeterRK/slices"
+)
+```
+
+After usage:
+```go
+package testdata // goimports-reviser/testdata
+
+import (
+	"fmt"
+
+	"github.com/incu6us/goimports-reviser/pkg"
+	"golang.org/x/exp/slices"
+
+	extpkg "google.com/golang/pkg"
+	extslice "github.com/PeterRK/slices"
+)
+```
 ---
+## Contributors
+
+A big thank you to all the amazing people who contributed!
+
+<a href="https://github.com/incu6us/goimports-reviser/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=incu6us/goimports-reviser" />
+</a>
 
 ## Give a Star! ⭐
 If you like or are using this project, please give it a **star**.

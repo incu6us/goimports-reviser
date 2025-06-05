@@ -7,12 +7,18 @@ type groupsImports struct {
 }
 
 type common struct {
-	std     []string
-	general []string
-	company []string
-	project []string
+	std          []string
+	namedStd     []string
+	general      []string
+	namedGeneral []string
+	company      []string
+	namedCompany []string
+	project      []string
+	namedProject []string
 }
 
 func (c *common) defaultSorting() [][]string {
-	return [][]string{c.std, c.general, c.company, c.project}
+	return [][]string{
+		c.std, c.namedStd, c.general, c.namedGeneral, c.company, c.namedCompany, c.project, c.namedProject,
+	}
 }

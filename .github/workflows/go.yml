@@ -12,25 +12,28 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        go-version: [ 1.21.x, oldstable, stable ]
-
+        go-version: [ 1.24.x, oldstable, stable ]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
-
-
       - name: Get dependencies
         run: |
           go mod download
           go get github.com/go-pg/pg/v9
-
       - name: Test
         run: go test -race -cover -coverprofile=coverage -covermode=atomic ./...
+      - name: Build
+        run: go build -v .
 
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: Coverage
         uses: codecov/codecov-action@v3
         with:
@@ -38,6 +41,3 @@ jobs:
           flags: unittests
           fail_ci_if_error: false
           verbose: true
-
-      - name: Build
-        run: go build -v .

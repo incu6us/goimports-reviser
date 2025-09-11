@@ -1,0 +1,42 @@
+name: order test with defaults, blanked and dotted
+args: -imports-order project,company,general,std,blanked,dotted
+is_stdin: false
+actual:
+  - filename: file.go
+    content: |
+      package testdata
+      
+      import (
+          "log"
+          
+          "github.com/incu6us/goimports-reviser/testdata/innderpkg"
+          
+          "bytes"
+          
+          . "io"
+          
+          "golang.org/x/exp/slices"
+          
+          _ "fmt"
+      )
+      
+      // nolint:gomnd
+
+expected:
+  - filename: file.go
+    content: |
+      package testdata
+      
+      import (
+          "github.com/incu6us/goimports-reviser/testdata/innderpkg"
+          "golang.org/x/exp/slices"
+          
+          "bytes"
+          "log"
+          
+          _ "fmt"
+          
+          . "io"
+      )
+      
+      // nolint:gomnd

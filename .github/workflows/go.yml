@@ -12,20 +12,30 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        go-version: [ 1.24.x, oldstable, stable ]
+        go-version: [ 1.25.x, oldstable, stable ]
     runs-on: ${{ matrix.os }}
+    env:
+      GOTOOLCHAIN: go1.25.3+auto
     steps:
       - uses: actions/checkout@v4
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
+          check-latest: true
       - name: Get dependencies
         run: |
           go mod download
           go get github.com/go-pg/pg/v9
       - name: Test
         run: go test -race -cover -coverprofile=coverage -covermode=atomic ./...
+      - name: Upload coverage artifact
+        if: matrix.os == 'ubuntu-latest' && matrix.go-version == 'stable'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+          retention-days: 1
       - name: Build
         run: go build -v .
 
@@ -34,7 +44,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Coverage
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+      - name: Upload to Codecov
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage

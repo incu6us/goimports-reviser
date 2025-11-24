@@ -69,7 +69,7 @@ func main() {
 		log.Fatalf("Failed to get current directory: %+v\n", err)
 	}
 
-	filePath := filepath.Join(filepath.Join(currentDir, "pkg/std"), fileName)
+	filePath := filepath.Join(currentDir, "..", fileName)
 	log.Printf("file path to be updated: %s", filePath)
 	if err := os.WriteFile(filePath, data, 0o644); err != nil {
 		log.Fatalf("Failed to write file: %+v\n", err)

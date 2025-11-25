@@ -308,9 +308,6 @@ func main() {
 
 	if len(originPaths) == 1 && originPaths[0] == "-" {
 		originPaths[0] = reviser.StandardInput
-		if err := validateRequiredParam(originPaths[0]); err != nil {
-			printUsageAndExit(err)
-		}
 	}
 
 	var options reviser.SourceFileOptions
@@ -480,17 +477,6 @@ func resultPostProcess(hasChange bool, originFilePath string, formattedOutput []
 	default:
 		log.Fatalf(`invalid output %q specified`, output)
 	}
-}
-
-func validateRequiredParam(filePath string) error {
-	if filePath == reviser.StandardInput {
-		stat, _ := os.Stdin.Stat()
-		if stat.Mode()&os.ModeNamedPipe == 0 {
-			// no data on stdin
-			return errors.New("no data on stdin")
-		}
-	}
-	return nil
 }
 
 func printDeprecations(deprecatedMessagesCh chan string) {

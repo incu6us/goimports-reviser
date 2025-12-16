@@ -231,7 +231,7 @@ func (f *SourceFile) groupImports(
 			continue
 		}
 
-		if strings.Contains(pkgWithoutAlias, projectName) {
+		if strings.HasPrefix(pkgWithoutAlias, projectName) {
 			if f.shouldSeparateNamedImports {
 				if len(values) > 1 {
 					namedProjectImports = append(namedProjectImports, imprt)

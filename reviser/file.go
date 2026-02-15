@@ -491,7 +491,14 @@ func (f *SourceFile) parseImports(file *ast.File) (map[string]*commentsMetadata,
 
 	if shouldRemoveUnusedImports || shouldUseAliasForVersionSuffix {
 		var err error
-		packageImports, err = astutil.LoadPackageDependencies(filepath.Dir(f.filePath), astutil.ParseBuildTag(file))
+		buildTag := astutil.ParseBuildTag(file)
+		packageImports, err = astutil.LoadPackageDependencies(filepath.Dir(f.filePath), buildTag)
+		if err != nil && buildTag != "" {
+			// Retry without build tag — files with custom build constraints
+			// (like tools.go with //+build tools) may cause go list conflicts
+			// when the file imports the project itself.
+			packageImports, err = astutil.LoadPackageDependencies(filepath.Dir(f.filePath), "")
+		}
 		if err != nil {
 			return nil, err
 		}

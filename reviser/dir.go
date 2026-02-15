@@ -20,7 +20,8 @@ const (
 )
 
 var (
-	currentPaths = []string{".", "." + string(filepath.Separator)}
+	defaultExcludes = []string{".git", ".idea", ".vscode"}
+	currentPaths    = []string{".", "." + string(filepath.Separator)}
 )
 
 var (
@@ -34,8 +35,6 @@ type SourceDir struct {
 	isRecursive     bool
 	excludePatterns []string // see filepath.Match
 }
-
-var defaultExcludes = []string{".git", ".idea", ".vscode"}
 
 func NewSourceDir(projectName string, path string, isRecursive bool, excludes string) *SourceDir {
 	patterns := make([]string, 0)

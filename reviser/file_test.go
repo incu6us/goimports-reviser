@@ -718,6 +718,28 @@ func main() {
 	}
 }
 
+func TestSourceFile_Fix_EmptyFile(t *testing.T) {
+	filePath := "./testdata/empty.go"
+	require.NoError(t, os.WriteFile(filePath, []byte(""), 0o644))
+	defer os.Remove(filePath)
+
+	_, _, _, err := NewSourceFile("github.com/incu6us/goimports-reviser", filePath).Fix()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "empty")
+	assert.Contains(t, err.Error(), "-excludes")
+}
+
+func TestSourceFile_Fix_InvalidGoSource(t *testing.T) {
+	filePath := "./testdata/invalid.go"
+	require.NoError(t, os.WriteFile(filePath, []byte("not valid go source"), 0o644))
+	defer os.Remove(filePath)
+
+	_, _, _, err := NewSourceFile("github.com/incu6us/goimports-reviser", filePath).Fix()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid Go source")
+	assert.Contains(t, err.Error(), "-excludes")
+}
+
 func TestSourceFile_Fix_WithImportsOrder(t *testing.T) {
 	type args struct {
 		projectName  string

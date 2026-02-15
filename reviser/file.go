@@ -211,7 +211,7 @@ func (f *SourceFile) groupImports(
 
 		var isLocalPackageFound bool
 		for _, localPackagePrefix := range localPkgPrefixes {
-			if strings.HasPrefix(pkgWithoutAlias, localPackagePrefix) && !strings.HasPrefix(pkgWithoutAlias, projectName) {
+			if strings.HasPrefix(pkgWithoutAlias, localPackagePrefix) && pkgWithoutAlias != projectName && !strings.HasPrefix(pkgWithoutAlias, projectName+"/") {
 				if f.shouldSeparateNamedImports {
 					if len(values) > 1 {
 						namedProjectLocalPkgs = append(namedProjectLocalPkgs, imprt)
@@ -231,7 +231,7 @@ func (f *SourceFile) groupImports(
 			continue
 		}
 
-		if strings.HasPrefix(pkgWithoutAlias, projectName) {
+		if pkgWithoutAlias == projectName || strings.HasPrefix(pkgWithoutAlias, projectName+"/") {
 			if f.shouldSeparateNamedImports {
 				if len(values) > 1 {
 					namedProjectImports = append(namedProjectImports, imprt)

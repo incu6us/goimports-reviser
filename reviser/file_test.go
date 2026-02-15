@@ -650,6 +650,45 @@ import "C"
 			wantErr: true,
 		},
 		{
+			name: "success with project name as substring of external package",
+			args: args{
+				projectName: "github.com/foo/bar",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"fmt"
+	"github.com/foo/barbecue"
+	"github.com/foo/bar/internal/pkg"
+	"github.com/foo/bar/pkg"
+	"github.com/foo/bars"
+)
+
+func main(){
+  _ = fmt.Println("test")
+}
+`,
+			},
+			want: `package testdata
+
+import (
+	"fmt"
+
+	"github.com/foo/barbecue"
+	"github.com/foo/bars"
+
+	"github.com/foo/bar/internal/pkg"
+	"github.com/foo/bar/pkg"
+)
+
+func main() {
+	_ = fmt.Println("test")
+}
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+		{
 			name: "error with non-existent file",
 			args: args{
 				projectName: "github.com/incu6us/goimports-reviser",

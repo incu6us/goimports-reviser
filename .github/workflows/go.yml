@@ -12,10 +12,8 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        go-version: [ 1.26.x, oldstable, stable ]
+        go-version: [ 1.26.x, stable ]
     runs-on: ${{ matrix.os }}
-    env:
-      GOTOOLCHAIN: go1.26.0+auto
     steps:
       - uses: actions/checkout@v4
       - name: Set up Go

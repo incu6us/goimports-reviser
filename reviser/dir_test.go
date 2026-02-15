@@ -17,8 +17,40 @@ func TestNewSourceDir(t *testing.T) {
 		assert.Equal(tt, "project", dir.projectName)
 		assert.NotContains(tt, dir.dir, "/...")
 		assert.Equal(tt, true, dir.isRecursive)
-		assert.Equal(tt, 0, len(dir.excludePatterns))
+		assert.Equal(tt, len(defaultExcludes), len(dir.excludePatterns))
 	})
+}
+
+func TestNewSourceDir_DefaultExcludes(t *testing.T) {
+	dir := NewSourceDir("project", ".", true, "")
+	absPath, _ := filepath.Abs(".")
+	assert.Contains(t, dir.excludePatterns, filepath.Join(absPath, ".git"))
+	assert.Contains(t, dir.excludePatterns, filepath.Join(absPath, ".idea"))
+	assert.Contains(t, dir.excludePatterns, filepath.Join(absPath, ".vscode"))
+}
+
+func TestSourceDir_Fix_IdeaExcludedByDefault(t *testing.T) {
+	// Create a .idea subdirectory with a .go file that has invalid content
+	ideaDir := "testdata/dir/.idea"
+	ideaFile := filepath.Join(ideaDir, "template.go")
+	err := os.MkdirAll(ideaDir, os.ModePerm)
+	assert.NoError(t, err)
+	err = os.WriteFile(ideaFile, []byte("not valid go"), 0o644)
+	assert.NoError(t, err)
+	defer os.RemoveAll(ideaDir)
+
+	// Also create a valid Go file so the walk has something to process
+	validDir := "testdata/dir/validpkg"
+	validFile := filepath.Join(validDir, "valid.go")
+	err = os.MkdirAll(validDir, os.ModePerm)
+	assert.NoError(t, err)
+	err = os.WriteFile(validFile, []byte("package validpkg\n"), 0o644)
+	assert.NoError(t, err)
+	defer os.RemoveAll(validDir)
+
+	// Fix should succeed because .idea is excluded by default
+	err = NewSourceDir("testdata", "testdata/dir", true, "").Fix()
+	assert.NoError(t, err)
 }
 
 func TestSourceDir_Fix(t *testing.T) {

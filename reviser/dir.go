@@ -35,6 +35,8 @@ type SourceDir struct {
 	excludePatterns []string // see filepath.Match
 }
 
+var defaultExcludes = []string{".git", ".idea", ".vscode"}
+
 func NewSourceDir(projectName string, path string, isRecursive bool, excludes string) *SourceDir {
 	patterns := make([]string, 0)
 
@@ -48,6 +50,9 @@ func NewSourceDir(projectName string, path string, isRecursive bool, excludes st
 	}
 
 	if err == nil {
+		for _, d := range defaultExcludes {
+			patterns = append(patterns, filepath.Join(absPath, d))
+		}
 		segs := strings.Split(excludes, ",")
 		for _, seg := range segs {
 			p := strings.TrimSpace(seg)

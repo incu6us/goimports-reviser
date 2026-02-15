@@ -2,6 +2,7 @@ package reviser
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -1169,6 +1170,93 @@ func main() {
 			wantErr:    false,
 		},
 		{
+			name: "preserve blank import with go:build tag",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `//go:build tools
+
+package testdata
+
+import (
+	_ "fmt"
+)
+`,
+			},
+			want: `//go:build tools
+
+package testdata
+
+import (
+	_ "fmt"
+)
+`,
+			wantChange: false,
+			wantErr:    false,
+		},
+		{
+			name: "preserve blank import with deprecated build tag",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `//go:build tools
+// +build tools
+
+package testdata
+
+import (
+	_ "fmt"
+)
+`,
+			},
+			want: `//go:build tools
+// +build tools
+
+package testdata
+
+import (
+	_ "fmt"
+)
+`,
+			wantChange: false,
+			wantErr:    false,
+		},
+		{
+			name: "remove unused import but preserve blank import with build tag",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `//go:build tools
+
+package testdata
+
+import (
+	"fmt"
+	_ "strconv"
+)
+
+func main(){
+  _ = fmt.Println("test")
+}
+`,
+			},
+			want: `//go:build tools
+
+package testdata
+
+import (
+	"fmt"
+	_ "strconv"
+)
+
+func main() {
+	_ = fmt.Println("test")
+}
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+		{
 			name: `success with "C"`,
 			args: args{
 				projectName: "github.com/incu6us/goimports-reviser",
@@ -1232,6 +1320,46 @@ func main() {
 			assert.Equal(t, tt.wantChange, hasChange)
 		})
 	}
+}
+
+func TestSourceFile_Fix_WithRemoveUnusedImports_BuildTagFallback(t *testing.T) {
+	// Simulate the tools.go scenario from issue #92: a file with a build tag
+	// imports a package that causes go list to fail when the tag is active.
+	// The fix retries without the build tag, which excludes the problematic file
+	// from go list and allows the process to succeed.
+	tmpDir := t.TempDir()
+
+	require.NoError(t, os.WriteFile(
+		filepath.Join(tmpDir, "go.mod"),
+		[]byte("module example.com/testproject\n\ngo 1.21\n"),
+		0o644,
+	))
+
+	// A regular file so the package is valid without the build tag.
+	require.NoError(t, os.WriteFile(
+		filepath.Join(tmpDir, "lib.go"),
+		[]byte("package testproject\n"),
+		0o644,
+	))
+
+	// tools.go with a build tag that imports an unresolvable package.
+	// This mirrors tools.go files that import a CLI tool (e.g. goimports-reviser)
+	// as a blank dependency, which can cause go list conflicts.
+	toolsContent := `//go:build tools
+
+package testproject
+
+import (
+	_ "example.com/nonexistent/tool"
+)
+`
+	toolsPath := filepath.Join(tmpDir, "tools.go")
+	require.NoError(t, os.WriteFile(toolsPath, []byte(toolsContent), 0o644))
+
+	got, _, _, err := NewSourceFile("example.com/testproject", toolsPath).
+		Fix(WithRemovingUnusedImports)
+	assert.NoError(t, err)
+	assert.Contains(t, string(got), `_ "example.com/nonexistent/tool"`)
 }
 
 func TestSourceFile_Fix_WithAliasForVersionSuffix(t *testing.T) {

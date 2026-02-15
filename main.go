@@ -308,6 +308,9 @@ func main() {
 
 	if len(originPaths) == 1 && originPaths[0] == "-" {
 		originPaths[0] = reviser.StandardInput
+		if isTerminal(os.Stdin) {
+			fmt.Fprintln(os.Stderr, "reading from stdin, press Ctrl+D when done...")
+		}
 	}
 
 	var options reviser.SourceFileOptions
@@ -477,6 +480,14 @@ func resultPostProcess(hasChange bool, originFilePath string, formattedOutput []
 	default:
 		log.Fatalf(`invalid output %q specified`, output)
 	}
+}
+
+func isTerminal(f *os.File) bool {
+	stat, err := f.Stat()
+	if err != nil {
+		return false
+	}
+	return stat.Mode()&os.ModeCharDevice != 0
 }
 
 func printDeprecations(deprecatedMessagesCh chan string) {

@@ -62,6 +62,33 @@ import (
 		},
 
 		{
+			name: "success with stdlib newer than the generated package list",
+			args: args{
+				projectName: "github.com/incu6us/goimports-reviser",
+				filePath:    "./testdata/example.go",
+				fileContent: `package testdata
+
+import (
+	"golang.org/x/exp/slices"
+	"log"
+	"uuid"
+)
+`,
+			},
+			want: `package testdata
+
+import (
+	"log"
+	"uuid"
+
+	"golang.org/x/exp/slices"
+)
+`,
+			wantChange: true,
+			wantErr:    false,
+		},
+
+		{
 			name: "success with auto-generated",
 			args: args{
 				projectName: "github.com/incu6us/goimports-reviser",

@@ -247,6 +247,18 @@ func (f *SourceFile) groupImports(
 			continue
 		}
 
+		// Not in the generated std list, not local, not project: it may still be
+		// stdlib added by a Go release newer than the one package_list.go was
+		// generated with. Checked last so a dot-less project/module path wins.
+		if std.IsStd(pkgWithoutAlias) {
+			if f.shouldSeparateNamedImports && len(values) > 1 {
+				namedStdImports = append(namedStdImports, imprt)
+			} else {
+				stdImports = append(stdImports, imprt)
+			}
+			continue
+		}
+
 		if f.shouldSeparateNamedImports {
 			if len(values) > 1 {
 				namedGeneralImports = append(namedGeneralImports, imprt)

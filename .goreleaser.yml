@@ -53,6 +53,8 @@ changelog:
 
 release:
   prerelease: auto
+  # Re-running a release job would otherwise die on 422 already_exists.
+  mode: replace
   github:
     owner: incu6us
     name: goimports-reviser

@@ -15,7 +15,7 @@ jobs:
         go-version: [ stable, oldstable ]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
@@ -29,7 +29,7 @@ jobs:
         run: go test -race -cover -coverprofile=coverage -covermode=atomic ./...
       - name: Upload coverage artifact
         if: matrix.os == 'ubuntu-latest' && matrix.go-version == 'stable'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: coverage
@@ -43,13 +43,13 @@ jobs:
     needs: build
     steps:
       - name: Download coverage artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: coverage
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v7
         with:
-          file: ./coverage
+          files: ./coverage
           flags: unittests
           fail_ci_if_error: false
           verbose: true

@@ -5,6 +5,9 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
@@ -12,10 +15,9 @@ jobs:
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Unshallow
-        run: git fetch --prune --unshallow
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -27,14 +29,19 @@ jobs:
         run: |
           echo GO_VERSION=$(go version | awk '{print $3;}') >> $GITHUB_ENV
 
-      - name: Login to Snapcraft
-        uses: samuelmeuli/action-snapcraft@v2
+      # Inlined from samuelmeuli/action-snapcraft, which is unmaintained (node20).
+      # It only installed snapcraft; auth is via SNAPCRAFT_STORE_CREDENTIALS above.
+      - name: Install Snapcraft
+        run: |
+          sudo snap install snapcraft --classic
+          echo /snap/bin >> "$GITHUB_PATH"
+          sudo chown root:root /  # snapd needs / to be root-owned
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v1
+        uses: goreleaser/goreleaser-action@v7
         with:
-          version: latest
+          version: "~> v2"
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-          GO_VERSION: ${{ env.GITHUB_GO_VERSION }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_TOKEN: ${{ secrets.TOKEN }}

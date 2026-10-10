@@ -51,6 +51,37 @@ You can also apply rules to multiple targets:
 goimports-reviser -rm-unused -set-alias -format ./reviser/reviser.go ./pkg/...
 ```
 
+### Standard input
+
+When no file or directory is specified, `goimports-reviser` reads Go source from stdin and writes the formatted source to stdout. You can also pass `-` explicitly:
+
+```bash
+goimports-reviser -rm-unused -set-alias -format < main.go
+goimports-reviser -rm-unused -set-alias -format - < main.go
+```
+
+### Zed
+
+`goimports-reviser` can be used as a [Zed external formatter](https://zed.dev/docs/reference/all-settings#formatter). Add the following to your Zed settings:
+
+```json
+{
+  "languages": {
+    "Go": {
+      "format_on_save": "on",
+      "formatter": {
+        "external": {
+          "command": "goimports-reviser",
+          "arguments": ["-format"]
+        }
+      }
+    }
+  }
+}
+```
+
+Zed sends the current buffer to the formatter over stdin, so no file path or `{buffer_path}` argument is needed.
+
 ### Example, to configure it with JetBrains IDEs (via file watcher plugin):
 ![example](./images/image.png)
 

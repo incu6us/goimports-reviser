@@ -302,12 +302,8 @@ func main() {
 		originPaths = append(originPaths, filePath)
 	}
 
-	if len(originPaths) == 0 {
-		printUsageAndExit(errors.New("no file(s) or directory(ies) specified on input"))
-	}
-
-	if len(originPaths) == 1 && originPaths[0] == "-" {
-		originPaths[0] = reviser.StandardInput
+	originPaths = normalizeOriginPaths(originPaths)
+	if len(originPaths) == 1 && originPaths[0] == reviser.StandardInput {
 		if isTerminal(os.Stdin) {
 			fmt.Fprintln(os.Stderr, "reading from stdin, press Ctrl+D when done...")
 		}
@@ -488,6 +484,16 @@ func isTerminal(f *os.File) bool {
 		return false
 	}
 	return stat.Mode()&os.ModeCharDevice != 0
+}
+
+func normalizeOriginPaths(originPaths []string) []string {
+	if len(originPaths) == 0 {
+		return []string{reviser.StandardInput}
+	}
+	if len(originPaths) == 1 && originPaths[0] == "-" {
+		return []string{reviser.StandardInput}
+	}
+	return originPaths
 }
 
 func printDeprecations(deprecatedMessagesCh chan string) {
